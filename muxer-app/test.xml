@@ -1,0 +1,34 @@
+<pipeline name="ogg-640x480">
+<preview>
+    gconfvideosrc name=videosrc !
+      video/x-raw-yuv,format=(fourcc)I420,width=640,height=480,framerate=30/1 !
+        timeoverlay shaded-background=true silent=1 name=overlay !
+          tee name=tee !
+            queue ! gconfvideosink name=videosink
+</preview>
+<record>
+    matroskamux name=muxer ! filesink location=test.mkv
+    queue name=queue ! x264enc ! queue ! muxer.
+    gconfaudiosrc name=audiosrc !
+      audio/x-raw-int,endianness=1234,width=16,rate=44100,channels=1 !
+        faac ! muxer.
+</record>
+</pipeline>
+
+<pipeline name="test-640x480">
+<preview>
+   videotestsrc name=videosrc !
+      video/x-raw-yuv,format=(fourcc)I420,width=640,height=480,framerate=30/1 !
+        timeoverlay shaded-background=true silent=1 name=overlay !
+          tee name=tee !
+            queue ! ffmpegcolorspace ! ximagesink name=videosink
+</preview>
+<record>
+    matroskamux name=muxer ! filesink location=test.mkv
+    queue name=queue ! x264enc ! queue ! muxer.
+    pulsesrc name=audiosrc !
+      audio/x-raw-int,endianness=1234,width=16,rate=44100,channels=1 !
+        faac ! muxer.
+</record>
+</pipeline>
+

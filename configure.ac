@@ -1,0 +1,34 @@
+AC_INIT([omap4-media-apps], [0.1], [tigrux@gmail.com], [omap4-media-apps])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS(config.h)
+AM_INIT_AUTOMAKE()
+
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_DISABLE_STATIC
+
+AC_PATH_PROG(VALAC, valac, valac)
+AC_SUBST(VALAC)
+
+AC_SUBST(CFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+PROGRAM_MODULES="gtk+-2.0 gdk-x11-2.0 gstreamer-0.10 gstreamer-interfaces-0.10"
+
+AC_SUBST(VALA_DEPS)
+PKG_CHECK_MODULES(PROGRAM, $PROGRAM_MODULES )
+AC_SUBST(PROGRAM_MODULES)
+AC_SUBST(PROGRAM_CFLAGS)
+AC_SUBST(PROGRAM_LIBS)
+
+AC_CONFIG_FILES([
+	Makefile
+	common/Makefile
+	player-app/Makefile
+	muxer-app/Makefile
+	])
+
+AC_OUTPUT
+

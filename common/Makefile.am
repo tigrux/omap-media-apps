@@ -1,0 +1,8 @@
+VALASOURCES = \
+	video-area.gs
+
+EXTRA_DIST = \
+	$(VALASOURCES)
+
+DISTCLEANFILES =
+
