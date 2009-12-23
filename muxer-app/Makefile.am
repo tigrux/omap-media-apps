@@ -1,5 +1,3 @@
-AM_CFLAGS = -ansi
-
 AM_CPPFLAGS = \
 	$(PROGRAM_CFLAGS) \
 	-include $(CONFIG_HEADER)

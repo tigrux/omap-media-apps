@@ -1,8 +1,7 @@
 AC_INIT([omap4-media-apps], [0.1], [tigrux@gmail.com], [omap4-media-apps])
 AC_CONFIG_SRCDIR([Makefile.am])
-AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS(config.h)
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE([foreign])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
