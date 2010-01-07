@@ -11,13 +11,17 @@ bin_PROGRAMS = omap4-player-app
 omap4_player_app_VALASOURCES = \
 	player-app.gs \
 	player-window.gs \
-	playlist-control.gs \
-	$(top_srcdir)/common/video-area.gs
+	playlist-control.gs
+
+common_VALASOURCES = \
+	$(top_srcdir)/common/video-area.gs \
+	$(top_srcdir)/common/error-dialog.gs \
+	$(top_srcdir)/common/utils.gs
 
 omap4_player_app_SOURCES = \
-	$(omap4_player_app_VALASOURCES:.gs=.c)
+	$(omap4_player_app_VALASOURCES:.gs=.c) $(common_VALASOURCES:.gs=.c)
 
-vala.stamp: $(omap4_player_app_VALASOURCES)
+vala.stamp: $(omap4_player_app_VALASOURCES) $(common_VALASOURCES)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 

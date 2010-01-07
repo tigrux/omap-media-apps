@@ -7,6 +7,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gdk/gdk.h>
 #include <pango/pango.h>
 
 
@@ -44,9 +45,13 @@ void error_dialog_add_error_with_debug (ErrorDialog* self, GError* _error_, cons
 GtkButton* new_button_with_stock_image (const char* stock_id);
 static void _lambda1_ (ErrorDialog* self);
 static void __lambda1__gtk_button_clicked (GtkButton* _sender, gpointer self);
+static gboolean _lambda2_ (ErrorDialog* self);
+static gboolean __lambda2__gtk_widget_delete_event (ErrorDialog* _sender, GdkEvent* event, gpointer self);
 GtkBox* error_dialog_new_error_box (ErrorDialog* self);
 ErrorDialog* error_dialog_new (void);
 ErrorDialog* error_dialog_construct (GType object_type);
+#define DEFAULT_WIDTH 800
+#define DEFAULT_HEIGHT 480
 static GObject * error_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void error_dialog_finalize (GObject* obj);
 
@@ -55,13 +60,14 @@ static void error_dialog_finalize (GObject* obj);
 void error_dialog_add_error_with_debug (ErrorDialog* self, GError* _error_, const char* debug) {
 	GtkTextIter iter = {0};
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (debug != NULL);
 	gtk_text_buffer_get_end_iter (self->text_buffer, &iter);
 	error_dialog_text_insert_new_line (self, &iter);
 	gtk_text_buffer_insert_with_tags_by_name (self->text_buffer, &iter, _error_->message, -1, "bold", NULL, NULL);
 	error_dialog_text_insert_new_line (self, &iter);
-	gtk_text_buffer_insert (self->text_buffer, &iter, debug, -1);
-	error_dialog_text_insert_new_line (self, &iter);
+	if (debug != NULL) {
+		gtk_text_buffer_insert (self->text_buffer, &iter, debug, -1);
+		error_dialog_text_insert_new_line (self, &iter);
+	}
 }
 
 
@@ -78,11 +84,23 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 static void _lambda1_ (ErrorDialog* self) {
 	g_signal_emit_by_name (self, "closed");
+	gtk_object_destroy ((GtkObject*) self);
 }
 
 
 static void __lambda1__gtk_button_clicked (GtkButton* _sender, gpointer self) {
 	_lambda1_ (self);
+}
+
+
+static gboolean _lambda2_ (ErrorDialog* self) {
+	gboolean result;
+	g_signal_emit_by_name (self, "closed");
+}
+
+
+static gboolean __lambda2__gtk_widget_delete_event (ErrorDialog* _sender, GdkEvent* event, gpointer self) {
+	return _lambda2_ (self);
 }
 
 
@@ -111,6 +129,7 @@ GtkBox* error_dialog_new_error_box (ErrorDialog* self) {
 	close_button = new_button_with_stock_image (GTK_STOCK_CLOSE);
 	gtk_container_add ((GtkContainer*) button_box, (GtkWidget*) close_button);
 	g_signal_connect_object (close_button, "clicked", (GCallback) __lambda1__gtk_button_clicked, self, 0);
+	g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda2__gtk_widget_delete_event, self, 0);
 	gtk_widget_show_all ((GtkWidget*) box);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
@@ -141,12 +160,13 @@ static GObject * error_dialog_constructor (GType type, guint n_construct_propert
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = ERROR_DIALOG (obj);
 	{
-		GtkBox* box;
+		GtkBox* _tmp0_;
 		gtk_window_set_title ((GtkWindow*) self, "Error");
-		box = error_dialog_new_error_box (self);
-		gtk_container_add ((GtkContainer*) self, (GtkWidget*) box);
+		gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+		gtk_window_set_modal ((GtkWindow*) self, TRUE);
+		gtk_container_add ((GtkContainer*) self, (GtkWidget*) (_tmp0_ = error_dialog_new_error_box (self)));
+		_g_object_unref0 (_tmp0_);
 		gtk_text_buffer_create_tag (self->text_buffer, "bold", "weight", PANGO_WEIGHT_BOLD, NULL, NULL);
-		_g_object_unref0 (box);
 	}
 	return obj;
 }

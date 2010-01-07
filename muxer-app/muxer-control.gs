@@ -11,6 +11,7 @@ class MuxerControl: GLib.Object
     buffer_probe_enabled: bool
 
     event eos()
+    event error_message(e: Error, debug: string)
 
     def get_bus(): Bus
         return preview_bin.bus
@@ -29,6 +30,8 @@ class MuxerControl: GLib.Object
     adjust_ts_audio: ClockTime
     video_probe_id: uint
     audio_probe_id: uint
+
+    error_dialog: ErrorDialog
 
     construct(preview: string, record: string)
         preview_desc = preview
@@ -112,11 +115,10 @@ class MuxerControl: GLib.Object
                 recording = false
                 eos()
             when Gst.MessageType.ERROR
-                error: Error
+                e: Error
                 debug: string
-                message.parse_error(out error, out debug)
-                print error.message
-                print debug
+                message.parse_error(out e, out debug)
+                error_message(e, debug)
                 shutdown()
                 eos()
             default

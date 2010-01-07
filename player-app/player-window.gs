@@ -13,9 +13,7 @@ enum PlayerTab
     LIST
     VIDEO
     CHOOSER
-    ERROR
 
-const ICON_SIZE: IconSize = IconSize.DND
 const UPDATE_INTERVAL: uint = 200
 const TITLE: string = "PlayerApp"
 
@@ -45,14 +43,14 @@ class PlayerWindow: Window
 
     chooser_widget: FileChooserWidget
     chooser_view: TreeView
-    error_label: Label
-    error_text: TextBuffer
 
     update_seeking_scale_id: uint
     stream_position: int64
     stream_duration: int64
     should_resume_playback: bool
     is_fullscreen: bool
+
+    error_dialog: ErrorDialog
 
     init
         playlist_store = new_playlist_store()
@@ -128,7 +126,7 @@ class PlayerWindow: Window
 
     def setup_widgets()
         set_title(TITLE)
-        set_default_size(800, 480)
+        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
         delete_event += on_delete
 
         var main_box = new VBox(false, 0)
@@ -142,7 +140,6 @@ class PlayerWindow: Window
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
         notebook.append_page(new_chooser_box(), new Label("Chooser"))
-        notebook.append_page(new_error_box(), new Label("Error"))
         notebook.switch_page += on_notebook_switch_page
         notebook.change_current_page += def(page)
             print "page %d", page
@@ -219,13 +216,6 @@ class PlayerWindow: Window
             return true
         return false
 
-    def new_button_with_stock_image(stock_id: string): Button
-        var button = new Button()
-        button.set_relief(ReliefStyle.NONE)
-        var image = new Image.from_stock(stock_id, ICON_SIZE)
-        button.add(image)
-        return button
-
     def new_volume_button_with_mute(): VolumeButton
         var volume_button = new VolumeButton()
 
@@ -278,34 +268,6 @@ class PlayerWindow: Window
         video_area.activated += on_video_area_activated
         video_area.prepared += def()
             notebook.set_current_page(PlayerTab.VIDEO)
-
-        box.show_all()
-        return box
-
-    def new_error_box(): Box
-        var box = new VBox(false, 6)
-
-        error_label = new Label(null)
-        box.pack_start(error_label, false, false, 6)
-
-        var scrolled_window = new ScrolledWindow(null, null)
-        box.pack_start(scrolled_window, true, true, 0)
-        scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
-
-        var text_view = new TextView()
-        text_view.set_editable(false)
-        text_view.set_cursor_visible(false)
-        error_text = text_view.buffer
-        scrolled_window.add(text_view)
-
-        var button_box = new HButtonBox()
-        box.pack_start(button_box, false, false, 6)
-        button_box.set_layout(ButtonBoxStyle.END)
-        var close_button = new_button_with_stock_image(STOCK_CLOSE)
-        button_box.add(close_button)
-        close_button.clicked += def()
-            controls_box.show()
-            on_stop()
 
         box.show_all()
         return box
@@ -372,9 +334,10 @@ class PlayerWindow: Window
             when State.NULL
                 if notebook.get_current_page() == PlayerTab.CHOOSER
                     add_file_from_chooser(out iter)
-                    playlist_selection.select_iter(iter)
-                    if get_and_select_iter(out iter)
-                        on_play()
+                    if playlist_store.iter_is_valid(iter)
+                        playlist_selection.select_iter(iter)
+                        if get_and_select_iter(out iter)
+                            on_play()
                 else
                     if not get_and_select_iter(out iter)
                         return
@@ -532,19 +495,23 @@ class PlayerWindow: Window
             when Gst.MessageType.ERROR
                 error: Error
                 debug: string
+                setup_error_dialog()
                 message.parse_error(out error, out debug)
-                error_label.set_markup("<b>%s</b>".printf(error.message))
-                error_text.set_text(debug, -1)
-                seeking_scale.hide()
-                controls_box.hide()
-                notebook.set_current_page(PlayerTab.ERROR)
+                error_dialog.add_error_with_debug(error, debug)
             default
                 pass
 
+    def setup_error_dialog()
+        if error_dialog == null
+            seeking_scale.hide()
+            controls_box.hide()
+            error_dialog = new ErrorDialog()
+            error_dialog.closed += on_error_dialog_closed
+            error_dialog.set_transient_for(this)
+            error_dialog.show_all()
 
-def child_widget_at_path(widget: Widget, indices: array of int): Widget
-    for var index in indices
-        var container = widget as Container
-        widget = container.get_children().nth_data(index) as Widget
-    return widget
+    def on_error_dialog_closed()
+        controls_box.show()
+        on_stop()
+        error_dialog = null
 

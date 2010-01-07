@@ -43,6 +43,16 @@ typedef struct _MuxerControlClass MuxerControlClass;
 
 typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
+
+#define TYPE_ERROR_DIALOG (error_dialog_get_type ())
+#define ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ERROR_DIALOG, ErrorDialog))
+#define ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_ERROR_DIALOG, ErrorDialogClass))
+#define IS_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_ERROR_DIALOG))
+#define IS_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_ERROR_DIALOG))
+#define ERROR_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_ERROR_DIALOG, ErrorDialogClass))
+
+typedef struct _ErrorDialog ErrorDialog;
+typedef struct _ErrorDialogClass ErrorDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
@@ -77,6 +87,7 @@ struct _MuxerWindow {
 	GtkButton* stop_button;
 	MuxerControl* muxer_control;
 	VideoArea* video_area;
+	ErrorDialog* error_dialog;
 };
 
 struct _MuxerWindowClass {
@@ -87,12 +98,12 @@ struct _MuxerWindowClass {
 static gpointer muxer_window_parent_class = NULL;
 
 #define TITLE "MuxerApp"
-#define ICON_SIZE GTK_ICON_SIZE_DND
 #define USE_BUFFER_PROBE FALSE
 GType muxer_combo_col_get_type (void);
 GType muxer_window_get_type (void);
 GType muxer_control_get_type (void);
 GType video_area_get_type (void);
+GType error_dialog_get_type (void);
 enum  {
 	MUXER_WINDOW_DUMMY_PROPERTY
 };
@@ -102,7 +113,10 @@ void muxer_window_shutdown (MuxerWindow* self);
 MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
 void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled);
+void muxer_window_on_error_message (MuxerWindow* self, GError* _error_, const char* debug);
+static void _muxer_window_on_error_message_muxer_control_error_message (MuxerControl* _sender, GError* e, const char* debug, gpointer self);
 void muxer_control_load (MuxerControl* self, GError** error);
+void muxer_window_show_error (MuxerWindow* self, GError* _error_, const char* debug);
 GstBus* muxer_control_get_bus (MuxerControl* self);
 void video_area_set_bus (VideoArea* self, GstBus* bus);
 void muxer_control_start_preview (MuxerControl* self);
@@ -120,6 +134,12 @@ MuxerConfigParser* muxer_config_parser_construct (GType object_type);
 GType muxer_config_parser_get_type (void);
 gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
 void muxer_window_on_chooser_file_set (MuxerWindow* self);
+void muxer_window_setup_error_dialog (MuxerWindow* self);
+void error_dialog_add_error_with_debug (ErrorDialog* self, GError* _error_, const char* debug);
+ErrorDialog* error_dialog_new (void);
+ErrorDialog* error_dialog_construct (GType object_type);
+void muxer_window_on_error_dialog_closed (MuxerWindow* self);
+static void _muxer_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self);
 MuxerWindow* muxer_window_new (void);
 MuxerWindow* muxer_window_construct (GType object_type);
 static void _muxer_window_on_quit_gtk_object_destroy (MuxerWindow* _sender, gpointer self);
@@ -127,6 +147,7 @@ static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (
 static gboolean _muxer_window_on_combo_box_child_pressed_gtk_widget_button_press_event (GtkEntry* _sender, GdkEventButton* event, gpointer self);
 static void _muxer_window_on_combo_changed_gtk_combo_box_changed (GtkComboBox* _sender, gpointer self);
 static void _muxer_window_on_record_gtk_button_clicked (GtkButton* _sender, gpointer self);
+#define ICON_SIZE GTK_ICON_SIZE_DND
 static void _muxer_window_on_stop_gtk_button_clicked (GtkButton* _sender, gpointer self);
 static void _muxer_window_on_quit_gtk_button_clicked (GtkButton* _sender, gpointer self);
 VideoArea* video_area_new (void);
@@ -161,6 +182,11 @@ gboolean muxer_window_on_combo_box_child_pressed (MuxerWindow* self, GdkEventBut
 }
 
 
+static void _muxer_window_on_error_message_muxer_control_error_message (MuxerControl* _sender, GError* e, const char* debug, gpointer self) {
+	muxer_window_on_error_message (self, e, debug);
+}
+
+
 static void _muxer_window_record_stopped_muxer_control_eos (MuxerControl* _sender, gpointer self) {
 	muxer_window_record_stopped (self);
 }
@@ -191,6 +217,7 @@ void muxer_window_on_combo_changed (MuxerWindow* self) {
 	muxer_window_shutdown (self);
 	self->muxer_control = (_tmp6_ = muxer_control_new (preview, record), _g_object_unref0 (self->muxer_control), _tmp6_);
 	muxer_control_enable_buffer_probe (self->muxer_control, gtk_toggle_button_get_active (self->probe_button));
+	g_signal_connect_object (self->muxer_control, "error-message", (GCallback) _muxer_window_on_error_message_muxer_control_error_message, self, 0);
 	{
 		muxer_control_load (self->muxer_control, &_inner_error_);
 		if (_inner_error_ != NULL) {
@@ -205,9 +232,7 @@ void muxer_window_on_combo_changed (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp7_;
-			g_print ("%s", _tmp7_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp7_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 			_g_free0 (preview);
 			_g_free0 (record);
@@ -254,9 +279,7 @@ void muxer_window_on_record (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp0_;
-			g_print ("%s", _tmp0_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp0_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 		}
 	}
@@ -351,9 +374,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp0_;
-			g_print ("%s", _tmp0_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp0_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -367,9 +388,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp1_;
-			g_print ("%s", _tmp1_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp1_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -383,9 +402,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp2_;
-			g_print ("%s", _tmp2_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp2_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -403,19 +420,19 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 	{
 		gtk_list_store_clear (self->combo_model);
 		{
-			gsize _tmp3_;
+			gsize _tmp0_;
 			char** group_collection;
 			int group_collection_length1;
 			int group_it;
-			group_collection = g_key_file_get_groups (key_file, &_tmp3_);
-			group_collection_length1 = _tmp3_;
-			for (group_it = 0; group_it < _tmp3_; group_it = group_it + 1) {
+			group_collection = g_key_file_get_groups (key_file, &_tmp0_);
+			group_collection_length1 = _tmp0_;
+			for (group_it = 0; group_it < _tmp0_; group_it = group_it + 1) {
 				char* group;
 				group = g_strdup (group_collection[group_it]);
 				{
 					char* preview;
 					char* record;
-					gboolean _tmp4_ = FALSE;
+					gboolean _tmp1_ = FALSE;
 					preview = g_key_file_get_string (key_file, group, "preview", &_inner_error_);
 					if (_inner_error_ != NULL) {
 						_g_free0 (group);
@@ -436,11 +453,11 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 						goto __finally3;
 					}
 					if (preview == NULL) {
-						_tmp4_ = TRUE;
+						_tmp1_ = TRUE;
 					} else {
-						_tmp4_ = record == NULL;
+						_tmp1_ = record == NULL;
 					}
-					if (_tmp4_) {
+					if (_tmp1_) {
 						_g_free0 (group);
 						_g_free0 (preview);
 						_g_free0 (record);
@@ -462,9 +479,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp5_;
-			g_print ("%s", _tmp5_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp5_);
+			muxer_window_show_error (self, e, NULL);
 			_g_error_free0 (e);
 		}
 	}
@@ -498,6 +513,45 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 	gtk_tree_model_get ((GtkTreeModel*) self->combo_model, &iter, MUXER_COMBO_COL_PREVIEW, preview, MUXER_COMBO_COL_RECORD, record, -1, -1);
 	result = TRUE;
 	return result;
+}
+
+
+void muxer_window_on_error_message (MuxerWindow* self, GError* _error_, const char* debug) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (debug != NULL);
+	muxer_window_show_error (self, _error_, debug);
+}
+
+
+void muxer_window_show_error (MuxerWindow* self, GError* _error_, const char* debug) {
+	g_return_if_fail (self != NULL);
+	muxer_window_setup_error_dialog (self);
+	error_dialog_add_error_with_debug (self->error_dialog, _error_, debug);
+}
+
+
+static void _muxer_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self) {
+	muxer_window_on_error_dialog_closed (self);
+}
+
+
+void muxer_window_setup_error_dialog (MuxerWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->error_dialog == NULL) {
+		ErrorDialog* _tmp0_;
+		self->error_dialog = (_tmp0_ = g_object_ref_sink (error_dialog_new ()), _g_object_unref0 (self->error_dialog), _tmp0_);
+		g_signal_connect_object (self->error_dialog, "closed", (GCallback) _muxer_window_on_error_dialog_closed_error_dialog_closed, self, 0);
+		gtk_window_set_transient_for ((GtkWindow*) self->error_dialog, (GtkWindow*) self);
+		gtk_widget_show_all ((GtkWidget*) self->error_dialog);
+	}
+}
+
+
+void muxer_window_on_error_dialog_closed (MuxerWindow* self) {
+	ErrorDialog* _tmp0_;
+	g_return_if_fail (self != NULL);
+	muxer_window_shutdown (self);
+	self->error_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->error_dialog), _tmp0_);
 }
 
 
@@ -666,6 +720,7 @@ static void muxer_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->stop_button);
 	_g_object_unref0 (self->muxer_control);
 	_g_object_unref0 (self->video_area);
+	_g_object_unref0 (self->error_dialog);
 	G_OBJECT_CLASS (muxer_window_parent_class)->finalize (obj);
 }
 

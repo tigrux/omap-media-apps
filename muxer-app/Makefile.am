@@ -12,13 +12,17 @@ omap4_muxer_app_VALASOURCES = \
 	muxer-app.gs \
 	muxer-config.gs \
 	muxer-control.gs \
-	muxer-window.gs \
-	$(top_srcdir)/common/video-area.gs
+	muxer-window.gs
+	
+common_VALASOURCES = \
+	$(top_srcdir)/common/video-area.gs \
+	$(top_srcdir)/common/error-dialog.gs \
+	$(top_srcdir)/common/utils.gs
 
 omap4_muxer_app_SOURCES = \
-	$(omap4_muxer_app_VALASOURCES:.gs=.c)
+	$(omap4_muxer_app_VALASOURCES:.gs=.c) $(common_VALASOURCES:.gs=.c)
 
-vala.stamp: $(omap4_muxer_app_VALASOURCES)
+vala.stamp: $(omap4_muxer_app_VALASOURCES) $(common_VALASOURCES)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 

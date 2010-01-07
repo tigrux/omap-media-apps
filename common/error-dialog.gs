@@ -10,19 +10,21 @@ class ErrorDialog: Window
 
     init
         set_title("Error")
-        var box = new_error_box()
-        add(box)
+        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        set_modal(true)
+        add(new_error_box())
         text_buffer.create_tag("bold", "weight", Pango.Weight.BOLD, null)
 
-    def add_error_with_debug(error: Error, debug: string)
+    def add_error_with_debug(error: Error, debug: string?)
         iter: TextIter
         text_buffer.get_end_iter(out iter)
         text_insert_new_line(ref iter)
         text_buffer.insert_with_tags_by_name(iter, \
             error.message, -1, "bold", null)
         text_insert_new_line(ref iter)
-        text_buffer.insert(iter, debug, -1)
-        text_insert_new_line(ref iter)
+        if debug != null
+            text_buffer.insert(iter, debug, -1)
+            text_insert_new_line(ref iter)
 
     def text_insert_new_line(ref iter: TextIter)
         text_buffer.insert(iter, "\n", -1)
@@ -47,6 +49,9 @@ class ErrorDialog: Window
         var close_button = new_button_with_stock_image(STOCK_CLOSE)
         button_box.add(close_button)
         close_button.clicked += def()
+            closed()
+            destroy()
+        delete_event += def()
             closed()
 
         box.show_all()

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/gst.h>
+#include <gtk/gtk.h>
 
 
 #define TYPE_MUXER_CONTROL (muxer_control_get_type ())
@@ -19,8 +20,19 @@
 typedef struct _MuxerControl MuxerControl;
 typedef struct _MuxerControlClass MuxerControlClass;
 typedef struct _MuxerControlPrivate MuxerControlPrivate;
+
+#define TYPE_ERROR_DIALOG (error_dialog_get_type ())
+#define ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ERROR_DIALOG, ErrorDialog))
+#define ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_ERROR_DIALOG, ErrorDialogClass))
+#define IS_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_ERROR_DIALOG))
+#define IS_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_ERROR_DIALOG))
+#define ERROR_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_ERROR_DIALOG, ErrorDialogClass))
+
+typedef struct _ErrorDialog ErrorDialog;
+typedef struct _ErrorDialogClass ErrorDialogClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
 
@@ -42,6 +54,7 @@ struct _MuxerControl {
 	GstClockTime adjust_ts_audio;
 	guint video_probe_id;
 	guint audio_probe_id;
+	ErrorDialog* error_dialog;
 };
 
 struct _MuxerControlClass {
@@ -52,6 +65,7 @@ struct _MuxerControlClass {
 static gpointer muxer_control_parent_class = NULL;
 
 GType muxer_control_get_type (void);
+GType error_dialog_get_type (void);
 enum  {
 	MUXER_CONTROL_DUMMY_PROPERTY
 };
@@ -78,6 +92,7 @@ void muxer_control_shutdown (MuxerControl* self);
 static void muxer_control_finalize (GObject* obj);
 
 
+static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 static gpointer _gst_object_ref0 (gpointer self) {
 	return self ? gst_object_ref (self) : NULL;
@@ -317,25 +332,20 @@ void muxer_control_on_bus_message (MuxerControl* self, GstMessage* message) {
 		case GST_MESSAGE_ERROR:
 		{
 			{
-				GError* _error_;
+				GError* e;
 				char* debug;
 				char* _tmp3_;
 				char* _tmp2_ = NULL;
 				GError* _tmp1_;
 				GError* _tmp0_ = NULL;
-				char* _tmp4_;
-				char* _tmp5_;
-				_error_ = NULL;
+				e = NULL;
 				debug = NULL;
-				(gst_message_parse_error (message, &_tmp0_, &_tmp2_), _error_ = (_tmp1_ = _tmp0_, _g_error_free0 (_error_), _tmp1_));
+				(gst_message_parse_error (message, &_tmp0_, &_tmp2_), e = (_tmp1_ = _tmp0_, _g_error_free0 (e), _tmp1_));
 				debug = (_tmp3_ = _tmp2_, _g_free0 (debug), _tmp3_);
-				g_print ("%s", _tmp4_ = g_strconcat (_error_->message, "\n", NULL));
-				_g_free0 (_tmp4_);
-				g_print ("%s", _tmp5_ = g_strconcat (debug, "\n", NULL));
-				_g_free0 (_tmp5_);
+				g_signal_emit_by_name (self, "error-message", e, debug);
 				muxer_control_shutdown (self);
 				g_signal_emit_by_name (self, "eos");
-				_g_error_free0 (_error_);
+				_g_error_free0 (e);
 				_g_free0 (debug);
 			}
 			break;
@@ -415,6 +425,7 @@ static void muxer_control_class_init (MuxerControlClass * klass) {
 	muxer_control_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->finalize = muxer_control_finalize;
 	g_signal_new ("eos", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	g_signal_new ("error_message", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__POINTER_STRING, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_STRING);
 }
 
 
@@ -433,6 +444,7 @@ static void muxer_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->preview_bin);
 	_gst_object_unref0 (self->record_bin);
 	_gst_object_unref0 (self->queue);
+	_g_object_unref0 (self->error_dialog);
 	G_OBJECT_CLASS (muxer_control_parent_class)->finalize (obj);
 }
 
@@ -446,6 +458,25 @@ GType muxer_control_get_type (void) {
 	return muxer_control_type_id;
 }
 
+
+
+static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__POINTER_STRING) (gpointer data1, gpointer arg_1, const char* arg_2, gpointer data2);
+	register GMarshalFunc_VOID__POINTER_STRING callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 3);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__POINTER_STRING) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_pointer (param_values + 1), g_value_get_string (param_values + 2), data2);
+}
 
 
 

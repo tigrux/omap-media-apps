@@ -48,6 +48,16 @@ typedef struct _PlayListControlClass PlayListControlClass;
 
 typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
+
+#define TYPE_ERROR_DIALOG (error_dialog_get_type ())
+#define ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ERROR_DIALOG, ErrorDialog))
+#define ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_ERROR_DIALOG, ErrorDialogClass))
+#define IS_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_ERROR_DIALOG))
+#define IS_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_ERROR_DIALOG))
+#define ERROR_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_ERROR_DIALOG, ErrorDialogClass))
+
+typedef struct _ErrorDialog ErrorDialog;
+typedef struct _ErrorDialogClass ErrorDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
@@ -65,8 +75,7 @@ typedef enum  {
 typedef enum  {
 	PLAYER_TAB_LIST,
 	PLAYER_TAB_VIDEO,
-	PLAYER_TAB_CHOOSER,
-	PLAYER_TAB_ERROR
+	PLAYER_TAB_CHOOSER
 } PlayerTab;
 
 struct _PlayerWindow {
@@ -95,13 +104,12 @@ struct _PlayerWindow {
 	gboolean is_muted;
 	GtkFileChooserWidget* chooser_widget;
 	GtkTreeView* chooser_view;
-	GtkLabel* error_label;
-	GtkTextBuffer* error_text;
 	guint update_seeking_scale_id;
 	gint64 stream_position;
 	gint64 stream_duration;
 	gboolean should_resume_playback;
 	gboolean is_fullscreen;
+	ErrorDialog* error_dialog;
 };
 
 struct _PlayerWindowClass {
@@ -113,12 +121,12 @@ static gpointer player_window_parent_class = NULL;
 
 GType play_list_col_get_type (void);
 GType player_tab_get_type (void);
-#define ICON_SIZE GTK_ICON_SIZE_DND
 #define UPDATE_INTERVAL ((guint) 200)
 #define TITLE "PlayerApp"
 GType player_window_get_type (void);
 GType play_list_control_get_type (void);
 GType video_area_get_type (void);
+GType error_dialog_get_type (void);
 enum  {
 	PLAYER_WINDOW_DUMMY_PROPERTY
 };
@@ -148,16 +156,17 @@ static void _player_window_on_playlist_control_stopped_play_list_control_stopped
 void player_window_on_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_on_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_setup_elements (PlayerWindow* self);
+#define DEFAULT_WIDTH 800
+#define DEFAULT_HEIGHT 480
 static gboolean _player_window_on_delete_gtk_widget_delete_event (PlayerWindow* _sender, GdkEvent* event, gpointer self);
 GtkButtonBox* player_window_new_buttons_box (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
 GtkBox* player_window_new_chooser_box (PlayerWindow* self);
-GtkBox* player_window_new_error_box (PlayerWindow* self);
 void player_window_on_notebook_switch_page (PlayerWindow* self, void* page, guint page_num);
 static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
-static gboolean _lambda5_ (gint page, PlayerWindow* self);
-static gboolean __lambda5__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self);
+static gboolean _lambda6_ (gint page, PlayerWindow* self);
+static gboolean __lambda6__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self);
 gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self);
 static gboolean _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
 gboolean player_window_on_seeking_scale_released (PlayerWindow* self);
@@ -165,7 +174,7 @@ static gboolean _player_window_on_seeking_scale_released_gtk_widget_button_relea
 char* player_window_on_scale_format_value (PlayerWindow* self, double scale_value);
 static char* _player_window_on_scale_format_value_gtk_scale_format_value (GtkScale* _sender, double value, gpointer self);
 void player_window_setup_widgets (PlayerWindow* self);
-GtkButton* player_window_new_button_with_stock_image (PlayerWindow* self, const char* stock_id);
+GtkButton* new_button_with_stock_image (const char* stock_id);
 void player_window_on_play_pause (PlayerWindow* self);
 static void _player_window_on_play_pause_gtk_button_clicked (GtkButton* _sender, gpointer self);
 static void _player_window_on_stop_gtk_button_clicked (GtkButton* _sender, gpointer self);
@@ -179,23 +188,22 @@ static void _player_window_on_quit_gtk_button_clicked (GtkButton* _sender, gpoin
 GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self);
 void player_window_on_mute_clicked (PlayerWindow* self);
 gboolean player_window_on_volume_button_pressed (PlayerWindow* self);
+#define ICON_SIZE GTK_ICON_SIZE_DND
 static gboolean _player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkVolumeButton* _sender, GdkEventButton* event, gpointer self);
 static void _player_window_on_mute_clicked_gtk_button_clicked (GtkButton* _sender, gpointer self);
 void play_list_control_set_volume (PlayListControl* self, double value);
-static void _lambda1_ (GtkAdjustment* volume, PlayerWindow* self);
-static void __lambda1__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
+static void _lambda3_ (GtkAdjustment* volume, PlayerWindow* self);
+static void __lambda3__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 double play_list_control_get_volume (PlayListControl* self);
 GtkTreeView* player_window_new_playlist_view (PlayerWindow* self);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 void player_window_on_video_area_activated (PlayerWindow* self);
 static void _player_window_on_video_area_activated_video_area_activated (VideoArea* _sender, gpointer self);
-static void _lambda2_ (PlayerWindow* self);
-static void __lambda2__video_area_prepared (VideoArea* _sender, gpointer self);
 static void _lambda4_ (PlayerWindow* self);
-static void __lambda4__gtk_button_clicked (GtkButton* _sender, gpointer self);
-static void _lambda3_ (PlayerWindow* self);
-static void __lambda3__gtk_file_chooser_file_activated (GtkFileChooserWidget* _sender, gpointer self);
+static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self);
+static void _lambda5_ (PlayerWindow* self);
+static void __lambda5__gtk_file_chooser_file_activated (GtkFileChooserWidget* _sender, gpointer self);
 GtkWidget* child_widget_at_path (GtkWidget* widget, gint* indices, int indices_length1);
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
@@ -213,7 +221,13 @@ void play_list_control_seek (PlayListControl* self, gint64 location);
 gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
 GstElement* play_list_control_get_pipeline (PlayListControl* self);
+void player_window_setup_error_dialog (PlayerWindow* self);
+void error_dialog_add_error_with_debug (ErrorDialog* self, GError* _error_, const char* debug);
 void player_window_on_bus_message (PlayerWindow* self, GstMessage* message);
+ErrorDialog* error_dialog_new (void);
+ErrorDialog* error_dialog_construct (GType object_type);
+void player_window_on_error_dialog_closed (PlayerWindow* self);
+static void _player_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self);
 PlayerWindow* player_window_new (void);
 PlayerWindow* player_window_construct (GType object_type);
 static void _player_window_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
@@ -240,7 +254,7 @@ GType play_list_col_get_type (void) {
 GType player_tab_get_type (void) {
 	static GType player_tab_type_id = 0;
 	if (G_UNLIKELY (player_tab_type_id == 0)) {
-		static const GEnumValue values[] = {{PLAYER_TAB_LIST, "PLAYER_TAB_LIST", "list"}, {PLAYER_TAB_VIDEO, "PLAYER_TAB_VIDEO", "video"}, {PLAYER_TAB_CHOOSER, "PLAYER_TAB_CHOOSER", "chooser"}, {PLAYER_TAB_ERROR, "PLAYER_TAB_ERROR", "error"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{PLAYER_TAB_LIST, "PLAYER_TAB_LIST", "list"}, {PLAYER_TAB_VIDEO, "PLAYER_TAB_VIDEO", "video"}, {PLAYER_TAB_CHOOSER, "PLAYER_TAB_CHOOSER", "chooser"}, {0, NULL, NULL}};
 		player_tab_type_id = g_enum_register_static ("PlayerTab", values);
 	}
 	return player_tab_type_id;
@@ -408,14 +422,14 @@ static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (Gtk
 }
 
 
-static gboolean _lambda5_ (gint page, PlayerWindow* self) {
+static gboolean _lambda6_ (gint page, PlayerWindow* self) {
 	gboolean result;
 	g_print ("page %d\n", page);
 }
 
 
-static gboolean __lambda5__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self) {
-	return _lambda5_ (offset, self);
+static gboolean __lambda6__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self) {
+	return _lambda6_ (offset, self);
 }
 
 
@@ -444,13 +458,11 @@ void player_window_setup_widgets (PlayerWindow* self) {
 	GtkBox* _tmp4_;
 	GtkLabel* _tmp7_;
 	GtkBox* _tmp6_;
-	GtkLabel* _tmp9_;
-	GtkBox* _tmp8_;
-	GtkAdjustment* _tmp10_;
-	GtkScale* _tmp11_;
+	GtkAdjustment* _tmp8_;
+	GtkScale* _tmp9_;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	gtk_window_set_default_size ((GtkWindow*) self, 800, 480);
+	gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) _player_window_on_delete_gtk_widget_delete_event, self, 0);
 	main_box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
 	gtk_container_add ((GtkContainer*) self, (GtkWidget*) main_box);
@@ -468,14 +480,11 @@ void player_window_setup_widgets (PlayerWindow* self) {
 	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp6_ = player_window_new_chooser_box (self)), (GtkWidget*) (_tmp7_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Chooser"))));
 	_g_object_unref0 (_tmp7_);
 	_g_object_unref0 (_tmp6_);
-	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp8_ = player_window_new_error_box (self)), (GtkWidget*) (_tmp9_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Error"))));
-	_g_object_unref0 (_tmp9_);
-	_g_object_unref0 (_tmp8_);
 	g_signal_connect_object (self->notebook, "switch-page", (GCallback) _player_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
-	g_signal_connect_object (self->notebook, "change-current-page", (GCallback) __lambda5__gtk_notebook_change_current_page, self, 0);
+	g_signal_connect_object (self->notebook, "change-current-page", (GCallback) __lambda6__gtk_notebook_change_current_page, self, 0);
 	gtk_widget_show ((GtkWidget*) self->notebook);
-	self->seeking_adjustment = (_tmp10_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp10_);
-	self->seeking_scale = (_tmp11_ = (GtkScale*) g_object_ref_sink ((GtkHScale*) gtk_hscale_new (self->seeking_adjustment)), _g_object_unref0 (self->seeking_scale), _tmp11_);
+	self->seeking_adjustment = (_tmp8_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp8_);
+	self->seeking_scale = (_tmp9_ = (GtkScale*) g_object_ref_sink ((GtkHScale*) gtk_hscale_new (self->seeking_adjustment)), _g_object_unref0 (self->seeking_scale), _tmp9_);
 	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) self->seeking_scale, FALSE, FALSE, (guint) 0);
 	g_signal_connect_object ((GtkWidget*) self->seeking_scale, "button-press-event", (GCallback) _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event, self, 0);
 	g_signal_connect_object ((GtkWidget*) self->seeking_scale, "button-release-event", (GCallback) _player_window_on_seeking_scale_released_gtk_widget_button_release_event, self, 0);
@@ -546,13 +555,13 @@ GtkButtonBox* player_window_new_buttons_box (PlayerWindow* self) {
 	buttons_box = g_object_ref_sink ((GtkHButtonBox*) gtk_hbutton_box_new ());
 	gtk_button_box_set_layout ((GtkButtonBox*) buttons_box, GTK_BUTTONBOX_START);
 	gtk_box_set_spacing ((GtkBox*) buttons_box, 5);
-	prev_button = player_window_new_button_with_stock_image (self, GTK_STOCK_MEDIA_PREVIOUS);
-	play_pause_button = player_window_new_button_with_stock_image (self, GTK_STOCK_MEDIA_PLAY);
-	stop_button = player_window_new_button_with_stock_image (self, GTK_STOCK_MEDIA_STOP);
-	self->next_button = (_tmp0_ = player_window_new_button_with_stock_image (self, GTK_STOCK_MEDIA_NEXT), _g_object_unref0 (self->next_button), _tmp0_);
-	self->add_button = (_tmp1_ = player_window_new_button_with_stock_image (self, GTK_STOCK_ADD), _g_object_unref0 (self->add_button), _tmp1_);
-	remove_button = player_window_new_button_with_stock_image (self, GTK_STOCK_REMOVE);
-	quit_button = player_window_new_button_with_stock_image (self, GTK_STOCK_QUIT);
+	prev_button = new_button_with_stock_image (GTK_STOCK_MEDIA_PREVIOUS);
+	play_pause_button = new_button_with_stock_image (GTK_STOCK_MEDIA_PLAY);
+	stop_button = new_button_with_stock_image (GTK_STOCK_MEDIA_STOP);
+	self->next_button = (_tmp0_ = new_button_with_stock_image (GTK_STOCK_MEDIA_NEXT), _g_object_unref0 (self->next_button), _tmp0_);
+	self->add_button = (_tmp1_ = new_button_with_stock_image (GTK_STOCK_ADD), _g_object_unref0 (self->add_button), _tmp1_);
+	remove_button = new_button_with_stock_image (GTK_STOCK_REMOVE);
+	quit_button = new_button_with_stock_image (GTK_STOCK_QUIT);
 	g_signal_connect_object (play_pause_button, "clicked", (GCallback) _player_window_on_play_pause_gtk_button_clicked, self, 0);
 	g_signal_connect_object (stop_button, "clicked", (GCallback) _player_window_on_stop_gtk_button_clicked, self, 0);
 	g_signal_connect_object (prev_button, "clicked", (GCallback) _player_window_on_prev_gtk_button_clicked, self, 0);
@@ -626,22 +635,6 @@ gboolean player_window_on_volume_button_pressed (PlayerWindow* self) {
 }
 
 
-GtkButton* player_window_new_button_with_stock_image (PlayerWindow* self, const char* stock_id) {
-	GtkButton* result;
-	GtkButton* button;
-	GtkImage* image;
-	g_return_val_if_fail (self != NULL, NULL);
-	g_return_val_if_fail (stock_id != NULL, NULL);
-	button = g_object_ref_sink ((GtkButton*) gtk_button_new ());
-	gtk_button_set_relief (button, GTK_RELIEF_NONE);
-	image = g_object_ref_sink ((GtkImage*) gtk_image_new_from_stock (stock_id, ICON_SIZE));
-	gtk_container_add ((GtkContainer*) button, (GtkWidget*) image);
-	result = button;
-	_g_object_unref0 (image);
-	return result;
-}
-
-
 static gboolean _player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkVolumeButton* _sender, GdkEventButton* event, gpointer self) {
 	return player_window_on_volume_button_pressed (self);
 }
@@ -652,14 +645,14 @@ static void _player_window_on_mute_clicked_gtk_button_clicked (GtkButton* _sende
 }
 
 
-static void _lambda1_ (GtkAdjustment* volume, PlayerWindow* self) {
+static void _lambda3_ (GtkAdjustment* volume, PlayerWindow* self) {
 	g_return_if_fail (volume != NULL);
 	play_list_control_set_volume (self->playlist_control, gtk_adjustment_get_value (volume));
 }
 
 
-static void __lambda1__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self) {
-	_lambda1_ (_sender, self);
+static void __lambda3__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self) {
+	_lambda3_ (_sender, self);
 }
 
 
@@ -700,7 +693,7 @@ GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self) 
 	gtk_widget_realize ((GtkWidget*) mute_button);
 	self->volume_adjustment = (_tmp7_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, 1.0, 0.1, 0.1, (double) 0)), _g_object_unref0 (self->volume_adjustment), _tmp7_);
 	gtk_scale_button_set_adjustment ((GtkScaleButton*) volume_button, self->volume_adjustment);
-	g_signal_connect_object (self->volume_adjustment, "value-changed", (GCallback) __lambda1__gtk_adjustment_value_changed, self, 0);
+	g_signal_connect_object (self->volume_adjustment, "value-changed", (GCallback) __lambda3__gtk_adjustment_value_changed, self, 0);
 	gtk_adjustment_set_value (self->volume_adjustment, play_list_control_get_volume (self->playlist_control));
 	result = volume_button;
 	_g_object_unref0 (popup_window);
@@ -739,13 +732,13 @@ static void _player_window_on_video_area_activated_video_area_activated (VideoAr
 }
 
 
-static void _lambda2_ (PlayerWindow* self) {
+static void _lambda4_ (PlayerWindow* self) {
 	gtk_notebook_set_current_page (self->notebook, (gint) PLAYER_TAB_VIDEO);
 }
 
 
-static void __lambda2__video_area_prepared (VideoArea* _sender, gpointer self) {
-	_lambda2_ (self);
+static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self) {
+	_lambda4_ (self);
 }
 
 
@@ -758,68 +751,20 @@ GtkBox* player_window_new_video_box (PlayerWindow* self) {
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 0);
 	g_signal_connect_object (self->video_area, "activated", (GCallback) _player_window_on_video_area_activated_video_area_activated, self, 0);
-	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda2__video_area_prepared, self, 0);
+	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda4__video_area_prepared, self, 0);
 	gtk_widget_show_all ((GtkWidget*) box);
 	result = (GtkBox*) box;
 	return result;
 }
 
 
-static void _lambda4_ (PlayerWindow* self) {
-	gtk_widget_show ((GtkWidget*) self->controls_box);
-	player_window_on_stop (self);
-}
-
-
-static void __lambda4__gtk_button_clicked (GtkButton* _sender, gpointer self) {
-	_lambda4_ (self);
-}
-
-
-GtkBox* player_window_new_error_box (PlayerWindow* self) {
-	GtkBox* result;
-	GtkVBox* box;
-	GtkLabel* _tmp0_;
-	GtkScrolledWindow* scrolled_window;
-	GtkTextView* text_view;
-	GtkTextBuffer* _tmp1_;
-	GtkHButtonBox* button_box;
-	GtkButton* close_button;
-	g_return_val_if_fail (self != NULL, NULL);
-	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 6));
-	self->error_label = (_tmp0_ = g_object_ref_sink ((GtkLabel*) gtk_label_new (NULL)), _g_object_unref0 (self->error_label), _tmp0_);
-	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->error_label, FALSE, FALSE, (guint) 6);
-	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
-	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
-	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	text_view = g_object_ref_sink ((GtkTextView*) gtk_text_view_new ());
-	gtk_text_view_set_editable (text_view, FALSE);
-	gtk_text_view_set_cursor_visible (text_view, FALSE);
-	self->error_text = (_tmp1_ = _g_object_ref0 (gtk_text_view_get_buffer (text_view)), _g_object_unref0 (self->error_text), _tmp1_);
-	gtk_container_add ((GtkContainer*) scrolled_window, (GtkWidget*) text_view);
-	button_box = g_object_ref_sink ((GtkHButtonBox*) gtk_hbutton_box_new ());
-	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) button_box, FALSE, FALSE, (guint) 6);
-	gtk_button_box_set_layout ((GtkButtonBox*) button_box, GTK_BUTTONBOX_END);
-	close_button = player_window_new_button_with_stock_image (self, GTK_STOCK_CLOSE);
-	gtk_container_add ((GtkContainer*) button_box, (GtkWidget*) close_button);
-	g_signal_connect_object (close_button, "clicked", (GCallback) __lambda4__gtk_button_clicked, self, 0);
-	gtk_widget_show_all ((GtkWidget*) box);
-	result = (GtkBox*) box;
-	_g_object_unref0 (scrolled_window);
-	_g_object_unref0 (text_view);
-	_g_object_unref0 (button_box);
-	_g_object_unref0 (close_button);
-	return result;
-}
-
-
-static void _lambda3_ (PlayerWindow* self) {
+static void _lambda5_ (PlayerWindow* self) {
 	g_signal_emit_by_name (self->add_button, "activate");
 }
 
 
-static void __lambda3__gtk_file_chooser_file_activated (GtkFileChooserWidget* _sender, gpointer self) {
-	_lambda3_ (self);
+static void __lambda5__gtk_file_chooser_file_activated (GtkFileChooserWidget* _sender, gpointer self) {
+	_lambda5_ (self);
 }
 
 
@@ -842,7 +787,7 @@ GtkBox* player_window_new_chooser_box (PlayerWindow* self) {
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->chooser_widget, TRUE, TRUE, (guint) 0);
 	gtk_widget_show ((GtkWidget*) self->chooser_widget);
 	gtk_file_chooser_set_select_multiple ((GtkFileChooser*) self->chooser_widget, FALSE);
-	g_signal_connect_object ((GtkFileChooser*) self->chooser_widget, "file-activated", (GCallback) __lambda3__gtk_file_chooser_file_activated, self, 0);
+	g_signal_connect_object ((GtkFileChooser*) self->chooser_widget, "file-activated", (GCallback) __lambda5__gtk_file_chooser_file_activated, self, 0);
 	indices = (indices_length1 = 0, NULL);
 	indices = (_tmp2_ = (_tmp1_ = g_new0 (gint, 7), _tmp1_[0] = 0, _tmp1_[1] = 0, _tmp1_[2] = 2, _tmp1_[3] = 1, _tmp1_[4] = 0, _tmp1_[5] = 0, _tmp1_[6] = 0, _tmp1_), indices = (g_free (indices), NULL), indices_length1 = 7, indices_size = indices_length1, _tmp2_);
 	self->chooser_view = (_tmp4_ = (_tmp3_ = child_widget_at_path ((GtkWidget*) self->chooser_widget, indices, indices_length1), GTK_IS_TREE_VIEW (_tmp3_) ? ((GtkTreeView*) _tmp3_) : NULL), _g_object_unref0 (self->chooser_view), _tmp4_);
@@ -950,9 +895,11 @@ void player_window_on_play_pause (PlayerWindow* self) {
 			{
 				if (gtk_notebook_get_current_page (self->notebook) == PLAYER_TAB_CHOOSER) {
 					player_window_add_file_from_chooser (self, &iter);
-					gtk_tree_selection_select_iter (self->playlist_selection, &iter);
-					if (player_window_get_and_select_iter (self, &iter)) {
-						player_window_on_play (self);
+					if (gtk_list_store_iter_is_valid (self->playlist_store, &iter)) {
+						gtk_tree_selection_select_iter (self->playlist_selection, &iter);
+						if (player_window_get_and_select_iter (self, &iter)) {
+							player_window_on_play (self);
+						}
 					}
 				} else {
 					GtkTreePath* row;
@@ -1264,17 +1211,12 @@ void player_window_on_bus_message (PlayerWindow* self, GstMessage* message) {
 				char* _tmp2_ = NULL;
 				GError* _tmp1_;
 				GError* _tmp0_ = NULL;
-				char* _tmp4_;
 				_error_ = NULL;
 				debug = NULL;
+				player_window_setup_error_dialog (self);
 				(gst_message_parse_error (message, &_tmp0_, &_tmp2_), _error_ = (_tmp1_ = _tmp0_, _g_error_free0 (_error_), _tmp1_));
 				debug = (_tmp3_ = _tmp2_, _g_free0 (debug), _tmp3_);
-				gtk_label_set_markup (self->error_label, _tmp4_ = g_strdup_printf ("<b>%s</b>", _error_->message));
-				_g_free0 (_tmp4_);
-				gtk_text_buffer_set_text (self->error_text, debug, -1);
-				gtk_widget_hide ((GtkWidget*) self->seeking_scale);
-				gtk_widget_hide ((GtkWidget*) self->controls_box);
-				gtk_notebook_set_current_page (self->notebook, (gint) PLAYER_TAB_ERROR);
+				error_dialog_add_error_with_debug (self->error_dialog, _error_, debug);
 				_g_error_free0 (_error_);
 				_g_free0 (debug);
 			}
@@ -1288,6 +1230,34 @@ void player_window_on_bus_message (PlayerWindow* self, GstMessage* message) {
 			break;
 		}
 	}
+}
+
+
+static void _player_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self) {
+	player_window_on_error_dialog_closed (self);
+}
+
+
+void player_window_setup_error_dialog (PlayerWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->error_dialog == NULL) {
+		ErrorDialog* _tmp0_;
+		gtk_widget_hide ((GtkWidget*) self->seeking_scale);
+		gtk_widget_hide ((GtkWidget*) self->controls_box);
+		self->error_dialog = (_tmp0_ = g_object_ref_sink (error_dialog_new ()), _g_object_unref0 (self->error_dialog), _tmp0_);
+		g_signal_connect_object (self->error_dialog, "closed", (GCallback) _player_window_on_error_dialog_closed_error_dialog_closed, self, 0);
+		gtk_window_set_transient_for ((GtkWindow*) self->error_dialog, (GtkWindow*) self);
+		gtk_widget_show_all ((GtkWidget*) self->error_dialog);
+	}
+}
+
+
+void player_window_on_error_dialog_closed (PlayerWindow* self) {
+	ErrorDialog* _tmp0_;
+	g_return_if_fail (self != NULL);
+	gtk_widget_show ((GtkWidget*) self->controls_box);
+	player_window_on_stop (self);
+	self->error_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->error_dialog), _tmp0_);
 }
 
 
@@ -1365,8 +1335,7 @@ static void player_window_finalize (GObject* obj) {
 	_g_free0 (self->muted_icon_name);
 	_g_object_unref0 (self->chooser_widget);
 	_g_object_unref0 (self->chooser_view);
-	_g_object_unref0 (self->error_label);
-	_g_object_unref0 (self->error_text);
+	_g_object_unref0 (self->error_dialog);
 	G_OBJECT_CLASS (player_window_parent_class)->finalize (obj);
 }
 
@@ -1378,35 +1347,6 @@ GType player_window_get_type (void) {
 		player_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "PlayerWindow", &g_define_type_info, 0);
 	}
 	return player_window_type_id;
-}
-
-
-GtkWidget* child_widget_at_path (GtkWidget* widget, gint* indices, int indices_length1) {
-	GtkWidget* result;
-	g_return_val_if_fail (widget != NULL, NULL);
-	{
-		gint* index_collection;
-		int index_collection_length1;
-		int index_it;
-		index_collection = indices;
-		index_collection_length1 = indices_length1;
-		for (index_it = 0; index_it < indices_length1; index_it = index_it + 1) {
-			gint index;
-			index = index_collection[index_it];
-			{
-				GtkWidget* _tmp0_;
-				GtkContainer* container;
-				GList* _tmp1_;
-				GtkWidget* _tmp2_;
-				container = _g_object_ref0 ((_tmp0_ = widget, GTK_IS_CONTAINER (_tmp0_) ? ((GtkContainer*) _tmp0_) : NULL));
-				widget = (_tmp2_ = (GtkWidget*) g_list_nth_data (_tmp1_ = gtk_container_get_children (container), (guint) index), GTK_IS_WIDGET (_tmp2_) ? ((GtkWidget*) _tmp2_) : NULL);
-				_g_list_free0 (_tmp1_);
-				_g_object_unref0 (container);
-			}
-		}
-	}
-	result = _g_object_ref0 (widget);
-	return result;
 }
 
 
