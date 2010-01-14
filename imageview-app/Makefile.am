@@ -9,7 +9,8 @@ VALA_DEPS = $$(for pkg in $(PROGRAM_MODULES); do echo --pkg $$pkg; done)
 bin_PROGRAMS = omap4-imageview-app
 
 omap4_imageview_app_VALASOURCES = \
-	imageview-window.gs
+	imageview-window.gs \
+	imageview-app.gs
 
 common_VALASOURCES = \
 	$(top_srcdir)/common/video-area.gs \
