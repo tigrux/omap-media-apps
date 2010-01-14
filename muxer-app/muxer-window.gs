@@ -27,7 +27,7 @@ class MuxerWindow: Window
     error_dialog: ErrorDialog
 
     init
-        set_default_size(800, 480)
+        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
         destroy += on_quit
 
         var main_box = new VBox(false, 6)
