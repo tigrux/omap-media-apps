@@ -142,6 +142,8 @@ void muxer_window_on_error_dialog_closed (MuxerWindow* self);
 static void _muxer_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self);
 MuxerWindow* muxer_window_new (void);
 MuxerWindow* muxer_window_construct (GType object_type);
+#define DEFAULT_WIDTH 800
+#define DEFAULT_HEIGHT 480
 static void _muxer_window_on_quit_gtk_object_destroy (MuxerWindow* _sender, gpointer self);
 static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self);
 static gboolean _muxer_window_on_combo_box_child_pressed_gtk_widget_button_press_event (GtkEntry* _sender, GdkEventButton* event, gpointer self);
@@ -633,7 +635,7 @@ static GObject * muxer_window_constructor (GType type, guint n_construct_propert
 		GtkButton* _tmp7_;
 		GtkImage* quit_image;
 		VideoArea* _tmp8_;
-		gtk_window_set_default_size ((GtkWindow*) self, 800, 480);
+		gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _muxer_window_on_quit_gtk_object_destroy, self, 0);
 		main_box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 6));
 		gtk_container_add ((GtkContainer*) self, (GtkWidget*) main_box);
