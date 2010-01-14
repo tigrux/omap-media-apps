@@ -33,6 +33,8 @@ class PlayListControl: GLib.Object
 
     init
         player = ElementFactory.make("playbin2", "player")
+        if player == null
+            player = ElementFactory.make("playbin", "player")
 
     construct(store: ListStore)
         playlist_store = store

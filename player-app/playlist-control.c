@@ -354,6 +354,10 @@ static GObject * play_list_control_constructor (GType type, guint n_construct_pr
 	{
 		GstElement* _tmp0_;
 		self->player = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), _gst_object_unref0 (self->player), _tmp0_);
+		if (self->player == NULL) {
+			GstElement* _tmp1_;
+			self->player = (_tmp1_ = gst_element_factory_make ("playbin", "player"), _gst_object_unref0 (self->player), _tmp1_);
+		}
 	}
 	return obj;
 }
