@@ -27,6 +27,7 @@ AC_CONFIG_FILES([
 	common/Makefile
 	player-app/Makefile
 	muxer-app/Makefile
+	imageview-app/Makefile
 	])
 
 AC_OUTPUT
