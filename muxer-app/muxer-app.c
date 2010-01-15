@@ -4,8 +4,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gtk/gtk.h>
 #include <gst/gst.h>
+#include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,9 +33,9 @@ void _main (char** args, int args_length1);
 
 void _main (char** args, int args_length1) {
 	MuxerWindow* window;
+	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
 	gtk_rc_parse_string (DEFAULT_STYLE);
-	gst_init (&args_length1, &args);
 	window = g_object_ref_sink (muxer_window_new ());
 	gtk_widget_show ((GtkWidget*) window);
 	gtk_main ();

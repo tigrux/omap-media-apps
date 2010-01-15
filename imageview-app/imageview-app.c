@@ -4,8 +4,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gtk/gtk.h>
 #include <gst/gst.h>
+#include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,8 +36,8 @@ void _main (char** args, int args_length1);
 void _main (char** args, int args_length1) {
 	GError * _inner_error_;
 	_inner_error_ = NULL;
-	gtk_init (&args_length1, &args);
 	gst_init (&args_length1, &args);
+	gtk_init (&args_length1, &args);
 	gtk_rc_parse_string (DEFAULT_STYLE);
 	{
 		ImageViewWindow* window;
