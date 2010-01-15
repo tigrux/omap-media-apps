@@ -75,6 +75,7 @@ gboolean play_list_control_stop (PlayListControl* self);
 gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
 gboolean play_list_control_prev (PlayListControl* self);
 gboolean play_list_control_next (PlayListControl* self);
+void play_list_control_add_file (PlayListControl* self, const char* file, GtkTreeIter* iter);
 void play_list_control_seek (PlayListControl* self, gint64 location);
 GstElement* play_list_control_get_pipeline (PlayListControl* self);
 double play_list_control_get_volume (PlayListControl* self);
@@ -226,6 +227,15 @@ gboolean play_list_control_next (PlayListControl* self) {
 	}
 	result = FALSE;
 	return result;
+}
+
+
+void play_list_control_add_file (PlayListControl* self, const char* file, GtkTreeIter* iter) {
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (file != NULL);
+	gtk_list_store_insert_with_values (self->playlist_store, iter, -1, PLAY_LIST_COL_NAME, _tmp0_ = g_path_get_basename (file), PLAY_LIST_COL_FULLNAME, file, -1, -1);
+	_g_free0 (_tmp0_);
 }
 
 

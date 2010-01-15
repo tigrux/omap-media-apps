@@ -383,15 +383,7 @@ class PlayerWindow: Window
         if FileUtils.test(filename, FileTest.IS_DIR)
             chooser_widget.set_current_folder(filename)
         else if FileUtils.test(filename, FileTest.IS_REGULAR)
-            add_filename_to_playlist(filename, out iter)
-
-    def add_filename_to_playlist(filename: string, out iter: TreeIter)
-        var basename = Path.get_basename(filename)
-        playlist_store.insert_with_values( \
-            out iter, -1, \
-            PlayListCol.NAME, basename, \
-            PlayListCol.FULLNAME, filename, \
-            -1)
+            playlist_control.add_file(filename, out iter)
 
     def on_remove()
         if notebook.get_current_page() == PlayerTab.CHOOSER

@@ -214,7 +214,7 @@ gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* ite
 void player_window_add_file_from_chooser (PlayerWindow* self, GtkTreeIter* iter);
 void player_window_add_update_scale_timeout (PlayerWindow* self);
 void player_window_remove_update_scale_timeout (PlayerWindow* self);
-void player_window_add_filename_to_playlist (PlayerWindow* self, const char* filename, GtkTreeIter* iter);
+void play_list_control_add_file (PlayListControl* self, const char* file, GtkTreeIter* iter);
 void player_window_on_remove_files (PlayerWindow* self);
 static void _g_list_free_gtk_tree_path_free (GList* self);
 void play_list_control_seek (PlayListControl* self, gint64 location);
@@ -985,20 +985,10 @@ void player_window_add_file_from_chooser (PlayerWindow* self, GtkTreeIter* iter)
 		gtk_file_chooser_set_current_folder ((GtkFileChooser*) self->chooser_widget, filename);
 	} else {
 		if (g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
-			player_window_add_filename_to_playlist (self, filename, iter);
+			play_list_control_add_file (self->playlist_control, filename, iter);
 		}
 	}
 	_g_free0 (filename);
-}
-
-
-void player_window_add_filename_to_playlist (PlayerWindow* self, const char* filename, GtkTreeIter* iter) {
-	char* basename;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (filename != NULL);
-	basename = g_path_get_basename (filename);
-	gtk_list_store_insert_with_values (self->playlist_store, iter, -1, PLAY_LIST_COL_NAME, basename, PLAY_LIST_COL_FULLNAME, filename, -1, -1);
-	_g_free0 (basename);
 }
 
 

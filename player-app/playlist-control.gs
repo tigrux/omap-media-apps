@@ -99,6 +99,13 @@ class PlayListControl: GLib.Object
             return move_to(current_row)
         return false
 
+    def add_file(file: string, out iter: TreeIter)
+        playlist_store.insert_with_values( \
+            out iter, -1, \
+            PlayListCol.NAME, Path.get_basename(file), \
+            PlayListCol.FULLNAME, file, \
+            -1)
+
     def seek(location: int64)
         var seek_event = new Event.seek( \
             1.0, Format.TIME, \
