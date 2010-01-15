@@ -5,7 +5,7 @@ uses Gst
 
 class VideoArea: DrawingArea
     xid: uint32
-    imagesink: Gst.XOverlay
+    imagesink: dynamic Gst.XOverlay
     bus: Bus
 
     event prepared()
@@ -24,7 +24,7 @@ class VideoArea: DrawingArea
 
     def set_sink(sink: Gst.XOverlay)
         imagesink = sink
-        imagesink.set("force-aspect-ratio", true, null)
+        imagesink.force_aspect_ratio = true
         imagesink.set_xwindow_id(xid)
 
     def override button_press_event(event: Gdk.EventButton): bool
@@ -41,7 +41,7 @@ class VideoArea: DrawingArea
     def set_bus(bus: Bus)
         this.bus = bus
         bus.enable_sync_message_emission()
-        bus.sync_message.connect(on_bus_sync_message)
+        bus.sync_message += on_bus_sync_message
 
     def on_bus_sync_message(message: Gst.Message)
         if message.structure == null

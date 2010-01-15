@@ -45,6 +45,7 @@ GType video_area_get_type (void);
 enum  {
 	VIDEO_AREA_DUMMY_PROPERTY
 };
+static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean value);
 void video_area_set_sink (VideoArea* self, GstXOverlay* sink);
 static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
 static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* event);
@@ -66,12 +67,17 @@ static gpointer _gst_object_ref0 (gpointer self) {
 }
 
 
+static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean value) {
+	g_object_set (obj, "force-aspect-ratio", value, NULL);
+}
+
+
 void video_area_set_sink (VideoArea* self, GstXOverlay* sink) {
 	GstXOverlay* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (sink != NULL);
 	self->imagesink = (_tmp0_ = _gst_object_ref0 (sink), _gst_object_unref0 (self->imagesink), _tmp0_);
-	g_object_set ((GObject*) self->imagesink, "force-aspect-ratio", TRUE, NULL, NULL);
+	_dynamic_set_force_aspect_ratio0 (self->imagesink, TRUE);
 	gst_x_overlay_set_xwindow_id (self->imagesink, (gulong) self->xid);
 }
 
