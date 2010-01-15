@@ -17,7 +17,8 @@ omap4_muxer_app_VALASOURCES = \
 common_VALASOURCES = \
 	$(top_srcdir)/common/video-area.gs \
 	$(top_srcdir)/common/error-dialog.gs \
-	$(top_srcdir)/common/utils.gs
+	$(top_srcdir)/common/utils.gs \
+	$(top_srcdir)/common/defaults.gs
 
 omap4_muxer_app_SOURCES = \
 	$(omap4_muxer_app_VALASOURCES:.gs=.c) $(common_VALASOURCES:.gs=.c)

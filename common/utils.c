@@ -13,10 +13,8 @@
 
 
 
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 480
-#define ICON_SIZE GTK_ICON_SIZE_DND
 GtkWidget* child_widget_at_path (GtkWidget* widget, gint* indices, int indices_length1);
+#define ICON_SIZE GTK_ICON_SIZE_DND
 GtkButton* new_button_with_stock_image (const char* stock_id);
 
 

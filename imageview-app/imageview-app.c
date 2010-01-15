@@ -25,7 +25,7 @@ typedef struct _ImageViewWindowClass ImageViewWindowClass;
 
 
 
-#define style "\nstyle \"custom\"\n{\n    GtkComboBox::appears-as-list = 1\n}\n\nwidget_class \"*ComboBox*\" style \"custom\"\n"
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 12\n    GtkComboBox::arrow-size = 12\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
 GType image_view_window_get_type (void);
@@ -38,7 +38,7 @@ void _main (char** args, int args_length1) {
 	_inner_error_ = NULL;
 	gtk_init (&args_length1, &args);
 	gst_init (&args_length1, &args);
-	gtk_rc_parse_string (style);
+	gtk_rc_parse_string (DEFAULT_STYLE);
 	{
 		ImageViewWindow* window;
 		window = g_object_ref_sink (image_view_window_new (&_inner_error_));

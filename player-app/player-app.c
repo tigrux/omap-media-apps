@@ -23,7 +23,7 @@ typedef struct _PlayerWindowClass PlayerWindowClass;
 
 
 
-#define style "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 36\n    GtkComboBox::arrow-size = 24\n    font_name = \"Sans 18\"\n}\n\nwidget_class \"*Scrollbar*\" style \"custom\"\n"
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 12\n    GtkComboBox::arrow-size = 12\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 PlayerWindow* player_window_new (void);
 PlayerWindow* player_window_construct (GType object_type);
 GType player_window_get_type (void);
@@ -34,7 +34,7 @@ void _main (char** args, int args_length1);
 void _main (char** args, int args_length1) {
 	PlayerWindow* window;
 	gtk_init (&args_length1, &args);
-	gtk_rc_parse_string (style);
+	gtk_rc_parse_string (DEFAULT_STYLE);
 	gst_init (&args_length1, &args);
 	window = g_object_ref_sink (player_window_new ());
 	gtk_widget_show ((GtkWidget*) window);

@@ -3,11 +3,6 @@
 uses Gtk
 
 
-const DEFAULT_WIDTH: int = 800
-const DEFAULT_HEIGHT: int = 480
-const ICON_SIZE: IconSize = IconSize.DND
-
-
 def child_widget_at_path(widget: Widget, indices: array of int): Widget
     for var index in indices
         var container = widget as Container

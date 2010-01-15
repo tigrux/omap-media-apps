@@ -3,7 +3,8 @@ all: vala.stamp
 VALASOURCES = \
 	video-area.gs \
 	error-dialog.gs \
-	utils.gs
+	utils.gs \
+	defaults.gs
 
 SOURCES = \
 	$(VALASOURCES:.gs=.c)
