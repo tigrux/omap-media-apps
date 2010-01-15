@@ -94,18 +94,16 @@ class MuxerControl: GLib.Object
         bus.message += on_bus_message
         preview_bin.set_name("preview_bin")
         overlay = preview_bin.get_by_name("overlay")
-        tee = preview_bin.get_by_name("tee")
-        if tee == null
-            raise new CoreError.MISSING_PLUGIN( \
-                "No element named tee in the preview pipeline")
+        if (tee = preview_bin.get_by_name("tee")) == null
+            raise new CoreError.FAILED( \
+                        "No element named tee in the preview pipeline")
 
     def load_record_pipeline() raises Error
         record_bin = parse_launch(record_desc) as Gst.Bin
         record_bin.set_name("record_bin")
-        queue = record_bin.get_by_name("queue")
-        if queue == null
-            raise new CoreError.MISSING_PLUGIN( \
-                "No element named queue in the record pipeline")
+        if (queue = record_bin.get_by_name("queue")) == null
+            raise new CoreError.FAILED( \
+                        "No element named queue in the record pipeline")
         audiosrc = record_bin.get_by_name("audiosrc")
 
     def on_bus_message(message: Message)

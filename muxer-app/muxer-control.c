@@ -275,9 +275,8 @@ void muxer_control_load_preview_pipeline (MuxerControl* self, GError** error) {
 	g_signal_connect_object (bus, "message", (GCallback) _muxer_control_on_bus_message_gst_bus_message, self, 0);
 	gst_object_set_name ((GstObject*) self->preview_bin, "preview_bin");
 	self->overlay = (_tmp3_ = gst_bin_get_by_name (self->preview_bin, "overlay"), _gst_object_unref0 (self->overlay), _tmp3_);
-	self->tee = (_tmp4_ = gst_bin_get_by_name (self->preview_bin, "tee"), _gst_object_unref0 (self->tee), _tmp4_);
-	if (self->tee == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN, "No element named tee in the preview pipeline");
+	if ((self->tee = (_tmp4_ = gst_bin_get_by_name (self->preview_bin, "tee"), _gst_object_unref0 (self->tee), _tmp4_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named tee in the preview pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (bus);
@@ -304,9 +303,8 @@ void muxer_control_load_record_pipeline (MuxerControl* self, GError** error) {
 	}
 	self->record_bin = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->record_bin), _tmp2_);
 	gst_object_set_name ((GstObject*) self->record_bin, "record_bin");
-	self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_bin, "queue"), _gst_object_unref0 (self->queue), _tmp3_);
-	if (self->queue == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN, "No element named queue in the record pipeline");
+	if ((self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_bin, "queue"), _gst_object_unref0 (self->queue), _tmp3_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named queue in the record pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
 			return;

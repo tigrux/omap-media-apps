@@ -11,6 +11,7 @@ video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink
 
 const IMAGE_FILE_ATTRIBUTES: string = "standard::name,standard::display-name,standard::content-type"
 
+
 class IconListControl: GLib.Object
     pipeline: Pipeline
     filesrc: dynamic Element
@@ -21,16 +22,21 @@ class IconListControl: GLib.Object
     continuation_error: Error
 
     construct(model: ListStore) raises Error
-        iconlist_store = model
         pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
+        if (filesrc = pipeline.get_by_name("filesrc")) == null
+            raise new CoreError.FAILED( \
+                        "No element named filesrc in the pixbuf pipeline")
+        if (imagesink = pipeline.get_by_name("imagesink")) == null
+            raise new CoreError.FAILED( \
+                        "No element named imagesink in the pixbuf pipeline")
+        iconlist_store = model
         var bus = pipeline.bus
         bus.add_signal_watch()
         bus.message += on_bus_message
-        filesrc = pipeline.get_by_name("filesrc")
-        imagesink = pipeline.get_by_name("imagesink")
 
     final
-        pipeline.set_state(State.NULL)
+        if pipeline != null
+            pipeline.set_state(State.NULL)
 
     def async add_file(filename: string, displayname: string) raises Error
         continuation = add_file.callback

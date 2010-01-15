@@ -148,24 +148,36 @@ IconListControl* icon_list_control_construct (GType object_type, GtkListStore* m
 	GstElement* _tmp0_;
 	GstPipeline* _tmp2_;
 	GstElement* _tmp1_;
-	GstBus* bus;
 	GstElement* _tmp3_;
 	GstElement* _tmp4_;
+	GstBus* bus;
 	g_return_val_if_fail (model != NULL, NULL);
 	_inner_error_ = NULL;
 	self = (IconListControl*) g_object_new (object_type, NULL);
-	icon_list_control_set_iconlist_store (self, model);
 	_tmp0_ = gst_parse_launch (PIXBUF_PIPELINE_DESC, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return NULL;
 	}
 	self->pipeline = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->pipeline), _tmp2_);
+	if ((self->filesrc = (_tmp3_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp3_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the pixbuf pipeline");
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			return NULL;
+		}
+	}
+	if ((self->imagesink = (_tmp4_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp4_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the pixbuf pipeline");
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			return NULL;
+		}
+	}
+	icon_list_control_set_iconlist_store (self, model);
 	bus = _gst_object_ref0 (((GstElement*) self->pipeline)->bus);
 	gst_bus_add_signal_watch (bus);
 	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
-	self->filesrc = (_tmp3_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp3_);
-	self->imagesink = (_tmp4_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp4_);
 	_gst_object_unref0 (bus);
 	return self;
 }
@@ -516,7 +528,9 @@ static void icon_list_control_finalize (GObject* obj) {
 	IconListControl * self;
 	self = ICON_LIST_CONTROL (obj);
 	{
-		gst_element_set_state ((GstElement*) self->pipeline, GST_STATE_NULL);
+		if (self->pipeline != NULL) {
+			gst_element_set_state ((GstElement*) self->pipeline, GST_STATE_NULL);
+		}
 	}
 	_gst_object_unref0 (self->pipeline);
 	_gst_object_unref0 (self->filesrc);
