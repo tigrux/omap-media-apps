@@ -7,7 +7,6 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gdk/gdk.h>
 #include <gst/gst.h>
 
 
@@ -113,8 +112,6 @@ void muxer_window_on_quit (MuxerWindow* self);
 static void _muxer_window_on_quit_gtk_object_destroy (MuxerWindow* _sender, gpointer self);
 void muxer_window_on_chooser_file_set (MuxerWindow* self);
 static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self);
-gboolean muxer_window_on_combo_box_child_pressed (MuxerWindow* self, GdkEventButton* event);
-static gboolean _muxer_window_on_combo_box_child_pressed_gtk_widget_button_press_event (GtkEntry* _sender, GdkEventButton* event, gpointer self);
 void muxer_window_on_combo_changed (MuxerWindow* self);
 static void _muxer_window_on_combo_changed_gtk_combo_box_changed (GtkComboBox* _sender, gpointer self);
 void muxer_window_on_record (MuxerWindow* self);
@@ -183,16 +180,6 @@ static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
-static gboolean _muxer_window_on_combo_box_child_pressed_gtk_widget_button_press_event (GtkEntry* _sender, GdkEventButton* event, gpointer self) {
-	return muxer_window_on_combo_box_child_pressed (self, event);
-}
-
-
 static void _muxer_window_on_combo_changed_gtk_combo_box_changed (GtkComboBox* _sender, gpointer self) {
 	muxer_window_on_combo_changed (self);
 }
@@ -221,17 +208,16 @@ void muxer_window_setup_widgets (MuxerWindow* self) {
 	GType s;
 	GtkListStore* _tmp1_;
 	GtkComboBox* _tmp2_;
-	GtkWidget* _tmp3_;
-	GtkEntry* combo_box_child;
-	GtkButton* _tmp4_;
+	GtkCellRendererText* renderer;
+	GtkButton* _tmp3_;
 	GtkImage* record_image;
-	GtkToggleButton* _tmp5_;
+	GtkToggleButton* _tmp4_;
 	GtkImage* probe_image;
-	GtkButton* _tmp6_;
+	GtkButton* _tmp5_;
 	GtkImage* stop_image;
-	GtkButton* _tmp7_;
+	GtkButton* _tmp6_;
 	GtkImage* quit_image;
-	VideoArea* _tmp8_;
+	VideoArea* _tmp7_;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _muxer_window_on_quit_gtk_object_destroy, self, 0);
@@ -249,61 +235,49 @@ void muxer_window_setup_widgets (MuxerWindow* self) {
 	gtk_file_chooser_add_filter ((GtkFileChooser*) self->chooser_button, file_filter);
 	s = G_TYPE_STRING;
 	self->combo_model = (_tmp1_ = gtk_list_store_new (3, s, s, s, NULL), _g_object_unref0 (self->combo_model), _tmp1_);
-	self->combo_box = (_tmp2_ = (GtkComboBox*) g_object_ref_sink ((GtkComboBoxEntry*) gtk_combo_box_entry_new_with_model ((GtkTreeModel*) self->combo_model, (gint) MUXER_COMBO_COL_GROUP)), _g_object_unref0 (self->combo_box), _tmp2_);
+	self->combo_box = (_tmp2_ = g_object_ref_sink ((GtkComboBox*) gtk_combo_box_new_with_model ((GtkTreeModel*) self->combo_model)), _g_object_unref0 (self->combo_box), _tmp2_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->combo_box, FALSE, FALSE, (guint) 0);
-	combo_box_child = _g_object_ref0 ((_tmp3_ = ((GtkBin*) self->combo_box)->child, GTK_IS_ENTRY (_tmp3_) ? ((GtkEntry*) _tmp3_) : NULL));
-	g_signal_connect_object ((GtkWidget*) combo_box_child, "button-press-event", (GCallback) _muxer_window_on_combo_box_child_pressed_gtk_widget_button_press_event, self, 0);
-	gtk_editable_set_editable ((GtkEditable*) combo_box_child, FALSE);
+	renderer = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ());
+	gtk_cell_layout_pack_start ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, TRUE);
+	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", MUXER_COMBO_COL_GROUP, NULL, NULL);
 	g_signal_connect_object (self->combo_box, "changed", (GCallback) _muxer_window_on_combo_changed_gtk_combo_box_changed, self, 0);
-	self->record_button = (_tmp4_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->record_button), _tmp4_);
+	self->record_button = (_tmp3_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->record_button), _tmp3_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->record_button, FALSE, FALSE, (guint) 0);
 	gtk_widget_set_sensitive ((GtkWidget*) self->record_button, FALSE);
 	g_signal_connect_object (self->record_button, "clicked", (GCallback) _muxer_window_on_record_gtk_button_clicked, self, 0);
 	record_image = g_object_ref_sink ((GtkImage*) gtk_image_new ());
 	gtk_container_add ((GtkContainer*) self->record_button, (GtkWidget*) record_image);
 	gtk_image_set_from_stock (record_image, GTK_STOCK_MEDIA_RECORD, ICON_SIZE);
-	self->probe_button = (_tmp5_ = g_object_ref_sink ((GtkToggleButton*) gtk_toggle_button_new ()), _g_object_unref0 (self->probe_button), _tmp5_);
+	self->probe_button = (_tmp4_ = g_object_ref_sink ((GtkToggleButton*) gtk_toggle_button_new ()), _g_object_unref0 (self->probe_button), _tmp4_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->probe_button, FALSE, FALSE, (guint) 0);
 	probe_image = g_object_ref_sink ((GtkImage*) gtk_image_new ());
 	gtk_container_add ((GtkContainer*) self->probe_button, (GtkWidget*) probe_image);
 	gtk_image_set_from_stock (probe_image, GTK_STOCK_CONVERT, ICON_SIZE);
-	self->stop_button = (_tmp6_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->stop_button), _tmp6_);
+	self->stop_button = (_tmp5_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->stop_button), _tmp5_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->stop_button, FALSE, FALSE, (guint) 0);
 	gtk_widget_set_sensitive ((GtkWidget*) self->stop_button, FALSE);
 	g_signal_connect_object (self->stop_button, "clicked", (GCallback) _muxer_window_on_stop_gtk_button_clicked, self, 0);
 	stop_image = g_object_ref_sink ((GtkImage*) gtk_image_new ());
 	gtk_container_add ((GtkContainer*) self->stop_button, (GtkWidget*) stop_image);
 	gtk_image_set_from_stock (stop_image, GTK_STOCK_MEDIA_STOP, ICON_SIZE);
-	self->quit_button = (_tmp7_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->quit_button), _tmp7_);
+	self->quit_button = (_tmp6_ = g_object_ref_sink ((GtkButton*) gtk_button_new ()), _g_object_unref0 (self->quit_button), _tmp6_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->quit_button, FALSE, FALSE, (guint) 0);
 	g_signal_connect_object (self->quit_button, "clicked", (GCallback) _muxer_window_on_quit_gtk_button_clicked, self, 0);
 	quit_image = g_object_ref_sink ((GtkImage*) gtk_image_new ());
 	gtk_container_add ((GtkContainer*) self->quit_button, (GtkWidget*) quit_image);
 	gtk_image_set_from_stock (quit_image, GTK_STOCK_QUIT, ICON_SIZE);
-	self->video_area = (_tmp8_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp8_);
+	self->video_area = (_tmp7_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp7_);
 	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 6);
 	gtk_widget_show_all ((GtkWidget*) main_box);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
 	_g_object_unref0 (main_box);
 	_g_object_unref0 (buttons_box);
 	_g_object_unref0 (file_filter);
-	_g_object_unref0 (combo_box_child);
+	_g_object_unref0 (renderer);
 	_g_object_unref0 (record_image);
 	_g_object_unref0 (probe_image);
 	_g_object_unref0 (stop_image);
 	_g_object_unref0 (quit_image);
-}
-
-
-gboolean muxer_window_on_combo_box_child_pressed (MuxerWindow* self, GdkEventButton* event) {
-	gboolean result;
-	GtkTreeIter iter = {0};
-	g_return_val_if_fail (self != NULL, FALSE);
-	if (gtk_tree_model_get_iter_first ((GtkTreeModel*) self->combo_model, &iter)) {
-		gtk_combo_box_popup (self->combo_box);
-	}
-	result = TRUE;
-	return result;
 }
 
 

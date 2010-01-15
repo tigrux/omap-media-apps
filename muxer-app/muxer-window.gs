@@ -52,11 +52,12 @@ class MuxerWindow: Window
 
         var s = typeof(string)
         combo_model = new ListStore(3, s, s, s)
-        combo_box = new ComboBoxEntry.with_model(combo_model, MuxerComboCol.GROUP)
+        combo_box = new ComboBox.with_model(combo_model)
         buttons_box.pack_start(combo_box, false, false, 0)
-        var combo_box_child = combo_box.child as Entry
-        combo_box_child.button_press_event += on_combo_box_child_pressed
-        combo_box_child.set_editable(false)
+        
+        var renderer = new CellRendererText()
+        combo_box.pack_start(renderer, true)
+        combo_box.set_attributes(renderer, "text", MuxerComboCol.GROUP, null)
         combo_box.changed += on_combo_changed
 
         record_button = new Button()
@@ -93,12 +94,6 @@ class MuxerWindow: Window
 
         main_box.show_all()
         video_area.realize()
-
-    def on_combo_box_child_pressed(event: Gdk.EventButton): bool
-        iter: TreeIter
-        if combo_model.get_iter_first(out iter)
-            combo_box.popup()
-        return true
 
     def on_combo_changed()
         preview: string
