@@ -27,6 +27,9 @@ class MuxerWindow: Window
     error_dialog: ErrorDialog
 
     init
+        setup_widgets()
+    
+    def setup_widgets()
         set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
         destroy += on_quit
 
