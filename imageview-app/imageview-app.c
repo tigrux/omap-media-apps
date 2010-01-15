@@ -20,26 +20,55 @@
 typedef struct _ImageViewWindow ImageViewWindow;
 typedef struct _ImageViewWindowClass ImageViewWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 
 
 #define style "\nstyle \"custom\"\n{\n    GtkComboBox::appears-as-list = 1\n}\n\nwidget_class \"*ComboBox*\" style \"custom\"\n"
-ImageViewWindow* image_view_window_new (void);
-ImageViewWindow* image_view_window_construct (GType object_type);
+ImageViewWindow* image_view_window_new (GError** error);
+ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
 GType image_view_window_get_type (void);
 void _main (char** args, int args_length1);
 
 
 
 void _main (char** args, int args_length1) {
-	ImageViewWindow* window;
+	GError * _inner_error_;
+	_inner_error_ = NULL;
 	gtk_init (&args_length1, &args);
 	gst_init (&args_length1, &args);
 	gtk_rc_parse_string (style);
-	window = g_object_ref_sink (image_view_window_new ());
-	gtk_widget_show ((GtkWidget*) window);
+	{
+		ImageViewWindow* window;
+		window = g_object_ref_sink (image_view_window_new (&_inner_error_));
+		if (_inner_error_ != NULL) {
+			goto __catch0_g_error;
+			goto __finally0;
+		}
+		gtk_widget_show ((GtkWidget*) window);
+		_g_object_unref0 (window);
+	}
+	goto __finally0;
+	__catch0_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			char* _tmp0_;
+			g_print ("%s", _tmp0_ = g_strconcat (e->message, "\n", NULL));
+			_g_free0 (_tmp0_);
+			_g_error_free0 (e);
+		}
+	}
+	__finally0:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
 	gtk_main ();
-	_g_object_unref0 (window);
 }
 
 

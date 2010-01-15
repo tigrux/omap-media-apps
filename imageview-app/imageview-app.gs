@@ -17,6 +17,9 @@ init
     Gtk.init(ref args)
     Gst.init(ref args)
     Gtk.rc_parse_string(style)
-    var window = new ImageViewWindow()
-    window.show()
+    try
+        var window = new ImageViewWindow()
+        window.show()
+    except e: Error
+        print e.message
     Gtk.main()

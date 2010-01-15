@@ -10,7 +10,8 @@ bin_PROGRAMS = omap4-imageview-app
 
 omap4_imageview_app_VALASOURCES = \
 	imageview-window.gs \
-	imageview-app.gs
+	imageview-app.gs \
+	icon-list-control.gs
 
 common_VALASOURCES = \
 	$(top_srcdir)/common/video-area.gs \
