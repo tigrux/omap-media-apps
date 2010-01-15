@@ -16,12 +16,24 @@ class IconListControl: GLib.Object
     pipeline: Pipeline
     filesrc: dynamic Element
     imagesink: dynamic Element
+    missing_pixbuf: Gdk.Pixbuf
+    loading_pixbuf: Gdk.Pixbuf
 
     prop iconlist_store: ListStore
     continuation: SourceFunc
     continuation_error: Error
 
     construct(model: ListStore) raises Error
+        var default_icon_theme = IconTheme.get_default()
+        icon_info: IconInfo
+        icon_info = default_icon_theme.lookup_icon( \
+            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
+        missing_pixbuf = icon_info.load_icon()
+
+        icon_info = default_icon_theme.lookup_icon( \
+            "image-loading", 96, IconLookupFlags.FORCE_SIZE)
+        loading_pixbuf = icon_info.load_icon()
+
         pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
         if (filesrc = pipeline.get_by_name("filesrc")) == null
             raise new CoreError.FAILED( \
@@ -38,23 +50,12 @@ class IconListControl: GLib.Object
         if pipeline != null
             pipeline.set_state(State.NULL)
 
-    def async add_file(filename: string, displayname: string) raises Error
-        continuation = add_file.callback
-        filesrc.location = filename
-        pipeline.set_state(State.PLAYING)
-        yield
-
-        if continuation_error == null
-            pixbuf: Gdk.Pixbuf = imagesink.last_pixbuf
-            if pixbuf != null
-                iconlist_store.insert_with_values(null, -1, \
-                    ImageListCol.TEXT, displayname, \
-                    ImageListCol.FILE, filename, \
-                    ImageListCol.PIXBUF, pixbuf)
-        else
-            error: Error = (owned)continuation_error
-            raise error
-        pipeline.set_state(State.READY)
+    def async add_file(file: string, text: string)
+        iconlist_store.insert_with_values(null, -1, \
+            ImageListCol.TEXT, text, \
+            ImageListCol.FILE, file, \
+            ImageListCol.PIXBUF, loading_pixbuf, \
+            -1)
 
     def async add_folder(dirname: string)
         var dir = File.new_for_path (dirname)
@@ -71,13 +72,35 @@ class IconListControl: GLib.Object
                 for info in files
                     if info.get_content_type() == "image/jpeg"
                         var file = Path.build_filename(dirname, info.get_name())
-                        var display = info.get_display_name()
-                        try
-                            yield add_file(file, display)
-                        except e2: Error
-                            print e2.message
+                        var text = info.get_display_name()
+                        add_file(file, text)
+            yield retrieve_icons()
         except e1: Error
             print e1.message
+
+    def async retrieve_icons()
+        iter: TreeIter
+        if iconlist_store.get_iter_first(out iter)
+            continuation = retrieve_icons.callback
+            do
+                file: string
+                display: string
+                iconlist_store.get(iter, \
+                    ImageListCol.TEXT, out display, \
+                    ImageListCol.FILE, out file, \
+                    -1)
+                filesrc.location = file
+                pipeline.set_state(State.PLAYING)
+                yield
+                if continuation_error == null
+                    pixbuf: Gdk.Pixbuf = imagesink.last_pixbuf
+                    iconlist_store.set(iter, \
+                        ImageListCol.PIXBUF, pixbuf, \
+                        -1)
+                else
+                    continuation_error = null
+                pipeline.set_state(State.NULL)
+            while iconlist_store.iter_next(ref iter)
 
     def on_bus_message(message: Gst.Message)
         case message.type

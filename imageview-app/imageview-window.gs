@@ -46,6 +46,11 @@ class ImageViewWindow: Window
         icon_view.set_model(iconlist_store)
         icon_view.set_text_column(ImageListCol.TEXT)
         icon_view.set_pixbuf_column(ImageListCol.PIXBUF)
+        icon_view.set_row_spacing(0)
+        icon_view.set_column_spacing(0)
+        icon_view.set_spacing(0)
+        icon_view.set_margin(0)
+        icon_view.set_item_padding(0)
 
         main_box.show_all()
 

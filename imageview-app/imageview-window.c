@@ -149,6 +149,11 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 	gtk_icon_view_set_model (self->icon_view, (GtkTreeModel*) self->iconlist_store);
 	gtk_icon_view_set_text_column (self->icon_view, (gint) IMAGE_LIST_COL_TEXT);
 	gtk_icon_view_set_pixbuf_column (self->icon_view, (gint) IMAGE_LIST_COL_PIXBUF);
+	gtk_icon_view_set_row_spacing (self->icon_view, 0);
+	gtk_icon_view_set_column_spacing (self->icon_view, 0);
+	gtk_icon_view_set_spacing (self->icon_view, 0);
+	gtk_icon_view_set_margin (self->icon_view, 0);
+	gtk_icon_view_set_item_padding (self->icon_view, 0);
 	gtk_widget_show_all ((GtkWidget*) main_box);
 	_g_object_unref0 (main_box);
 	_g_object_unref0 (buttons_box);
