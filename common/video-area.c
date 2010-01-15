@@ -6,8 +6,8 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gst/interfaces/xoverlay.h>
-#include <gdk/gdk.h>
 #include <gst/gst.h>
+#include <gdk/gdk.h>
 #include <stdlib.h>
 #include <string.h>
 #include <gdk/gdkx.h>
@@ -31,6 +31,7 @@ struct _VideoArea {
 	VideoAreaPrivate * priv;
 	guint32 xid;
 	GstXOverlay* imagesink;
+	GstBus* bus;
 };
 
 struct _VideoAreaClass {
@@ -107,8 +108,10 @@ static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sende
 
 
 void video_area_set_bus (VideoArea* self, GstBus* bus) {
+	GstBus* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (bus != NULL);
+	self->bus = (_tmp0_ = _gst_object_ref0 (bus), _gst_object_unref0 (self->bus), _tmp0_);
 	gst_bus_enable_sync_message_emission (bus);
 	g_signal_connect_object (bus, "sync-message", (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self, 0);
 }
@@ -191,7 +194,14 @@ static void video_area_instance_init (VideoArea * self) {
 static void video_area_finalize (GObject* obj) {
 	VideoArea * self;
 	self = VIDEO_AREA (obj);
+	{
+		if (self->bus != NULL) {
+			guint _tmp0_;
+			g_signal_handlers_disconnect_matched (self->bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("sync-message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self);
+		}
+	}
 	_gst_object_unref0 (self->imagesink);
+	_gst_object_unref0 (self->bus);
 	G_OBJECT_CLASS (video_area_parent_class)->finalize (obj);
 }
 

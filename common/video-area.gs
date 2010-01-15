@@ -6,16 +6,21 @@ uses Gst
 class VideoArea: DrawingArea
     xid: uint32
     imagesink: Gst.XOverlay
+    bus: Bus
 
     event prepared()
     event activated()
 
     init
-        set_double_buffered(false)
+        double_buffered = false
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
         realize += def()
             xid = Gdk.x11_drawable_get_xid(window)
+
+    final
+        if bus != null
+           bus.sync_message.disconnect(on_bus_sync_message)
 
     def set_sink(sink: Gst.XOverlay)
         imagesink = sink
@@ -33,9 +38,10 @@ class VideoArea: DrawingArea
             return false
         return true
 
-    def set_bus(bus: Gst.Bus)
+    def set_bus(bus: Bus)
+        this.bus = bus
         bus.enable_sync_message_emission()
-        bus.sync_message += on_bus_sync_message
+        bus.sync_message.connect(on_bus_sync_message)
 
     def on_bus_sync_message(message: Gst.Message)
         if message.structure == null
