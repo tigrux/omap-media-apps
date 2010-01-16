@@ -12,8 +12,8 @@ const ICON_SIZE: IconSize = IconSize.DND
 const DEFAULT_STYLE: string = """
 style "custom"
 {
-    GtkRange::slider-width = 12
-    GtkComboBox::arrow-size = 12
+    GtkRange::slider-width = 24
+    GtkComboBox::arrow-size = 18
     GtkComboBox::appears-as-list = 1
     font_name = "Sans 12"
 }

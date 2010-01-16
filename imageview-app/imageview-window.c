@@ -211,7 +211,6 @@ gboolean image_view_window_retry_chooser_folder_change (ImageViewWindow* self) {
 void image_view_window_on_iconlist_done (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
-	g_print ("Work done\n");
 	self->cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->cancellable), _tmp0_);
 }
 

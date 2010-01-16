@@ -23,7 +23,7 @@ typedef struct _MuxerWindowClass MuxerWindowClass;
 
 
 
-#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 12\n    GtkComboBox::arrow-size = 12\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 18\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 MuxerWindow* muxer_window_new (void);
 MuxerWindow* muxer_window_construct (GType object_type);
 GType muxer_window_get_type (void);
