@@ -16,7 +16,8 @@ vala.stamp: $(VALASOURCES)
 	touch $@
 
 EXTRA_DIST = \
-	$(VALASOURCES)
+	$(VALASOURCES) \
+	vala.stamp
 
 DISTCLEANFILES =
 
