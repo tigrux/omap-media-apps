@@ -5,9 +5,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
 
@@ -39,7 +39,8 @@ typedef struct _IconListControlClass IconListControlClass;
 typedef enum  {
 	IMAGE_LIST_COL_TEXT,
 	IMAGE_LIST_COL_FILE,
-	IMAGE_LIST_COL_PIXBUF
+	IMAGE_LIST_COL_PIXBUF,
+	IMAGE_LIST_COL_VALID
 } ImageListCol;
 
 struct _ImageViewWindow {
@@ -49,6 +50,7 @@ struct _ImageViewWindow {
 	GtkIconView* icon_view;
 	GtkListStore* iconlist_store;
 	IconListControl* iconlist_control;
+	GCancellable* cancellable;
 };
 
 struct _ImageViewWindowClass {
@@ -66,6 +68,8 @@ enum  {
 };
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
+void image_view_window_on_iconlist_done (ImageViewWindow* self);
+static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self);
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
 #define DEFAULT_WIDTH 800
@@ -74,8 +78,10 @@ static void _gtk_main_quit_gtk_object_destroy (ImageViewWindow* _sender, gpointe
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
-void icon_list_control_add_folder (IconListControl* self, const char* dirname, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
+gboolean image_view_window_retry_chooser_folder_change (ImageViewWindow* self);
+static gboolean _image_view_window_retry_chooser_folder_change_gsource_func (gpointer self);
 GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self);
 static GObject * image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void image_view_window_finalize (GObject* obj);
@@ -86,10 +92,15 @@ static void image_view_window_finalize (GObject* obj);
 GType image_list_col_get_type (void) {
 	static GType image_list_col_type_id = 0;
 	if (G_UNLIKELY (image_list_col_type_id == 0)) {
-		static const GEnumValue values[] = {{IMAGE_LIST_COL_TEXT, "IMAGE_LIST_COL_TEXT", "text"}, {IMAGE_LIST_COL_FILE, "IMAGE_LIST_COL_FILE", "file"}, {IMAGE_LIST_COL_PIXBUF, "IMAGE_LIST_COL_PIXBUF", "pixbuf"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{IMAGE_LIST_COL_TEXT, "IMAGE_LIST_COL_TEXT", "text"}, {IMAGE_LIST_COL_FILE, "IMAGE_LIST_COL_FILE", "file"}, {IMAGE_LIST_COL_PIXBUF, "IMAGE_LIST_COL_PIXBUF", "pixbuf"}, {IMAGE_LIST_COL_VALID, "IMAGE_LIST_COL_VALID", "valid"}, {0, NULL, NULL}};
 		image_list_col_type_id = g_enum_register_static ("ImageListCol", values);
 	}
 	return image_list_col_type_id;
+}
+
+
+static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self) {
+	image_view_window_on_iconlist_done (self);
 }
 
 
@@ -106,6 +117,7 @@ ImageViewWindow* image_view_window_construct (GType object_type, GError** error)
 		return NULL;
 	}
 	self->iconlist_control = (_tmp1_ = _tmp0_, _g_object_unref0 (self->iconlist_control), _tmp1_);
+	g_signal_connect_object (self->iconlist_control, "done", (GCallback) _image_view_window_on_iconlist_done_icon_list_control_done, self, 0);
 	return self;
 }
 
@@ -161,13 +173,46 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 }
 
 
+static gboolean _image_view_window_retry_chooser_folder_change_gsource_func (gpointer self) {
+	return image_view_window_retry_chooser_folder_change (self);
+}
+
+
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self) {
-	char* folder;
 	g_return_if_fail (self != NULL);
-	folder = gtk_file_chooser_get_filename ((GtkFileChooser*) self->chooser_button);
-	gtk_list_store_clear (self->iconlist_store);
-	icon_list_control_add_folder (self->iconlist_control, folder, NULL, NULL);
-	_g_free0 (folder);
+	if (self->cancellable == NULL) {
+		char* folder;
+		GCancellable* _tmp0_;
+		folder = gtk_file_chooser_get_filename ((GtkFileChooser*) self->chooser_button);
+		gtk_list_store_clear (self->iconlist_store);
+		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
+		icon_list_control_add_folder (self->iconlist_control, folder, self->cancellable, NULL, NULL);
+		_g_free0 (folder);
+	} else {
+		g_cancellable_cancel (self->cancellable);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_chooser_folder_change_gsource_func, g_object_ref (self), g_object_unref);
+	}
+}
+
+
+gboolean image_view_window_retry_chooser_folder_change (ImageViewWindow* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (self->cancellable == NULL) {
+		image_view_window_on_chooser_folder_changed (self);
+	} else {
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_chooser_folder_change_gsource_func, g_object_ref (self), g_object_unref);
+	}
+	result = FALSE;
+	return result;
+}
+
+
+void image_view_window_on_iconlist_done (ImageViewWindow* self) {
+	GCancellable* _tmp0_;
+	g_return_if_fail (self != NULL);
+	g_print ("Work done\n");
+	self->cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->cancellable), _tmp0_);
 }
 
 
@@ -175,11 +220,13 @@ GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self) {
 	GtkListStore* result;
 	GType s;
 	GType p;
+	GType b;
 	GtkListStore* model;
 	g_return_val_if_fail (self != NULL, NULL);
 	s = G_TYPE_STRING;
 	p = GDK_TYPE_PIXBUF;
-	model = gtk_list_store_new (3, s, s, p, NULL);
+	b = G_TYPE_BOOLEAN;
+	model = gtk_list_store_new (4, s, s, p, b, NULL);
 	result = model;
 	return result;
 }
@@ -219,6 +266,7 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->icon_view);
 	_g_object_unref0 (self->iconlist_store);
 	_g_object_unref0 (self->iconlist_control);
+	_g_object_unref0 (self->cancellable);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);
 }
 

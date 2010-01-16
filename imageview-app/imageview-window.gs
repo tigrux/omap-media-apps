@@ -7,6 +7,7 @@ enum ImageListCol
     TEXT
     FILE
     PIXBUF
+    VALID
 
 
 class ImageViewWindow: Window
@@ -14,6 +15,7 @@ class ImageViewWindow: Window
     icon_view: IconView
     iconlist_store: ListStore
     iconlist_control: IconListControl
+    cancellable: Cancellable
 
     init
         iconlist_store = new_imagelist_store()
@@ -21,6 +23,7 @@ class ImageViewWindow: Window
     
     construct() raises Error
         iconlist_control = new IconListControl(iconlist_store)
+        iconlist_control.done += on_iconlist_done
 
     def setup_widgets()
         set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
@@ -55,13 +58,29 @@ class ImageViewWindow: Window
         main_box.show_all()
 
     def on_chooser_folder_changed()
-        var folder = chooser_button.get_filename()
-        iconlist_store.clear()
-        iconlist_control.add_folder(folder)
+        if cancellable == null
+            var folder = chooser_button.get_filename()
+            iconlist_store.clear()
+            cancellable = new Cancellable()
+            iconlist_control.add_folder(folder, cancellable)
+        else
+            cancellable.cancel()
+            Idle.add(retry_chooser_folder_change)
+    
+    def retry_chooser_folder_change(): bool
+        if cancellable == null
+            on_chooser_folder_changed()
+        else
+            Idle.add(retry_chooser_folder_change)
+        return false
+
+    def on_iconlist_done()
+        cancellable = null
 
     def new_imagelist_store(): ListStore
         var s = typeof(string)
         var p = typeof(Gdk.Pixbuf)
-        var model = new ListStore(3, s, s, p)
+        var b = typeof(bool)
+        var model = new ListStore(4, s, s, p, b)
         return model
 

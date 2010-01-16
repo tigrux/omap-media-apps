@@ -26,6 +26,8 @@ class IconListControl: GLib.Object
     continuation: SourceFunc
     continuation_error: Error
 
+    event done()
+
     construct(model: ListStore) raises Error
         iconlist_store = model
         if not pixbufs_loaded
@@ -42,12 +44,12 @@ class IconListControl: GLib.Object
         icon_info: IconInfo
 
         icon_info = icon_theme.lookup_icon( \
-            STOCK_MISSING_IMAGE, 128, IconLookupFlags.FORCE_SIZE)
+            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             missing_pixbuf = icon_info.load_icon()
 
         icon_info = icon_theme.lookup_icon( \
-            "image-loading", 128, IconLookupFlags.FORCE_SIZE)
+            "image-loading", 96, IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             loading_pixbuf = icon_info.load_icon()
 
@@ -74,22 +76,25 @@ class IconListControl: GLib.Object
         bus.add_signal_watch()
         bus.message += on_bus_message
 
-    def async add_folder(dirname: string)
+    def async add_folder(dirname: string, cancellable: Cancellable)
         var dir = File.new_for_path (dirname)
         try
             var file_etor = yield dir.enumerate_children_async( \
                                     IMAGE_FILE_ATTRIBUTES, \
                                     FileQueryInfoFlags.NONE, \
-                                    Priority.DEFAULT, null)
-            while true
+                                    Priority.DEFAULT, cancellable)
+            while not cancellable.is_cancelled()
                 var files = yield file_etor.next_files_async( \
-                                    5, Priority.DEFAULT, null)
+                                    5, Priority.DEFAULT, cancellable)
                 if files == null
                     break
                 add_next_files(dirname, files)
-            yield retrieve_icons()
+            if not cancellable.is_cancelled()
+                yield retrieve_thumbnails(cancellable)
         except e1: Error
             print e1.message
+        finally
+            done()
 
     def add_next_files(dirname: string, files: GLib.List of FileInfo)
         for info in files
@@ -102,11 +107,13 @@ class IconListControl: GLib.Object
                     ImageListCol.PIXBUF, loading_pixbuf, \
                     -1)
 
-    def async retrieve_icons()
+    def async retrieve_thumbnails(cancellable: Cancellable)
         iter: TreeIter
         if iconlist_store.get_iter_first(out iter)
-            continuation = retrieve_icons.callback
+            continuation = retrieve_thumbnails.callback
             do
+                if cancellable.is_cancelled()
+                    return
                 file: string
                 display: string
                 iconlist_store.get(iter, \
@@ -119,12 +126,16 @@ class IconListControl: GLib.Object
                 pipeline.set_state(State.PLAYING)
                 yield
                 pixbuf: Gdk.Pixbuf
+                is_valid: bool
                 if continuation_error == null and last_pixbuf != null
                     pixbuf = last_pixbuf
+                    is_valid = true
                 else
                     pixbuf = missing_pixbuf
+                    is_valid = false
                 iconlist_store.set(iter, \
                     ImageListCol.PIXBUF, pixbuf, \
+                    ImageListCol.VALID, is_valid, \
                     -1)
                 pipeline.set_state(State.READY)
             while iconlist_store.iter_next(ref iter)
