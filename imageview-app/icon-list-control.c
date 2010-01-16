@@ -116,10 +116,12 @@ enum  {
 	ICON_LIST_CONTROL_ICONLIST_STORE
 };
 void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* value);
-void icon_list_control_on_bus_message (IconListControl* self, GstMessage* message);
-static void _icon_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+void icon_list_control_setup_icons (IconListControl* self, GError** error);
+void icon_list_control_setup_elements (IconListControl* self, GError** error);
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
+void icon_list_control_on_bus_message (IconListControl* self, GstMessage* message);
+static void _icon_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
 static void icon_list_control_add_file_data_free (gpointer _data);
 static void icon_list_control_add_file_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self);
@@ -148,6 +150,32 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
+IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error) {
+	GError * _inner_error_;
+	IconListControl * self;
+	g_return_val_if_fail (model != NULL, NULL);
+	_inner_error_ = NULL;
+	self = (IconListControl*) g_object_new (object_type, NULL);
+	icon_list_control_set_iconlist_store (self, model);
+	icon_list_control_setup_icons (self, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		g_propagate_error (error, _inner_error_);
+		return NULL;
+	}
+	icon_list_control_setup_elements (self, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		g_propagate_error (error, _inner_error_);
+		return NULL;
+	}
+	return self;
+}
+
+
+IconListControl* icon_list_control_new (GtkListStore* model, GError** error) {
+	return icon_list_control_construct (TYPE_ICON_LIST_CONTROL, model, error);
+}
+
+
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
 }
@@ -163,85 +191,117 @@ static void _icon_list_control_on_bus_message_gst_bus_message (GstBus* _sender, 
 }
 
 
-IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error) {
+void icon_list_control_setup_icons (IconListControl* self, GError** error) {
 	GError * _inner_error_;
-	IconListControl * self;
-	GtkIconTheme* default_icon_theme;
+	GtkIconTheme* icon_theme;
 	GtkIconInfo* icon_info;
 	GtkIconInfo* _tmp0_;
-	GdkPixbuf* _tmp1_;
-	GdkPixbuf* _tmp2_;
 	GtkIconInfo* _tmp3_;
-	GdkPixbuf* _tmp4_;
-	GdkPixbuf* _tmp5_;
 	GstElement* _tmp6_;
 	GstPipeline* _tmp8_;
 	GstElement* _tmp7_;
 	GstElement* _tmp9_;
 	GstElement* _tmp10_;
 	GstBus* bus;
-	g_return_val_if_fail (model != NULL, NULL);
+	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	self = (IconListControl*) g_object_new (object_type, NULL);
-	default_icon_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
+	icon_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
 	icon_info = NULL;
-	icon_info = (_tmp0_ = gtk_icon_theme_lookup_icon (default_icon_theme, GTK_STOCK_MISSING_IMAGE, 96, GTK_ICON_LOOKUP_FORCE_SIZE), _gtk_icon_info_free0 (icon_info), _tmp0_);
-	_tmp1_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
-	if (_inner_error_ != NULL) {
-		g_propagate_error (error, _inner_error_);
-		_g_object_unref0 (default_icon_theme);
-		_gtk_icon_info_free0 (icon_info);
-		return NULL;
+	icon_info = (_tmp0_ = gtk_icon_theme_lookup_icon (icon_theme, GTK_STOCK_MISSING_IMAGE, 96, GTK_ICON_LOOKUP_FORCE_SIZE), _gtk_icon_info_free0 (icon_info), _tmp0_);
+	if (icon_info != NULL) {
+		GdkPixbuf* _tmp1_;
+		GdkPixbuf* _tmp2_;
+		_tmp1_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			_g_object_unref0 (icon_theme);
+			_gtk_icon_info_free0 (icon_info);
+			return;
+		}
+		self->missing_pixbuf = (_tmp2_ = _tmp1_, _g_object_unref0 (self->missing_pixbuf), _tmp2_);
 	}
-	self->missing_pixbuf = (_tmp2_ = _tmp1_, _g_object_unref0 (self->missing_pixbuf), _tmp2_);
-	icon_info = (_tmp3_ = gtk_icon_theme_lookup_icon (default_icon_theme, "image-loading", 96, GTK_ICON_LOOKUP_FORCE_SIZE), _gtk_icon_info_free0 (icon_info), _tmp3_);
-	_tmp4_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
-	if (_inner_error_ != NULL) {
-		g_propagate_error (error, _inner_error_);
-		_g_object_unref0 (default_icon_theme);
-		_gtk_icon_info_free0 (icon_info);
-		return NULL;
+	icon_info = (_tmp3_ = gtk_icon_theme_lookup_icon (icon_theme, "image-loading", 96, GTK_ICON_LOOKUP_FORCE_SIZE), _gtk_icon_info_free0 (icon_info), _tmp3_);
+	if (icon_info != NULL) {
+		GdkPixbuf* _tmp4_;
+		GdkPixbuf* _tmp5_;
+		_tmp4_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			_g_object_unref0 (icon_theme);
+			_gtk_icon_info_free0 (icon_info);
+			return;
+		}
+		self->loading_pixbuf = (_tmp5_ = _tmp4_, _g_object_unref0 (self->loading_pixbuf), _tmp5_);
 	}
-	self->loading_pixbuf = (_tmp5_ = _tmp4_, _g_object_unref0 (self->loading_pixbuf), _tmp5_);
 	_tmp6_ = gst_parse_launch (PIXBUF_PIPELINE_DESC, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
-		_g_object_unref0 (default_icon_theme);
+		_g_object_unref0 (icon_theme);
 		_gtk_icon_info_free0 (icon_info);
-		return NULL;
+		return;
 	}
 	self->pipeline = (_tmp8_ = (_tmp7_ = _tmp6_, GST_IS_PIPELINE (_tmp7_) ? ((GstPipeline*) _tmp7_) : NULL), _gst_object_unref0 (self->pipeline), _tmp8_);
 	if ((self->filesrc = (_tmp9_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp9_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the pixbuf pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (default_icon_theme);
+			_g_object_unref0 (icon_theme);
 			_gtk_icon_info_free0 (icon_info);
-			return NULL;
+			return;
 		}
 	}
 	if ((self->imagesink = (_tmp10_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp10_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the pixbuf pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (default_icon_theme);
+			_g_object_unref0 (icon_theme);
 			_gtk_icon_info_free0 (icon_info);
-			return NULL;
+			return;
 		}
 	}
-	icon_list_control_set_iconlist_store (self, model);
 	bus = _gst_object_ref0 (((GstElement*) self->pipeline)->bus);
 	gst_bus_add_signal_watch (bus);
 	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
-	_g_object_unref0 (default_icon_theme);
+	_g_object_unref0 (icon_theme);
 	_gtk_icon_info_free0 (icon_info);
 	_gst_object_unref0 (bus);
-	return self;
 }
 
 
-IconListControl* icon_list_control_new (GtkListStore* model, GError** error) {
-	return icon_list_control_construct (TYPE_ICON_LIST_CONTROL, model, error);
+void icon_list_control_setup_elements (IconListControl* self, GError** error) {
+	GError * _inner_error_;
+	GstElement* _tmp0_;
+	GstPipeline* _tmp2_;
+	GstElement* _tmp1_;
+	GstElement* _tmp3_;
+	GstElement* _tmp4_;
+	GstBus* bus;
+	g_return_if_fail (self != NULL);
+	_inner_error_ = NULL;
+	_tmp0_ = gst_parse_launch (PIXBUF_PIPELINE_DESC, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		g_propagate_error (error, _inner_error_);
+		return;
+	}
+	self->pipeline = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->pipeline), _tmp2_);
+	if ((self->filesrc = (_tmp3_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp3_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the pixbuf pipeline");
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			return;
+		}
+	}
+	if ((self->imagesink = (_tmp4_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp4_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the pixbuf pipeline");
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			return;
+		}
+	}
+	bus = _gst_object_ref0 (((GstElement*) self->pipeline)->bus);
+	gst_bus_add_signal_watch (bus);
+	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
+	_gst_object_unref0 (bus);
 }
 
 

@@ -24,15 +24,27 @@ class IconListControl: GLib.Object
     continuation_error: Error
 
     construct(model: ListStore) raises Error
-        var default_icon_theme = IconTheme.get_default()
-        icon_info: IconInfo
-        icon_info = default_icon_theme.lookup_icon( \
-            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
-        missing_pixbuf = icon_info.load_icon()
+        iconlist_store = model
+        setup_icons()
+        setup_elements()
 
-        icon_info = default_icon_theme.lookup_icon( \
+    final
+        if pipeline != null
+            pipeline.set_state(State.NULL)
+
+    def setup_icons() raises Error
+        var icon_theme = IconTheme.get_default()
+        icon_info: IconInfo
+
+        icon_info = icon_theme.lookup_icon( \
+            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
+        if icon_info != null
+            missing_pixbuf = icon_info.load_icon()
+
+        icon_info = icon_theme.lookup_icon( \
             "image-loading", 96, IconLookupFlags.FORCE_SIZE)
-        loading_pixbuf = icon_info.load_icon()
+        if icon_info != null
+            loading_pixbuf = icon_info.load_icon()
 
         pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
         if (filesrc = pipeline.get_by_name("filesrc")) == null
@@ -41,14 +53,21 @@ class IconListControl: GLib.Object
         if (imagesink = pipeline.get_by_name("imagesink")) == null
             raise new CoreError.FAILED( \
                         "No element named imagesink in the pixbuf pipeline")
-        iconlist_store = model
         var bus = pipeline.bus
         bus.add_signal_watch()
         bus.message += on_bus_message
 
-    final
-        if pipeline != null
-            pipeline.set_state(State.NULL)
+    def setup_elements() raises Error
+        pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
+        if (filesrc = pipeline.get_by_name("filesrc")) == null
+            raise new CoreError.FAILED( \
+                        "No element named filesrc in the pixbuf pipeline")
+        if (imagesink = pipeline.get_by_name("imagesink")) == null
+            raise new CoreError.FAILED( \
+                        "No element named imagesink in the pixbuf pipeline")
+        var bus = pipeline.bus
+        bus.add_signal_watch()
+        bus.message += on_bus_message
 
     def async add_file(file: string, text: string)
         iconlist_store.insert_with_values(null, -1, \
