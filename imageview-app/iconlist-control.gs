@@ -17,7 +17,10 @@ class IconListControl: GLib.Object
     filesrc: dynamic Element
     imagesink: dynamic Element
     missing_pixbuf: Gdk.Pixbuf
-    loading_pixbuf: Gdk.Pixbuf
+    loading_pixbuf: static Gdk.Pixbuf
+    last_pixbuf: static Gdk.Pixbuf
+    pixbuf_q: static Quark = Quark.from_string("pixbuf")
+    pixbufs_loaded: static bool
 
     prop iconlist_store: ListStore
     continuation: SourceFunc
@@ -25,7 +28,9 @@ class IconListControl: GLib.Object
 
     construct(model: ListStore) raises Error
         iconlist_store = model
-        setup_icons()
+        if not pixbufs_loaded
+            setup_icons()
+            pixbufs_loaded = true
         setup_elements()
 
     final
@@ -37,12 +42,12 @@ class IconListControl: GLib.Object
         icon_info: IconInfo
 
         icon_info = icon_theme.lookup_icon( \
-            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
+            STOCK_MISSING_IMAGE, 128, IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             missing_pixbuf = icon_info.load_icon()
 
         icon_info = icon_theme.lookup_icon( \
-            "image-loading", 96, IconLookupFlags.FORCE_SIZE)
+            "image-loading", 128, IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             loading_pixbuf = icon_info.load_icon()
 
@@ -69,33 +74,33 @@ class IconListControl: GLib.Object
         bus.add_signal_watch()
         bus.message += on_bus_message
 
-    def async add_file(file: string, text: string)
-        iconlist_store.insert_with_values(null, -1, \
-            ImageListCol.TEXT, text, \
-            ImageListCol.FILE, file, \
-            ImageListCol.PIXBUF, loading_pixbuf, \
-            -1)
-
     def async add_folder(dirname: string)
         var dir = File.new_for_path (dirname)
         try
-            var file_etor = yield dir.enumerate_children_async(\
+            var file_etor = yield dir.enumerate_children_async( \
                                     IMAGE_FILE_ATTRIBUTES, \
                                     FileQueryInfoFlags.NONE, \
                                     Priority.DEFAULT, null)
             while true
-                var files = yield file_etor.next_files_async(\
+                var files = yield file_etor.next_files_async( \
                                     5, Priority.DEFAULT, null)
                 if files == null
                     break
-                for info in files
-                    if info.get_content_type() == "image/jpeg"
-                        var file = Path.build_filename(dirname, info.get_name())
-                        var text = info.get_display_name()
-                        add_file(file, text)
+                add_next_files(dirname, files)
             yield retrieve_icons()
         except e1: Error
             print e1.message
+
+    def add_next_files(dirname: string, files: GLib.List of FileInfo)
+        for info in files
+            if info.get_content_type() == "image/jpeg"
+                var file = Path.build_filename(dirname, info.get_name())
+                var text = info.get_display_name()
+                iconlist_store.insert_with_values(null, -1, \
+                    ImageListCol.TEXT, text, \
+                    ImageListCol.FILE, file, \
+                    ImageListCol.PIXBUF, loading_pixbuf, \
+                    -1)
 
     def async retrieve_icons()
         iter: TreeIter
@@ -108,17 +113,20 @@ class IconListControl: GLib.Object
                     ImageListCol.TEXT, out display, \
                     ImageListCol.FILE, out file, \
                     -1)
+                last_pixbuf = null
+                continuation_error = null
                 filesrc.location = file
                 pipeline.set_state(State.PLAYING)
                 yield
-                if continuation_error == null
-                    pixbuf: Gdk.Pixbuf = imagesink.last_pixbuf
-                    iconlist_store.set(iter, \
-                        ImageListCol.PIXBUF, pixbuf, \
-                        -1)
+                pixbuf: Gdk.Pixbuf
+                if continuation_error == null and last_pixbuf != null
+                    pixbuf = last_pixbuf
                 else
-                    continuation_error = null
-                pipeline.set_state(State.NULL)
+                    pixbuf = missing_pixbuf
+                iconlist_store.set(iter, \
+                    ImageListCol.PIXBUF, pixbuf, \
+                    -1)
+                pipeline.set_state(State.READY)
             while iconlist_store.iter_next(ref iter)
 
     def on_bus_message(message: Gst.Message)
@@ -126,6 +134,12 @@ class IconListControl: GLib.Object
             when Gst.MessageType.ERROR
                 message.parse_error(out continuation_error, null)
                 Idle.add(continuation)
+            when Gst.MessageType.ELEMENT
+                if message.src == imagesink
+                    structure: Structure
+                    if (structure = message.structure) != null
+                        if structure.name == pixbuf_q
+                            last_pixbuf = imagesink.last_pixbuf
             when Gst.MessageType.EOS
                 Idle.add(continuation)
             default
