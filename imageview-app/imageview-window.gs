@@ -53,7 +53,6 @@ class ImageViewWindow: Window
         icon_view.set_column_spacing(0)
         icon_view.set_spacing(0)
         icon_view.set_margin(0)
-        icon_view.set_item_padding(0)
 
         main_box.show_all()
 

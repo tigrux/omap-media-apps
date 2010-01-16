@@ -12,7 +12,7 @@
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 480
 #define ICON_SIZE GTK_ICON_SIZE_DND
-#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 18\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 24\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 
 
 

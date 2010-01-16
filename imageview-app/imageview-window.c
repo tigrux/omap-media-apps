@@ -165,7 +165,6 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 	gtk_icon_view_set_column_spacing (self->icon_view, 0);
 	gtk_icon_view_set_spacing (self->icon_view, 0);
 	gtk_icon_view_set_margin (self->icon_view, 0);
-	gtk_icon_view_set_item_padding (self->icon_view, 0);
 	gtk_widget_show_all ((GtkWidget*) main_box);
 	_g_object_unref0 (main_box);
 	_g_object_unref0 (buttons_box);
