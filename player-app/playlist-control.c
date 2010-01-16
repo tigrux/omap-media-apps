@@ -234,7 +234,7 @@ void play_list_control_add_file (PlayListControl* self, const char* file, GtkTre
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (file != NULL);
-	gtk_list_store_insert_with_values (self->playlist_store, iter, -1, PLAY_LIST_COL_NAME, _tmp0_ = g_path_get_basename (file), PLAY_LIST_COL_FULLNAME, file, -1, -1);
+	gtk_list_store_insert_with_values (self->playlist_store, iter, -1, PLAY_LIST_COL_NAME, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_COL_FULLNAME, file, -1, -1);
 	_g_free0 (_tmp0_);
 }
 

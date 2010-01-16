@@ -102,7 +102,7 @@ class PlayListControl: GLib.Object
     def add_file(file: string, out iter: TreeIter)
         playlist_store.insert_with_values( \
             out iter, -1, \
-            PlayListCol.NAME, Path.get_basename(file), \
+            PlayListCol.NAME, Filename.display_basename(file), \
             PlayListCol.FULLNAME, file, \
             -1)
 
