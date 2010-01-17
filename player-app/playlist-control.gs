@@ -4,7 +4,7 @@ uses Gtk
 uses Gst
 
 
-class PlayListControl: GLib.Object
+class PlayListControl: GLib.Object implements Control
     player: Element
     playlist_store: ListStore
     current_row: TreePath
@@ -26,6 +26,8 @@ class PlayListControl: GLib.Object
         get
             return number_of_rows
 
+    event eos()
+    event error(e: Error, debug: string)
     event playing(iter: TreeIter)
     event paused(iter: TreeIter)
     event stopped(iter: TreeIter)
@@ -35,6 +37,9 @@ class PlayListControl: GLib.Object
         player = ElementFactory.make("playbin2", "player")
         if player == null
             player = ElementFactory.make("playbin", "player")
+        var bus = player.get_bus()
+        bus.add_signal_watch()
+        bus.message += on_bus_message
 
     construct(store: ListStore)
         playlist_store = store
@@ -43,6 +48,21 @@ class PlayListControl: GLib.Object
 
     def set_location(location: string)
         player.set("uri", "file://%s".printf(location), null)
+
+    def get_bus(): Bus
+        return player.get_bus()
+
+    def get_position(): int64
+        var format = Format.TIME
+        position: int64
+        player.query_position(ref format, out position)
+        return position
+
+    def get_duration(): int64
+        var format = Format.TIME
+        duration: int64
+        player.query_duration(ref format, out duration)
+        return duration
 
     def play(): bool
         iter: TreeIter
@@ -143,4 +163,16 @@ class PlayListControl: GLib.Object
 
     def on_row_inserted(row: TreePath)
         number_of_rows ++
+
+    def on_bus_message(message: Message)
+        case message.type
+            when Gst.MessageType.EOS
+                eos()
+            when Gst.MessageType.ERROR
+                e: Error
+                debug: string
+                message.parse_error(out e, out debug)
+                error(e, debug)
+            default
+                pass
 

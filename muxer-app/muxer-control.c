@@ -4,11 +4,19 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gst/gst.h>
 #include <gtk/gtk.h>
 
+
+#define TYPE_CONTROL (control_get_type ())
+#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
+#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
+#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
+
+typedef struct _Control Control;
+typedef struct _ControlIface ControlIface;
 
 #define TYPE_MUXER_CONTROL (muxer_control_get_type ())
 #define MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONTROL, MuxerControl))
@@ -35,6 +43,11 @@ typedef struct _ErrorDialogClass ErrorDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
+
+struct _ControlIface {
+	GTypeInterface parent_iface;
+	GstBus* (*get_bus) (Control* self);
+};
 
 struct _MuxerControl {
 	GObject parent_instance;
@@ -63,13 +76,15 @@ struct _MuxerControlClass {
 
 
 static gpointer muxer_control_parent_class = NULL;
+static ControlIface* muxer_control_control_parent_iface = NULL;
 
+GType control_get_type (void);
 GType muxer_control_get_type (void);
 GType error_dialog_get_type (void);
 enum  {
 	MUXER_CONTROL_DUMMY_PROPERTY
 };
-GstBus* muxer_control_get_bus (MuxerControl* self);
+static GstBus* muxer_control_real_get_bus (Control* base);
 void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled);
 MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
@@ -99,9 +114,10 @@ static gpointer _gst_object_ref0 (gpointer self) {
 }
 
 
-GstBus* muxer_control_get_bus (MuxerControl* self) {
+static GstBus* muxer_control_real_get_bus (Control* base) {
+	MuxerControl * self;
 	GstBus* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	self = (MuxerControl*) base;
 	result = _gst_object_ref0 (((GstElement*) self->preview_bin)->bus);
 	return result;
 }
@@ -427,6 +443,12 @@ static void muxer_control_class_init (MuxerControlClass * klass) {
 }
 
 
+static void muxer_control_control_interface_init (ControlIface * iface) {
+	muxer_control_control_parent_iface = g_type_interface_peek_parent (iface);
+	iface->get_bus = muxer_control_real_get_bus;
+}
+
+
 static void muxer_control_instance_init (MuxerControl * self) {
 }
 
@@ -451,7 +473,9 @@ GType muxer_control_get_type (void) {
 	static GType muxer_control_type_id = 0;
 	if (muxer_control_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (MuxerControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerControl), 0, (GInstanceInitFunc) muxer_control_instance_init, NULL };
+		static const GInterfaceInfo control_info = { (GInterfaceInitFunc) muxer_control_control_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
 		muxer_control_type_id = g_type_register_static (G_TYPE_OBJECT, "MuxerControl", &g_define_type_info, 0);
+		g_type_add_interface_static (muxer_control_type_id, TYPE_CONTROL, &control_info);
 	}
 	return muxer_control_type_id;
 }

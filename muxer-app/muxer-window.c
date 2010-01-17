@@ -55,7 +55,14 @@ typedef struct _ErrorDialogClass ErrorDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
-#define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
+
+#define TYPE_CONTROL (control_get_type ())
+#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
+#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
+#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
+
+typedef struct _Control Control;
+typedef struct _ControlIface ControlIface;
 
 #define TYPE_MUXER_CONFIG_PARSER (muxer_config_parser_get_type ())
 #define MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParser))
@@ -91,6 +98,11 @@ struct _MuxerWindow {
 
 struct _MuxerWindowClass {
 	GtkWindowClass parent_class;
+};
+
+struct _ControlIface {
+	GTypeInterface parent_iface;
+	GstBus* (*get_bus) (Control* self);
 };
 
 
@@ -132,8 +144,8 @@ void muxer_window_on_error_message (MuxerWindow* self, GError* _error_, const ch
 static void _muxer_window_on_error_message_muxer_control_error_message (MuxerControl* _sender, GError* e, const char* debug, gpointer self);
 void muxer_control_load (MuxerControl* self, GError** error);
 void muxer_window_show_error (MuxerWindow* self, GError* _error_, const char* debug);
-GstBus* muxer_control_get_bus (MuxerControl* self);
-void video_area_set_bus (VideoArea* self, GstBus* bus);
+GType control_get_type (void);
+void video_area_set_control (VideoArea* self, Control* control);
 void muxer_control_start_preview (MuxerControl* self);
 void muxer_window_record_stopped (MuxerWindow* self);
 static void _muxer_window_record_stopped_muxer_control_eos (MuxerControl* _sender, gpointer self);
@@ -302,7 +314,6 @@ void muxer_window_on_combo_changed (MuxerWindow* self) {
 	gboolean _tmp1_;
 	char* _tmp0_ = NULL;
 	MuxerControl* _tmp6_;
-	GstBus* bus;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	preview = NULL;
@@ -346,14 +357,12 @@ void muxer_window_on_combo_changed (MuxerWindow* self) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	bus = muxer_control_get_bus (self->muxer_control);
-	video_area_set_bus (self->video_area, bus);
+	video_area_set_control (self->video_area, (Control*) self->muxer_control);
 	muxer_control_start_preview (self->muxer_control);
 	g_signal_connect_object (self->muxer_control, "eos", (GCallback) _muxer_window_record_stopped_muxer_control_eos, self, 0);
 	gtk_widget_set_sensitive ((GtkWidget*) self->record_button, TRUE);
 	_g_free0 (preview);
 	_g_free0 (record);
-	_gst_object_unref0 (bus);
 }
 
 

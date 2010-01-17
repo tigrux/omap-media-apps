@@ -3,10 +3,14 @@
 uses Gtk
 uses Gst
 
+interface Control
+    def abstract get_bus(): Bus
+
 class VideoArea: DrawingArea
     xid: uint32
-    imagesink: dynamic Gst.XOverlay
     bus: Bus
+    imagesink: dynamic Gst.XOverlay
+    prepare_xwindow_q: static Quark = Quark.from_string("prepare-xwindow-id")
 
     event prepared()
     event activated()
@@ -38,16 +42,16 @@ class VideoArea: DrawingArea
             return false
         return true
 
-    def set_bus(bus: Bus)
-        this.bus = bus
+    def set_control(control: Control)
+        bus = control.get_bus()
         bus.enable_sync_message_emission()
         bus.sync_message += on_bus_sync_message
 
     def on_bus_sync_message(message: Gst.Message)
-        if message.structure == null
+        structure: Structure
+        if (structure = message.structure) == null
             return
-        var message_name = message.structure.get_name()
-        if message_name == "prepare-xwindow-id"
+        if structure.name == prepare_xwindow_q
             var imagesink = message.src as Gst.XOverlay
             set_sink(imagesink)
             prepared()

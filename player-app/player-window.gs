@@ -1,7 +1,6 @@
 [indent=4]
 
 uses Gtk
-uses Gst
 
 
 enum PlayListCol
@@ -56,13 +55,49 @@ class PlayerWindow: Window
         playlist_store = new_playlist_store()
         setup_elements()
         setup_widgets()
-        var bus = playlist_control.pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.message += on_bus_message
-        video_area.set_bus(bus)
+
+    def setup_elements()
+        playlist_control = new PlayListControl(playlist_store)
+        playlist_control.eos += on_playlist_control_eos
+        playlist_control.error += on_playlist_control_error
+        playlist_control.playing += on_playlist_control_playing
+        playlist_control.paused += on_playlist_control_paused
+        playlist_control.stopped += on_playlist_control_stopped
+        playlist_control.moved += on_playlist_control_moved
+
+    def setup_widgets()
+        set_title(TITLE)
+        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        delete_event += on_delete
+
+        var main_box = new VBox(false, 0)
+        add(main_box)
+        controls_box = new_buttons_box()
+        main_box.pack_start(controls_box, false, false, 0)
+
+        notebook = new Notebook()
+        main_box.pack_start(notebook, true, true, 0)
+        notebook.set_show_tabs(false)
+        notebook.append_page(new_playlist_box(), new Label("List"))
+        notebook.append_page(new_video_box(), new Label("Video"))
+        notebook.append_page(new_chooser_box(), new Label("Chooser"))
+        notebook.switch_page += on_notebook_switch_page
+        notebook.change_current_page += def(page)
+            print "page %d", page
+        notebook.show()
+
+        seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
+        seeking_scale = new HScale(seeking_adjustment)
+        main_box.pack_start(seeking_scale, false, false, 0)
+        seeking_scale.button_press_event += on_seeking_scale_pressed
+        seeking_scale.button_release_event += on_seeking_scale_released
+        seeking_scale.format_value += on_scale_format_value
+
+        main_box.show()
+        video_area.realize()
 
     def is_playing(): bool
-        return playlist_control.get_state() == State.PLAYING
+        return playlist_control.get_state() == Gst.State.PLAYING
 
     def on_play()
         playlist_control.play()
@@ -116,44 +151,6 @@ class PlayerWindow: Window
     def on_delete(): bool
         main_quit()
         return true
-
-    def setup_elements()
-        playlist_control = new PlayListControl(playlist_store)
-        playlist_control.playing += on_playlist_control_playing
-        playlist_control.paused += on_playlist_control_paused
-        playlist_control.stopped += on_playlist_control_stopped
-        playlist_control.moved += on_playlist_control_moved
-
-    def setup_widgets()
-        set_title(TITLE)
-        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
-        delete_event += on_delete
-
-        var main_box = new VBox(false, 0)
-        add(main_box)
-        controls_box = new_buttons_box()
-        main_box.pack_start(controls_box, false, false, 0)
-
-        notebook = new Notebook()
-        main_box.pack_start(notebook, true, true, 0)
-        notebook.set_show_tabs(false)
-        notebook.append_page(new_playlist_box(), new Label("List"))
-        notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.append_page(new_chooser_box(), new Label("Chooser"))
-        notebook.switch_page += on_notebook_switch_page
-        notebook.change_current_page += def(page)
-            print "page %d", page
-        notebook.show()
-
-        seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
-        seeking_scale = new HScale(seeking_adjustment)
-        main_box.pack_start(seeking_scale, false, false, 0)
-        seeking_scale.button_press_event += on_seeking_scale_pressed
-        seeking_scale.button_release_event += on_seeking_scale_released
-        seeking_scale.format_value += on_scale_format_value
-
-        main_box.show()
-        video_area.realize()
 
     def new_buttons_box(): ButtonBox
         var buttons_box = new HButtonBox()
@@ -268,6 +265,7 @@ class PlayerWindow: Window
         video_area.activated += on_video_area_activated
         video_area.prepared += def()
             notebook.set_current_page(PlayerTab.VIDEO)
+        video_area.set_control(playlist_control)
 
         box.show_all()
         return box
@@ -327,11 +325,11 @@ class PlayerWindow: Window
     def on_play_pause()
         iter: TreeIter
         case playlist_control.get_state()
-            when State.PLAYING
+            when Gst.State.PLAYING
                 on_pause()
-            when State.PAUSED
+            when Gst.State.PAUSED
                 on_play()
-            when State.NULL
+            when Gst.State.NULL
                 if notebook.get_current_page() == PlayerTab.CHOOSER
                     add_file_from_chooser(out iter)
                     if playlist_store.iter_is_valid(iter)
@@ -431,8 +429,8 @@ class PlayerWindow: Window
             real_value = scale_value * stream_duration / 100.0
             real_duration = stream_duration
 
-        sec0: int = (int)(real_value / SECOND)
-        sec1: int = (int)(real_duration / SECOND)
+        sec0: int = (int)(real_value / Gst.SECOND)
+        sec1: int = (int)(real_duration / Gst.SECOND)
         return "%02d:%02d/%02d:%02d".printf(sec0/60, sec0%60, sec1/60, sec1%60)
 
     def add_update_scale_timeout()
@@ -448,11 +446,8 @@ class PlayerWindow: Window
         update_seeking_scale_id = 0
 
     def update_scale_timeout(): bool
-        var format = Format.TIME
-        var pipeline = playlist_control.pipeline
-
-        pipeline.query_position(ref format, out stream_position)
-        pipeline.query_duration(ref format, out stream_duration)
+        stream_position = playlist_control.get_position()
+        stream_duration = playlist_control.get_duration()
 
         if stream_position >= 0 and stream_duration > 0
             var stream_value = stream_position * 100.0 / stream_duration
@@ -480,19 +475,6 @@ class PlayerWindow: Window
             is_fullscreen = true
             controls_box.grab_focus()
 
-    def on_bus_message(message: Message)
-        case message.type
-            when Gst.MessageType.EOS
-                next_button.activate()
-            when Gst.MessageType.ERROR
-                error: Error
-                debug: string
-                setup_error_dialog()
-                message.parse_error(out error, out debug)
-                error_dialog.add_error_with_debug(error, debug)
-            default
-                pass
-
     def setup_error_dialog()
         if error_dialog == null
             seeking_scale.hide()
@@ -506,4 +488,11 @@ class PlayerWindow: Window
         controls_box.show()
         on_stop()
         error_dialog = null
+
+    def on_playlist_control_eos()
+        next_button.activate()
+
+    def on_playlist_control_error(error: Error, debug: string)
+        setup_error_dialog()
+        error_dialog.add_error_with_debug(error, debug)
 

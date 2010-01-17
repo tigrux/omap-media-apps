@@ -12,6 +12,14 @@
 #include <math.h>
 
 
+#define TYPE_CONTROL (control_get_type ())
+#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
+#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
+#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
+
+typedef struct _Control Control;
+typedef struct _ControlIface ControlIface;
+
 #define TYPE_PLAY_LIST_CONTROL (play_list_control_get_type ())
 #define PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAY_LIST_CONTROL, PlayListControl))
 #define PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_PLAY_LIST_CONTROL, PlayListControlClass))
@@ -29,6 +37,12 @@ typedef struct _PlayListControlPrivate PlayListControlPrivate;
 
 #define TYPE_PLAY_LIST_COL (play_list_col_get_type ())
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+
+struct _ControlIface {
+	GTypeInterface parent_iface;
+	GstBus* (*get_bus) (Control* self);
+};
 
 struct _PlayListControl {
 	GObject parent_instance;
@@ -51,7 +65,9 @@ typedef enum  {
 
 
 static gpointer play_list_control_parent_class = NULL;
+static ControlIface* play_list_control_control_parent_iface = NULL;
 
+GType control_get_type (void);
 GType play_list_control_get_type (void);
 enum  {
 	PLAY_LIST_CONTROL_DUMMY_PROPERTY,
@@ -66,6 +82,9 @@ static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkLis
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
 void play_list_control_set_location (PlayListControl* self, const char* location);
+static GstBus* play_list_control_real_get_bus (Control* base);
+gint64 play_list_control_get_position (PlayListControl* self);
+gint64 play_list_control_get_duration (PlayListControl* self);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 GType play_list_col_get_type (void);
 GstState play_list_control_get_state (PlayListControl* self);
@@ -77,16 +96,19 @@ gboolean play_list_control_prev (PlayListControl* self);
 gboolean play_list_control_next (PlayListControl* self);
 void play_list_control_add_file (PlayListControl* self, const char* file, GtkTreeIter* iter);
 void play_list_control_seek (PlayListControl* self, gint64 location);
+void play_list_control_on_bus_message (PlayListControl* self, GstMessage* message);
 GstElement* play_list_control_get_pipeline (PlayListControl* self);
 double play_list_control_get_volume (PlayListControl* self);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
+static void _play_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
 static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void play_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
+static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 static gpointer _g_object_ref0 (gpointer self) {
@@ -127,6 +149,39 @@ void play_list_control_set_location (PlayListControl* self, const char* location
 	g_return_if_fail (location != NULL);
 	g_object_set ((GObject*) self->player, "uri", _tmp0_ = g_strdup_printf ("file://%s", location), NULL, NULL);
 	_g_free0 (_tmp0_);
+}
+
+
+static GstBus* play_list_control_real_get_bus (Control* base) {
+	PlayListControl * self;
+	GstBus* result;
+	self = (PlayListControl*) base;
+	result = gst_element_get_bus (self->player);
+	return result;
+}
+
+
+gint64 play_list_control_get_position (PlayListControl* self) {
+	gint64 result;
+	GstFormat format;
+	gint64 position = 0LL;
+	g_return_val_if_fail (self != NULL, 0LL);
+	format = GST_FORMAT_TIME;
+	gst_element_query_position (self->player, &format, &position);
+	result = position;
+	return result;
+}
+
+
+gint64 play_list_control_get_duration (PlayListControl* self) {
+	gint64 result;
+	GstFormat format;
+	gint64 duration = 0LL;
+	g_return_val_if_fail (self != NULL, 0LL);
+	format = GST_FORMAT_TIME;
+	gst_element_query_duration (self->player, &format, &duration);
+	result = duration;
+	return result;
 }
 
 
@@ -321,6 +376,47 @@ void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row)
 }
 
 
+void play_list_control_on_bus_message (PlayListControl* self, GstMessage* message) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (message != NULL);
+	switch (message->type) {
+		case GST_MESSAGE_EOS:
+		{
+			{
+				g_signal_emit_by_name (self, "eos");
+			}
+			break;
+		}
+		case GST_MESSAGE_ERROR:
+		{
+			{
+				GError* e;
+				char* debug;
+				char* _tmp3_;
+				char* _tmp2_ = NULL;
+				GError* _tmp1_;
+				GError* _tmp0_ = NULL;
+				e = NULL;
+				debug = NULL;
+				(gst_message_parse_error (message, &_tmp0_, &_tmp2_), e = (_tmp1_ = _tmp0_, _g_error_free0 (e), _tmp1_));
+				debug = (_tmp3_ = _tmp2_, _g_free0 (debug), _tmp3_);
+				g_signal_emit_by_name (self, "error", e, debug);
+				_g_error_free0 (e);
+				_g_free0 (debug);
+			}
+			break;
+		}
+		default:
+		{
+			{
+				;
+			}
+			break;
+		}
+	}
+}
+
+
 GstElement* play_list_control_get_pipeline (PlayListControl* self) {
 	GstElement* result;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -354,6 +450,11 @@ guint play_list_control_get_n_rows (PlayListControl* self) {
 }
 
 
+static void _play_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
+	play_list_control_on_bus_message (self, message);
+}
+
+
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -363,11 +464,16 @@ static GObject * play_list_control_constructor (GType type, guint n_construct_pr
 	self = PLAY_LIST_CONTROL (obj);
 	{
 		GstElement* _tmp0_;
+		GstBus* bus;
 		self->player = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), _gst_object_unref0 (self->player), _tmp0_);
 		if (self->player == NULL) {
 			GstElement* _tmp1_;
 			self->player = (_tmp1_ = gst_element_factory_make ("playbin", "player"), _gst_object_unref0 (self->player), _tmp1_);
 		}
+		bus = gst_element_get_bus (self->player);
+		gst_bus_add_signal_watch (bus);
+		g_signal_connect_object (bus, "message", (GCallback) _play_list_control_on_bus_message_gst_bus_message, self, 0);
+		_gst_object_unref0 (bus);
 	}
 	return obj;
 }
@@ -382,10 +488,18 @@ static void play_list_control_class_init (PlayListControlClass * klass) {
 	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_PIPELINE, g_param_spec_object ("pipeline", "pipeline", "pipeline", GST_TYPE_ELEMENT, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_VOLUME, g_param_spec_double ("volume", "volume", "volume", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_N_ROWS, g_param_spec_uint ("n-rows", "n-rows", "n-rows", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_signal_new ("eos", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	g_signal_new ("error", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__POINTER_STRING, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_STRING);
 	g_signal_new ("playing", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("paused", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("stopped", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("moved", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+}
+
+
+static void play_list_control_control_interface_init (ControlIface * iface) {
+	play_list_control_control_parent_iface = g_type_interface_peek_parent (iface);
+	iface->get_bus = play_list_control_real_get_bus;
 }
 
 
@@ -407,7 +521,9 @@ GType play_list_control_get_type (void) {
 	static GType play_list_control_type_id = 0;
 	if (play_list_control_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (PlayListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) play_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (PlayListControl), 0, (GInstanceInitFunc) play_list_control_instance_init, NULL };
+		static const GInterfaceInfo control_info = { (GInterfaceInitFunc) play_list_control_control_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
 		play_list_control_type_id = g_type_register_static (G_TYPE_OBJECT, "PlayListControl", &g_define_type_info, 0);
+		g_type_add_interface_static (play_list_control_type_id, TYPE_CONTROL, &control_info);
 	}
 	return play_list_control_type_id;
 }
@@ -446,6 +562,25 @@ static void play_list_control_set_property (GObject * object, guint property_id,
 	}
 }
 
+
+
+static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__POINTER_STRING) (gpointer data1, gpointer arg_1, const char* arg_2, gpointer data2);
+	register GMarshalFunc_VOID__POINTER_STRING callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 3);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__POINTER_STRING) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_pointer (param_values + 1), g_value_get_string (param_values + 2), data2);
+}
 
 
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {

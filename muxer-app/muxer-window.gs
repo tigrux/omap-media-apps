@@ -110,8 +110,7 @@ class MuxerWindow: Window
         except e: Error
             show_error(e, null)
             return
-        var bus = muxer_control.get_bus()
-        video_area.set_bus(bus)
+        video_area.set_control(muxer_control)
         muxer_control.start_preview()
         muxer_control.eos += record_stopped
         record_button.set_sensitive(true)

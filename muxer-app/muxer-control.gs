@@ -3,7 +3,7 @@
 uses Gst
 
 
-class MuxerControl: GLib.Object
+class MuxerControl: GLib.Object implements Control
     preview_desc: string
     record_desc: string
     recording: bool

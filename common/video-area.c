@@ -4,14 +4,20 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gst/interfaces/xoverlay.h>
-#include <gst/gst.h>
 #include <gdk/gdk.h>
-#include <stdlib.h>
-#include <string.h>
 #include <gdk/gdkx.h>
 
+
+#define TYPE_CONTROL (control_get_type ())
+#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
+#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
+#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
+
+typedef struct _Control Control;
+typedef struct _ControlIface ControlIface;
 
 #define TYPE_VIDEO_AREA (video_area_get_type ())
 #define VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_VIDEO_AREA, VideoArea))
@@ -24,14 +30,19 @@ typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
 typedef struct _VideoAreaPrivate VideoAreaPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
-#define _g_free0(var) (var = (g_free (var), NULL))
+#define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
+
+struct _ControlIface {
+	GTypeInterface parent_iface;
+	GstBus* (*get_bus) (Control* self);
+};
 
 struct _VideoArea {
 	GtkDrawingArea parent_instance;
 	VideoAreaPrivate * priv;
 	guint32 xid;
-	GstXOverlay* imagesink;
 	GstBus* bus;
+	GstXOverlay* imagesink;
 };
 
 struct _VideoAreaClass {
@@ -39,8 +50,12 @@ struct _VideoAreaClass {
 };
 
 
+extern GQuark video_area_prepare_xwindow_q;
+GQuark video_area_prepare_xwindow_q = 0U;
 static gpointer video_area_parent_class = NULL;
 
+GType control_get_type (void);
+GstBus* control_get_bus (Control* self);
 GType video_area_get_type (void);
 enum  {
 	VIDEO_AREA_DUMMY_PROPERTY
@@ -51,15 +66,37 @@ static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventBut
 static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* event);
 void video_area_on_bus_sync_message (VideoArea* self, GstMessage* message);
 static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
-void video_area_set_bus (VideoArea* self, GstBus* bus);
+void video_area_set_control (VideoArea* self, Control* control);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 static void _lambda0_ (VideoArea* self);
 static void __lambda0__gtk_widget_realize (VideoArea* _sender, gpointer self);
 static GObject * video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void video_area_finalize (GObject* obj);
-static int _vala_strcmp0 (const char * str1, const char * str2);
 
+
+
+GstBus* control_get_bus (Control* self) {
+	return CONTROL_GET_INTERFACE (self)->get_bus (self);
+}
+
+
+static void control_base_init (ControlIface * iface) {
+	static gboolean initialized = FALSE;
+	if (!initialized) {
+		initialized = TRUE;
+	}
+}
+
+
+GType control_get_type (void) {
+	static GType control_type_id = 0;
+	if (control_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (ControlIface), (GBaseInitFunc) control_base_init, (GBaseFinalizeFunc) NULL, (GClassInitFunc) NULL, (GClassFinalizeFunc) NULL, NULL, 0, 0, (GInstanceInitFunc) NULL, NULL };
+		control_type_id = g_type_register_static (G_TYPE_INTERFACE, "Control", &g_define_type_info, 0);
+	}
+	return control_type_id;
+}
 
 
 static gpointer _gst_object_ref0 (gpointer self) {
@@ -113,33 +150,40 @@ static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sende
 }
 
 
-void video_area_set_bus (VideoArea* self, GstBus* bus) {
+void video_area_set_control (VideoArea* self, Control* control) {
 	GstBus* _tmp0_;
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (bus != NULL);
-	self->bus = (_tmp0_ = _gst_object_ref0 (bus), _gst_object_unref0 (self->bus), _tmp0_);
-	gst_bus_enable_sync_message_emission (bus);
-	g_signal_connect_object (bus, "sync-message", (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self, 0);
+	g_return_if_fail (control != NULL);
+	self->bus = (_tmp0_ = control_get_bus (control), _gst_object_unref0 (self->bus), _tmp0_);
+	gst_bus_enable_sync_message_emission (self->bus);
+	g_signal_connect_object (self->bus, "sync-message", (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self, 0);
+}
+
+
+static gpointer _gst_structure_copy0 (gpointer self) {
+	return self ? gst_structure_copy (self) : NULL;
 }
 
 
 void video_area_on_bus_sync_message (VideoArea* self, GstMessage* message) {
-	char* message_name;
+	GstStructure* structure;
+	GstStructure* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (message != NULL);
-	if (message->structure == NULL) {
+	structure = NULL;
+	if ((structure = (_tmp0_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (structure), _tmp0_)) == NULL) {
+		_gst_structure_free0 (structure);
 		return;
 	}
-	message_name = g_strdup (gst_structure_get_name (message->structure));
-	if (_vala_strcmp0 (message_name, "prepare-xwindow-id") == 0) {
-		GstObject* _tmp0_;
+	if (structure->name == video_area_prepare_xwindow_q) {
+		GstObject* _tmp1_;
 		GstXOverlay* imagesink;
-		imagesink = _gst_object_ref0 ((_tmp0_ = message->src, GST_IS_X_OVERLAY (_tmp0_) ? ((GstXOverlay*) _tmp0_) : NULL));
+		imagesink = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL));
 		video_area_set_sink (self, imagesink);
 		g_signal_emit_by_name (self, "prepared");
 		_gst_object_unref0 (imagesink);
 	}
-	_g_free0 (message_name);
+	_gst_structure_free0 (structure);
 }
 
 
@@ -190,6 +234,7 @@ static void video_area_class_init (VideoAreaClass * klass) {
 	G_OBJECT_CLASS (klass)->finalize = video_area_finalize;
 	g_signal_new ("prepared", TYPE_VIDEO_AREA, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	g_signal_new ("activated", TYPE_VIDEO_AREA, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	video_area_prepare_xwindow_q = g_quark_from_string ("prepare-xwindow-id");
 }
 
 
@@ -206,8 +251,8 @@ static void video_area_finalize (GObject* obj) {
 			g_signal_handlers_disconnect_matched (self->bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("sync-message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self);
 		}
 	}
-	_gst_object_unref0 (self->imagesink);
 	_gst_object_unref0 (self->bus);
+	_gst_object_unref0 (self->imagesink);
 	G_OBJECT_CLASS (video_area_parent_class)->finalize (obj);
 }
 
@@ -219,17 +264,6 @@ GType video_area_get_type (void) {
 		video_area_type_id = g_type_register_static (GTK_TYPE_DRAWING_AREA, "VideoArea", &g_define_type_info, 0);
 	}
 	return video_area_type_id;
-}
-
-
-static int _vala_strcmp0 (const char * str1, const char * str2) {
-	if (str1 == NULL) {
-		return -(str1 != str2);
-	}
-	if (str2 == NULL) {
-		return str1 != str2;
-	}
-	return strcmp (str1, str2);
 }
 
 
