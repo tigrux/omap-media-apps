@@ -4,12 +4,6 @@ uses Gtk
 
 const TITLE: string = "ImageViewApp"
 
-enum ImageListCol
-    TEXT
-    FILE
-    PIXBUF
-    VALID
-
 
 class ImageViewWindow: ApplicationWindow
     chooser_button: FileChooserButton
@@ -51,14 +45,21 @@ class ImageViewWindow: ApplicationWindow
         icon_view = new IconView()
         scrolled_window.add(icon_view)
         icon_view.set_model(iconlist_store)
-        icon_view.set_text_column(ImageListCol.TEXT)
-        icon_view.set_pixbuf_column(ImageListCol.PIXBUF)
+        icon_view.set_text_column(iconlist_control.get_text_column())
+        icon_view.set_pixbuf_column(iconlist_control.get_pixbuf_column())
         icon_view.set_row_spacing(0)
         icon_view.set_column_spacing(0)
         icon_view.set_spacing(0)
         icon_view.set_margin(0)
+        icon_view.item_activated += on_icon_activated
         
         return box
+
+    def on_icon_activated(path: TreePath)
+        iter: TreeIter
+        iconlist_store.get_iter(out iter, path)
+        print "Valid = %s", iconlist_control.iter_get_valid(iter).to_string()
+        print "File = %s", iconlist_control.iter_get_file(iter).to_string()
 
     def new_video_box(): Box
         var box = new VBox(false, 0)

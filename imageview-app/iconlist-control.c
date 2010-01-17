@@ -22,6 +22,8 @@
 typedef struct _IconListControl IconListControl;
 typedef struct _IconListControlClass IconListControlClass;
 typedef struct _IconListControlPrivate IconListControlPrivate;
+
+#define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
@@ -29,8 +31,6 @@ typedef struct _IconListControlPrivate IconListControlPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 typedef struct _IconListControlAddFolderData IconListControlAddFolderData;
-
-#define TYPE_IMAGE_LIST_COL (image_list_col_get_type ())
 typedef struct _IconListControlRetrieveThumbnailsData IconListControlRetrieveThumbnailsData;
 #define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
 
@@ -55,6 +55,13 @@ struct _IconListControlPrivate {
 	GtkListStore* _iconlist_store;
 };
 
+typedef enum  {
+	ICON_LIST_CONTROL_COL_TEXT,
+	ICON_LIST_CONTROL_COL_FILE,
+	ICON_LIST_CONTROL_COL_PIXBUF,
+	ICON_LIST_CONTROL_COL_VALID
+} IconListControlCol;
+
 struct _IconListControlAddFolderData {
 	int _state_;
 	GAsyncResult* _res_;
@@ -69,13 +76,6 @@ struct _IconListControlAddFolderData {
 	GError * e1;
 	GError * _inner_error_;
 };
-
-typedef enum  {
-	IMAGE_LIST_COL_TEXT,
-	IMAGE_LIST_COL_FILE,
-	IMAGE_LIST_COL_PIXBUF,
-	IMAGE_LIST_COL_VALID
-} ImageListCol;
 
 struct _IconListControlRetrieveThumbnailsData {
 	int _state_;
@@ -117,6 +117,7 @@ enum  {
 	ICON_LIST_CONTROL_DUMMY_PROPERTY,
 	ICON_LIST_CONTROL_ICONLIST_STORE
 };
+GType icon_list_control_col_get_type (void);
 void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* value);
 void icon_list_control_setup_icons (IconListControl* self, GError** error);
 void icon_list_control_setup_elements (IconListControl* self, GError** error);
@@ -134,18 +135,32 @@ void icon_list_control_add_folder (IconListControl* self, const char* dirname, G
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* data);
 GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self);
-GType image_list_col_get_type (void);
 static void icon_list_control_retrieve_thumbnails_data_free (gpointer _data);
 static void icon_list_control_retrieve_thumbnails_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean _icon_list_control_retrieve_thumbnails_co_gsource_func (gpointer self);
 static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
 static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetrieveThumbnailsData* data);
 static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj);
+IconListControlCol icon_list_control_get_text_column (void);
+IconListControlCol icon_list_control_get_pixbuf_column (void);
+gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
+char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 static void icon_list_control_finalize (GObject* obj);
 static void icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void icon_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
+
+
+
+GType icon_list_control_col_get_type (void) {
+	static GType icon_list_control_col_type_id = 0;
+	if (G_UNLIKELY (icon_list_control_col_type_id == 0)) {
+		static const GEnumValue values[] = {{ICON_LIST_CONTROL_COL_TEXT, "ICON_LIST_CONTROL_COL_TEXT", "text"}, {ICON_LIST_CONTROL_COL_FILE, "ICON_LIST_CONTROL_COL_FILE", "file"}, {ICON_LIST_CONTROL_COL_PIXBUF, "ICON_LIST_CONTROL_COL_PIXBUF", "pixbuf"}, {ICON_LIST_CONTROL_COL_VALID, "ICON_LIST_CONTROL_COL_VALID", "valid"}, {0, NULL, NULL}};
+		icon_list_control_col_type_id = g_enum_register_static ("IconListControlCol", values);
+	}
+	return icon_list_control_col_type_id;
+}
 
 
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error) {
@@ -446,7 +461,7 @@ void icon_list_control_add_next_files (IconListControl* self, const char* dirnam
 					char* text;
 					file = g_build_filename (dirname, g_file_info_get_name (info), NULL);
 					text = g_strdup (g_file_info_get_display_name (info));
-					gtk_list_store_insert_with_values (self->priv->_iconlist_store, NULL, -1, IMAGE_LIST_COL_TEXT, text, IMAGE_LIST_COL_FILE, file, IMAGE_LIST_COL_PIXBUF, icon_list_control_loading_pixbuf, -1, -1);
+					gtk_list_store_insert_with_values (self->priv->_iconlist_store, NULL, -1, ICON_LIST_CONTROL_COL_TEXT, text, ICON_LIST_CONTROL_COL_FILE, file, ICON_LIST_CONTROL_COL_PIXBUF, icon_list_control_loading_pixbuf, -1, -1);
 					_g_free0 (file);
 					_g_free0 (text);
 				}
@@ -523,7 +538,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 							}
 						}
 						data->_tmp1_ = FALSE;
-						gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, IMAGE_LIST_COL_TEXT, &data->display, IMAGE_LIST_COL_FILE, &data->file, -1, -1);
+						gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_TEXT, &data->display, ICON_LIST_CONTROL_COL_FILE, &data->file, -1, -1);
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
 						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_PLAYING);
@@ -542,7 +557,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 						} else {
 							data->pixbuf = (data->_tmp7_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp7_);
 						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, IMAGE_LIST_COL_PIXBUF, data->pixbuf, IMAGE_LIST_COL_VALID, data->valid, -1, -1);
+						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, -1, -1);
 						_g_free0 (data->file);
 						_g_free0 (data->display);
 						_g_object_unref0 (data->pixbuf);
@@ -624,6 +639,41 @@ void icon_list_control_on_bus_message (IconListControl* self, GstMessage* messag
 			break;
 		}
 	}
+}
+
+
+IconListControlCol icon_list_control_get_text_column (void) {
+	IconListControlCol result;
+	result = ICON_LIST_CONTROL_COL_TEXT;
+	return result;
+}
+
+
+IconListControlCol icon_list_control_get_pixbuf_column (void) {
+	IconListControlCol result;
+	result = ICON_LIST_CONTROL_COL_PIXBUF;
+	return result;
+}
+
+
+gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter) {
+	gboolean result;
+	gboolean valid = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_VALID, &valid, -1, -1);
+	result = valid;
+	return result;
+}
+
+
+char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter) {
+	char* result;
+	char* file;
+	g_return_val_if_fail (self != NULL, NULL);
+	file = NULL;
+	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_FILE, &file, -1, -1);
+	result = file;
+	return result;
 }
 
 

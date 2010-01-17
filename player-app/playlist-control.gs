@@ -5,6 +5,11 @@ uses Gst
 
 
 class PlayListControl: GLib.Object implements Control
+    enum Col
+        ICON
+        NAME
+        FILE
+
     player: Element
     playlist_store: ListStore
     current_row: TreePath
@@ -70,14 +75,14 @@ class PlayListControl: GLib.Object implements Control
             return false
 
         filename: string
-        playlist_store.get(iter, PlayListCol.FULLNAME, out filename, -1)
+        playlist_store.get(iter, Col.FILE, out filename, -1)
 
         var state = get_state()
         if state == State.NULL
             set_location(filename)
 
         if player.set_state(State.PLAYING) != StateChangeReturn.FAILURE
-            playlist_store.set(iter, PlayListCol.ICON, STOCK_MEDIA_PLAY, -1)
+            playlist_store.set(iter, Col.ICON, STOCK_MEDIA_PLAY, -1)
             playing(iter)
             return true
         return false
@@ -87,7 +92,7 @@ class PlayListControl: GLib.Object implements Control
             iter: TreeIter
             if get_iter(out iter)
                 playlist_store.set(iter, \
-                    PlayListCol.ICON, STOCK_MEDIA_PAUSE, -1)
+                    Col.ICON, STOCK_MEDIA_PAUSE, -1)
             paused(iter)
             return true
         return false
@@ -96,7 +101,7 @@ class PlayListControl: GLib.Object implements Control
         if player.set_state(State.NULL) != StateChangeReturn.FAILURE
             iter: TreeIter
             if get_iter(out iter)
-                playlist_store.set(iter, PlayListCol.ICON, null, -1)
+                playlist_store.set(iter, Col.ICON, null, -1)
             stopped(iter)
             return true
         return false
@@ -122,8 +127,8 @@ class PlayListControl: GLib.Object implements Control
     def add_file(file: string)
         playlist_store.insert_with_values( \
             null, -1, \
-            PlayListCol.NAME, Filename.display_basename(file), \
-            PlayListCol.FULLNAME, file, \
+            Col.NAME, Filename.display_basename(file), \
+            Col.FILE, file, \
             -1)
 
     def seek(location: int64)
@@ -175,4 +180,20 @@ class PlayListControl: GLib.Object implements Control
                 error(e, debug)
             default
                 pass
+
+    def static get_name_column(): int
+        return Col.NAME
+
+    def static get_icon_column(): int
+        return Col.ICON
+
+    def iter_get_name(iter: TreeIter): string
+        name: string
+        playlist_store.get(iter, Col.NAME, out name, -1)
+        return name
+
+    def iter_get_file(iter: TreeIter): string
+        file: string
+        playlist_store.get(iter, Col.FILE, out file, -1)
+        return file
 

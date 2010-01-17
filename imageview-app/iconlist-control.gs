@@ -13,6 +13,12 @@ const IMAGE_FILE_ATTRIBUTES: string = "standard::name,standard::display-name,sta
 
 
 class IconListControl: GLib.Object
+    enum Col
+        TEXT
+        FILE
+        PIXBUF
+        VALID
+
     pipeline: Pipeline
     filesrc: dynamic Element
     imagesink: dynamic Element
@@ -98,9 +104,9 @@ class IconListControl: GLib.Object
                 var file = Path.build_filename(dirname, info.get_name())
                 var text = info.get_display_name()
                 iconlist_store.insert_with_values(null, -1, \
-                    ImageListCol.TEXT, text, \
-                    ImageListCol.FILE, file, \
-                    ImageListCol.PIXBUF, loading_pixbuf, \
+                    Col.TEXT, text, \
+                    Col.FILE, file, \
+                    Col.PIXBUF, loading_pixbuf, \
                     -1)
 
     def async retrieve_thumbnails(cancellable: Cancellable)
@@ -112,8 +118,8 @@ class IconListControl: GLib.Object
                 file: string
                 display: string
                 iconlist_store.get(iter, \
-                    ImageListCol.TEXT, out display, \
-                    ImageListCol.FILE, out file, \
+                    Col.TEXT, out display, \
+                    Col.FILE, out file, \
                     -1)
                 continuation_error = null
                 filesrc.location = file
@@ -127,8 +133,8 @@ class IconListControl: GLib.Object
                 else
                     pixbuf = missing_pixbuf
                 iconlist_store.set(iter, \
-                    ImageListCol.PIXBUF, pixbuf, \
-                    ImageListCol.VALID, valid, \
+                    Col.PIXBUF, pixbuf, \
+                    Col.VALID, valid, \
                     -1)
             while \
                 iconlist_store.iter_next(ref iter) and \
@@ -150,4 +156,20 @@ class IconListControl: GLib.Object
                 Idle.add(continuation)
             default
                 pass
+
+    def static get_text_column(): Col
+        return Col.TEXT
+
+    def static get_pixbuf_column(): Col
+        return Col.PIXBUF
+
+    def iter_get_valid(iter: TreeIter): bool
+        valid: bool
+        iconlist_store.get(iter, Col.VALID, out valid, -1)
+        return valid
+
+    def iter_get_file(iter: TreeIter): string
+        file: string
+        iconlist_store.get(iter, Col.FILE, out file, -1)
+        return file
 

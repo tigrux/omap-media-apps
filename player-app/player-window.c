@@ -13,8 +13,6 @@
 #include <gst/gst.h>
 
 
-#define TYPE_PLAY_LIST_COL (play_list_col_get_type ())
-
 #define TYPE_APPLICATION_WINDOW (application_window_get_type ())
 #define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
 #define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
@@ -81,12 +79,6 @@ typedef struct _ControlIface ControlIface;
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define __g_list_free_gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_gtk_tree_path_free (var), NULL)))
 
-typedef enum  {
-	PLAY_LIST_COL_ICON,
-	PLAY_LIST_COL_NAME,
-	PLAY_LIST_COL_FULLNAME
-} PlayListCol;
-
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
 	ApplicationWindowPrivate * priv;
@@ -145,7 +137,6 @@ struct _ControlIface {
 
 static gpointer player_window_parent_class = NULL;
 
-GType play_list_col_get_type (void);
 #define UPDATE_INTERVAL ((guint) 200)
 #define TITLE "PlayerApp"
 GType application_window_get_type (void);
@@ -227,10 +218,13 @@ GType control_get_type (void);
 void video_area_set_control (VideoArea* self, Control* control);
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
+gint play_list_control_get_icon_column (void);
+gint play_list_control_get_name_column (void);
 GtkListStore* player_window_new_playlist_store (PlayerWindow* self);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
 gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* iter);
+char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
 void player_window_add_update_scale_timeout (PlayerWindow* self);
 void player_window_remove_update_scale_timeout (PlayerWindow* self);
 void player_window_setup_chooser (PlayerWindow* self);
@@ -257,17 +251,6 @@ static void player_window_finalize (GObject* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 
-
-
-
-GType play_list_col_get_type (void) {
-	static GType play_list_col_type_id = 0;
-	if (G_UNLIKELY (play_list_col_type_id == 0)) {
-		static const GEnumValue values[] = {{PLAY_LIST_COL_ICON, "PLAY_LIST_COL_ICON", "icon"}, {PLAY_LIST_COL_NAME, "PLAY_LIST_COL_NAME", "name"}, {PLAY_LIST_COL_FULLNAME, "PLAY_LIST_COL_FULLNAME", "fullname"}, {0, NULL, NULL}};
-		play_list_col_type_id = g_enum_register_static ("PlayListCol", values);
-	}
-	return play_list_col_type_id;
-}
 
 
 static void _player_window_on_playlist_control_eos_play_list_control_eos (PlayListControl* _sender, gpointer self) {
@@ -665,9 +648,9 @@ GtkTreeView* player_window_new_playlist_view (PlayerWindow* self) {
 	view = g_object_ref_sink ((GtkTreeView*) gtk_tree_view_new ());
 	gtk_tree_view_set_headers_visible (view, FALSE);
 	g_signal_connect_object (view, "row-activated", (GCallback) _player_window_on_row_activated_gtk_tree_view_row_activated, self, 0);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Icon", (GtkCellRenderer*) (_tmp0_ = g_object_ref_sink ((GtkCellRendererPixbuf*) gtk_cell_renderer_pixbuf_new ())), "stock-id", PLAY_LIST_COL_ICON, NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Icon", (GtkCellRenderer*) (_tmp0_ = g_object_ref_sink ((GtkCellRendererPixbuf*) gtk_cell_renderer_pixbuf_new ())), "stock-id", play_list_control_get_icon_column (), NULL, NULL);
 	_g_object_unref0 (_tmp0_);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Song", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", PLAY_LIST_COL_NAME, NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Song", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_name_column (), NULL, NULL);
 	_g_object_unref0 (_tmp1_);
 	result = view;
 	return result;
@@ -744,15 +727,13 @@ void player_window_on_play_pause (PlayerWindow* self) {
 
 
 void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter) {
-	char* name;
+	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-	name = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_COL_NAME, &name, -1, -1);
-	gtk_window_set_title ((GtkWindow*) self, name);
+	gtk_window_set_title ((GtkWindow*) self, _tmp0_ = play_list_control_iter_get_name (self->playlist_control, iter));
+	_g_free0 (_tmp0_);
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PAUSE);
 	player_window_add_update_scale_timeout (self);
 	gtk_widget_show ((GtkWidget*) self->seeking_scale);
-	_g_free0 (name);
 }
 
 

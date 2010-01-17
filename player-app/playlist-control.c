@@ -30,12 +30,12 @@ typedef struct _ControlIface ControlIface;
 typedef struct _PlayListControl PlayListControl;
 typedef struct _PlayListControlClass PlayListControlClass;
 typedef struct _PlayListControlPrivate PlayListControlPrivate;
+
+#define PLAY_LIST_CONTROL_TYPE_COL (play_list_control_col_get_type ())
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-
-#define TYPE_PLAY_LIST_COL (play_list_col_get_type ())
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
@@ -58,10 +58,10 @@ struct _PlayListControlClass {
 };
 
 typedef enum  {
-	PLAY_LIST_COL_ICON,
-	PLAY_LIST_COL_NAME,
-	PLAY_LIST_COL_FULLNAME
-} PlayListCol;
+	PLAY_LIST_CONTROL_COL_ICON,
+	PLAY_LIST_CONTROL_COL_NAME,
+	PLAY_LIST_CONTROL_COL_FILE
+} PlayListControlCol;
 
 
 static gpointer play_list_control_parent_class = NULL;
@@ -75,6 +75,7 @@ enum  {
 	PLAY_LIST_CONTROL_VOLUME,
 	PLAY_LIST_CONTROL_N_ROWS
 };
+GType play_list_control_col_get_type (void);
 void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row);
 static void _play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
 void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row);
@@ -86,7 +87,6 @@ static GstBus* play_list_control_real_get_bus (Control* base);
 gint64 play_list_control_get_position (PlayListControl* self);
 gint64 play_list_control_get_duration (PlayListControl* self);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
-GType play_list_col_get_type (void);
 GstState play_list_control_get_state (PlayListControl* self);
 gboolean play_list_control_play (PlayListControl* self);
 gboolean play_list_control_pause (PlayListControl* self);
@@ -97,6 +97,10 @@ gboolean play_list_control_next (PlayListControl* self);
 void play_list_control_add_file (PlayListControl* self, const char* file);
 void play_list_control_seek (PlayListControl* self, gint64 location);
 void play_list_control_on_bus_message (PlayListControl* self, GstMessage* message);
+gint play_list_control_get_name_column (void);
+gint play_list_control_get_icon_column (void);
+char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
+char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
 GstElement* play_list_control_get_pipeline (PlayListControl* self);
 double play_list_control_get_volume (PlayListControl* self);
 void play_list_control_set_volume (PlayListControl* self, double value);
@@ -110,6 +114,17 @@ static void play_list_control_set_property (GObject * object, guint property_id,
 
 static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+
+
+GType play_list_control_col_get_type (void) {
+	static GType play_list_control_col_type_id = 0;
+	if (G_UNLIKELY (play_list_control_col_type_id == 0)) {
+		static const GEnumValue values[] = {{PLAY_LIST_CONTROL_COL_ICON, "PLAY_LIST_CONTROL_COL_ICON", "icon"}, {PLAY_LIST_CONTROL_COL_NAME, "PLAY_LIST_CONTROL_COL_NAME", "name"}, {PLAY_LIST_CONTROL_COL_FILE, "PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
+		play_list_control_col_type_id = g_enum_register_static ("PlayListControlCol", values);
+	}
+	return play_list_control_col_type_id;
+}
+
 
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
@@ -196,13 +211,13 @@ gboolean play_list_control_play (PlayListControl* self) {
 		return result;
 	}
 	filename = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, &iter, PLAY_LIST_COL_FULLNAME, &filename, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_FILE, &filename, -1, -1);
 	state = play_list_control_get_state (self);
 	if (state == GST_STATE_NULL) {
 		play_list_control_set_location (self, filename);
 	}
 	if (gst_element_set_state (self->player, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
-		gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
+		gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
 		g_signal_emit_by_name (self, "playing", &iter);
 		result = TRUE;
 		_g_free0 (filename);
@@ -220,7 +235,7 @@ gboolean play_list_control_pause (PlayListControl* self) {
 	if (gst_element_set_state (self->player, GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
 		if (play_list_control_get_iter (self, &iter)) {
-			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_COL_ICON, GTK_STOCK_MEDIA_PAUSE, -1, -1);
+			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PAUSE, -1, -1);
 		}
 		g_signal_emit_by_name (self, "paused", &iter);
 		result = TRUE;
@@ -237,7 +252,7 @@ gboolean play_list_control_stop (PlayListControl* self) {
 	if (gst_element_set_state (self->player, GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
 		if (play_list_control_get_iter (self, &iter)) {
-			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_COL_ICON, NULL, -1, -1);
+			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, NULL, -1, -1);
 		}
 		g_signal_emit_by_name (self, "stopped", &iter);
 		result = TRUE;
@@ -289,7 +304,7 @@ void play_list_control_add_file (PlayListControl* self, const char* file) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (file != NULL);
-	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, PLAY_LIST_COL_NAME, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_COL_FULLNAME, file, -1, -1);
+	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, PLAY_LIST_CONTROL_COL_NAME, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_CONTROL_COL_FILE, file, -1, -1);
 	_g_free0 (_tmp0_);
 }
 
@@ -414,6 +429,42 @@ void play_list_control_on_bus_message (PlayListControl* self, GstMessage* messag
 			break;
 		}
 	}
+}
+
+
+gint play_list_control_get_name_column (void) {
+	gint result;
+	result = (gint) PLAY_LIST_CONTROL_COL_NAME;
+	return result;
+}
+
+
+gint play_list_control_get_icon_column (void) {
+	gint result;
+	result = (gint) PLAY_LIST_CONTROL_COL_ICON;
+	return result;
+}
+
+
+char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter) {
+	char* result;
+	char* name;
+	g_return_val_if_fail (self != NULL, NULL);
+	name = NULL;
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_NAME, &name, -1, -1);
+	result = name;
+	return result;
+}
+
+
+char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter) {
+	char* result;
+	char* file;
+	g_return_val_if_fail (self != NULL, NULL);
+	file = NULL;
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_FILE, &file, -1, -1);
+	result = file;
+	return result;
 }
 
 

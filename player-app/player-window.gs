@@ -3,11 +3,6 @@
 uses Gtk
 
 
-enum PlayListCol
-    ICON
-    NAME
-    FULLNAME
-
 const UPDATE_INTERVAL: uint = 200
 const TITLE: string = "PlayerApp"
 
@@ -216,11 +211,11 @@ class PlayerWindow: ApplicationWindow
 
         view.insert_column_with_attributes(\
             -1, "Icon", new CellRendererPixbuf(), \
-            "stock-id", PlayListCol.ICON, null)
+            "stock-id", playlist_control.get_icon_column(), null)
 
         view.insert_column_with_attributes(\
             -1, "Song", new CellRendererText(), \
-            "markup", PlayListCol.NAME, null)
+            "markup", playlist_control.get_name_column(), null)
 
         return view
 
@@ -254,9 +249,7 @@ class PlayerWindow: ApplicationWindow
                 on_play()
 
     def on_playlist_control_playing(iter: TreeIter)
-        name: string
-        playlist_store.get(iter, PlayListCol.NAME, out name, -1)
-        set_title(name)
+        set_title(playlist_control.iter_get_name(iter))
         play_pause_button.set_stock_id(STOCK_MEDIA_PAUSE)
         add_update_scale_timeout()
         seeking_scale.show()

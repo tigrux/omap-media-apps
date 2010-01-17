@@ -11,8 +11,6 @@
 #include <gdk-pixbuf/gdk-pixdata.h>
 
 
-#define TYPE_IMAGE_LIST_COL (image_list_col_get_type ())
-
 #define TYPE_APPLICATION_WINDOW (application_window_get_type ())
 #define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
 #define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
@@ -57,14 +55,9 @@ typedef struct _IconListControlClass IconListControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define TYPE_APPLICATION_TAB (application_tab_get_type ())
+#define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
 
-typedef enum  {
-	IMAGE_LIST_COL_TEXT,
-	IMAGE_LIST_COL_FILE,
-	IMAGE_LIST_COL_PIXBUF,
-	IMAGE_LIST_COL_VALID
-} ImageListCol;
+#define TYPE_APPLICATION_TAB (application_tab_get_type ())
 
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
@@ -95,6 +88,13 @@ struct _ImageViewWindowClass {
 };
 
 typedef enum  {
+	ICON_LIST_CONTROL_COL_TEXT,
+	ICON_LIST_CONTROL_COL_FILE,
+	ICON_LIST_CONTROL_COL_PIXBUF,
+	ICON_LIST_CONTROL_COL_VALID
+} IconListControlCol;
+
+typedef enum  {
 	APPLICATION_TAB_LIST,
 	APPLICATION_TAB_VIDEO
 } ApplicationTab;
@@ -103,7 +103,6 @@ typedef enum  {
 static gpointer image_view_window_parent_class = NULL;
 
 #define TITLE "ImageViewApp"
-GType image_list_col_get_type (void);
 GType application_window_get_type (void);
 GType image_view_window_get_type (void);
 GType video_area_get_type (void);
@@ -122,6 +121,13 @@ void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
+GType icon_list_control_col_get_type (void);
+IconListControlCol icon_list_control_get_text_column (void);
+IconListControlCol icon_list_control_get_pixbuf_column (void);
+void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path);
+static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self);
+gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
+char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 GType application_tab_get_type (void);
@@ -140,17 +146,6 @@ static GObject * image_view_window_constructor (GType type, guint n_construct_pr
 static void image_view_window_finalize (GObject* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
-
-
-
-GType image_list_col_get_type (void) {
-	static GType image_list_col_type_id = 0;
-	if (G_UNLIKELY (image_list_col_type_id == 0)) {
-		static const GEnumValue values[] = {{IMAGE_LIST_COL_TEXT, "IMAGE_LIST_COL_TEXT", "text"}, {IMAGE_LIST_COL_FILE, "IMAGE_LIST_COL_FILE", "file"}, {IMAGE_LIST_COL_PIXBUF, "IMAGE_LIST_COL_PIXBUF", "pixbuf"}, {IMAGE_LIST_COL_VALID, "IMAGE_LIST_COL_VALID", "valid"}, {0, NULL, NULL}};
-		image_list_col_type_id = g_enum_register_static ("ImageListCol", values);
-	}
-	return image_list_col_type_id;
-}
 
 
 static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self) {
@@ -205,6 +200,11 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 }
 
 
+static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self) {
+	image_view_window_on_icon_activated (self, path);
+}
+
+
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
@@ -218,15 +218,50 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	self->icon_view = (_tmp0_ = g_object_ref_sink ((GtkIconView*) gtk_icon_view_new ()), _g_object_unref0 (self->icon_view), _tmp0_);
 	gtk_container_add ((GtkContainer*) scrolled_window, (GtkWidget*) self->icon_view);
 	gtk_icon_view_set_model (self->icon_view, (GtkTreeModel*) self->iconlist_store);
-	gtk_icon_view_set_text_column (self->icon_view, (gint) IMAGE_LIST_COL_TEXT);
-	gtk_icon_view_set_pixbuf_column (self->icon_view, (gint) IMAGE_LIST_COL_PIXBUF);
+	gtk_icon_view_set_text_column (self->icon_view, (gint) icon_list_control_get_text_column ());
+	gtk_icon_view_set_pixbuf_column (self->icon_view, (gint) icon_list_control_get_pixbuf_column ());
 	gtk_icon_view_set_row_spacing (self->icon_view, 0);
 	gtk_icon_view_set_column_spacing (self->icon_view, 0);
 	gtk_icon_view_set_spacing (self->icon_view, 0);
 	gtk_icon_view_set_margin (self->icon_view, 0);
+	g_signal_connect_object (self->icon_view, "item-activated", (GCallback) _image_view_window_on_icon_activated_gtk_icon_view_item_activated, self, 0);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
 	return result;
+}
+
+
+static char* bool_to_string (gboolean self) {
+	char* result;
+	if (self) {
+		result = g_strdup ("true");
+		return result;
+	} else {
+		result = g_strdup ("false");
+		return result;
+	}
+}
+
+
+static const char* string_to_string (const char* self) {
+	const char* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self;
+	return result;
+}
+
+
+void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path) {
+	GtkTreeIter iter = {0};
+	char* _tmp0_;
+	char* _tmp1_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (path != NULL);
+	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
+	g_print ("Valid = %s\n", _tmp0_ = bool_to_string (icon_list_control_iter_get_valid (self->iconlist_control, &iter)));
+	_g_free0 (_tmp0_);
+	g_print ("File = %s\n", string_to_string (_tmp1_ = icon_list_control_iter_get_file (self->iconlist_control, &iter)));
+	_g_free0 (_tmp1_);
 }
 
 
