@@ -21,12 +21,11 @@ class PlayerWindow: Window
     playlist_store: ListStore
     playlist_selection: TreeSelection
     playlist_control: PlayListControl
-    controls_box: Box
+    toolbar: Toolbar
     notebook: Notebook
-    add_button: Button
-    next_button: Button
-    play_pause_image: Gtk.Image
-    remove_close_image: Gtk.Image
+    play_pause_button: ToolButton
+    add_button: ToolButton
+    next_button: ToolButton
     remove_image: Gtk.Image
     video_area: VideoArea
     seeking_scale: Scale
@@ -68,8 +67,8 @@ class PlayerWindow: Window
 
         var main_box = new VBox(false, 0)
         add(main_box)
-        controls_box = new_buttons_box()
-        main_box.pack_start(controls_box, false, false, 0)
+
+        main_box.pack_start(new_toolbar(), false, false, 0)
 
         notebook = new Notebook()
         main_box.pack_start(notebook, true, true, 0)
@@ -123,51 +122,51 @@ class PlayerWindow: Window
         main_quit()
         return true
 
-    def new_buttons_box(): ButtonBox
-        var buttons_box = new HButtonBox()
-        buttons_box.set_layout(ButtonBoxStyle.START)
-        buttons_box.set_spacing(5)
+    def new_toolbar(): Toolbar
+        toolbar = new Toolbar()
+        toolbar.set_icon_size(ICON_SIZE)
 
-        var prev_button = new_button_with_stock_image(STOCK_MEDIA_PREVIOUS)
-        var play_pause_button = new_button_with_stock_image(STOCK_MEDIA_PLAY)
-        var stop_button = new_button_with_stock_image(STOCK_MEDIA_STOP)
-        next_button = new_button_with_stock_image(STOCK_MEDIA_NEXT)
-        add_button = new_button_with_stock_image(STOCK_ADD)
-        var remove_button = new_button_with_stock_image(STOCK_REMOVE)
-        var quit_button = new_button_with_stock_image(STOCK_QUIT)
+        toolbar.add(new_expander())
 
-        play_pause_button.clicked += on_play_pause
-        stop_button.clicked += on_stop
+        var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
         prev_button.clicked += on_prev
+        toolbar.add(prev_button)
+
+        play_pause_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(play_pause_button)
+        play_pause_button.clicked += on_play_pause
+
+        next_button = new ToolButton.from_stock(STOCK_MEDIA_NEXT)
+        toolbar.add(next_button)
         next_button.clicked += on_next
+
+        var stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
+        toolbar.add(stop_button)
+        stop_button.clicked += on_stop
+
+        var volume_button_item = new ToolItem()
+        toolbar.add(volume_button_item)
+        volume_button = new_volume_button_with_mute()
+        volume_button_item.add(volume_button)
+
+        toolbar.add(new_expander())
+
+        add_button = new ToolButton.from_stock(STOCK_ADD)
+        toolbar.add(add_button)
         add_button.clicked += on_add
+
+        var remove_button = new ToolButton.from_stock(STOCK_REMOVE)
+        toolbar.add(remove_button)
         remove_button.clicked += on_remove
+
+        var quit_button = new ToolButton.from_stock(STOCK_QUIT)
+        toolbar.add(quit_button)
         quit_button.clicked += on_quit
 
-        buttons: array of Button = { \
-            prev_button, \
-            play_pause_button, \
-            stop_button, \
-            next_button, \
-            add_button, \
-            remove_button, \
-            quit_button \
-        }
+        toolbar.add(new_expander())
 
-        var i = 0
-        for button in buttons
-            buttons_box.add(button)
-            if i >= 4
-                buttons_box.set_child_secondary(button, true)
-            i++
-        play_pause_image = play_pause_button.child as Gtk.Image
-        remove_close_image = remove_button.child as Gtk.Image
-
-        volume_button = new_volume_button_with_mute()
-        buttons_box.add(volume_button)
-
-        buttons_box.show_all()
-        return buttons_box
+        toolbar.show_all()
+        return toolbar
 
     def on_mute_clicked()
         var volume = volume_button.get_adjustment()
@@ -186,21 +185,24 @@ class PlayerWindow: Window
 
     def new_volume_button_with_mute(): VolumeButton
         var volume_button = new VolumeButton()
+        var icon_size = toolbar.get_icon_size()
+        volume_button.size = icon_size
 
-        volume_button.size = ICON_SIZE
         volume_button.button_press_event += on_volume_button_pressed
 
         var popup_window = volume_button.get_popup() as Window
         popup_window.set_size_request(-1, 240)
+
         var popup_frame = popup_window.get_child() as Frame
         var popup_box = popup_frame.get_child() as Box
         popup_box.set_spacing(24)
         popup_box.remove(volume_button.get_plus_button())
         popup_box.remove(volume_button.get_minus_button())
+
         var mute_button = new Button()
         popup_box.pack_end(mute_button, false, false, 0)
         muted_icon_name = volume_button.icons[0]
-        mute_image = new Image.from_icon_name(muted_icon_name, ICON_SIZE)
+        mute_image = new Image.from_icon_name(muted_icon_name, icon_size)
         mute_button.add(mute_image)
         mute_button.clicked += on_mute_clicked
         mute_button.realize()
@@ -290,12 +292,12 @@ class PlayerWindow: Window
         name: string
         playlist_store.get(iter, PlayListCol.NAME, out name, -1)
         set_title(name)
-        play_pause_image.set_from_stock(STOCK_MEDIA_PAUSE, ICON_SIZE)
+        play_pause_button.set_stock_id(STOCK_MEDIA_PAUSE)
         add_update_scale_timeout()
         seeking_scale.show()
 
     def on_playlist_control_paused(iter: TreeIter)
-        play_pause_image.set_from_stock(STOCK_MEDIA_PLAY, ICON_SIZE)
+        play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
         remove_update_scale_timeout()
 
     def on_playlist_control_stopped(iter: TreeIter)
@@ -303,7 +305,7 @@ class PlayerWindow: Window
         var page = notebook.get_current_page()
         if page != PlayerTab.LIST
             notebook.set_current_page(PlayerTab.LIST)
-        play_pause_image.set_from_stock(STOCK_MEDIA_PLAY, ICON_SIZE)
+        play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
         remove_update_scale_timeout()
         seeking_scale.hide()
 
@@ -406,28 +408,29 @@ class PlayerWindow: Window
 
     def on_video_area_activated()
         if is_fullscreen
-            controls_box.show()
+            toolbar.show()
             seeking_scale.show()
             unfullscreen()
             activate_default()
             is_fullscreen = false
         else
-            controls_box.hide()
+            toolbar.hide()
             seeking_scale.hide()
             fullscreen()
             is_fullscreen = true
-            controls_box.grab_focus()
+            toolbar.grab_focus()
 
     def setup_debug_dialog()
-        if debug_dialog == null
-            seeking_scale.hide()
-            controls_box.hide()
-            debug_dialog = new DebugDialog(this)
-            debug_dialog.closed += on_debug_dialog_closed
-            debug_dialog.show_all()
+        if debug_dialog != null
+            return
+        seeking_scale.hide()
+        toolbar.hide()
+        debug_dialog = new DebugDialog(this)
+        debug_dialog.closed += on_debug_dialog_closed
+        debug_dialog.show_all()
 
     def on_debug_dialog_closed()
-        controls_box.show()
+        toolbar.show()
         on_stop()
         debug_dialog = null
 

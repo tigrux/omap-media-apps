@@ -9,10 +9,16 @@ enum ImageListCol
     PIXBUF
     VALID
 
+enum ImageViewTab
+    LIST
+    VIDEO
+
 
 class ImageViewWindow: Window
+    notebook: Notebook
     chooser_button: FileChooserButton
     icon_view: IconView
+    video_area: VideoArea
     iconlist_store: ListStore
     iconlist_control: IconListControl
     cancellable: Cancellable
@@ -33,17 +39,20 @@ class ImageViewWindow: Window
         var main_box = new VBox(false, 6)
         add(main_box)
 
-        var buttons_box = new HBox(false, 6)
-        main_box.pack_start(buttons_box, false, false, 0)
-
-        chooser_button = new FileChooserButton( \
-            "Select folder", FileChooserAction.SELECT_FOLDER)
-        buttons_box.pack_start(chooser_button, true, true, 0)
-        chooser_button.set_create_folders(false)
-        chooser_button.current_folder_changed += on_chooser_folder_changed
+        main_box.pack_start(new_toolbar(), false, false, 0)
         
+        notebook = new Notebook()
+        main_box.pack_start(notebook, true, true, 0)
+        //notebook.set_show_tabs(false)
+        notebook.append_page(new_iconlist_box(), new Label("List"))
+        notebook.append_page(new_video_box(), new Label("Video"))
+
+        main_box.show_all()
+
+    def new_iconlist_box(): Box
+        var box = new VBox(false, 6)
         var scrolled_window = new ScrolledWindow(null, null)
-        main_box.pack_start(scrolled_window, true, true, 0)
+        box.pack_start(scrolled_window, true, true, 0)
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
         
         icon_view = new IconView()
@@ -55,8 +64,32 @@ class ImageViewWindow: Window
         icon_view.set_column_spacing(0)
         icon_view.set_spacing(0)
         icon_view.set_margin(0)
+        
+        return box
 
-        main_box.show_all()
+    def new_video_box(): Box
+        var box = new VBox(false, 6)
+        video_area = new VideoArea()
+        box.pack_start(video_area, true, true, 0)
+        video_area.prepared += def()
+            notebook.set_current_page(ImageViewTab.VIDEO)
+        //video_area.set_control(playlist_control)
+        return box
+
+    def new_toolbar(): Toolbar
+        var toolbar = new Toolbar()
+
+        var chooser_item = new ToolItem()
+        chooser_item.set_expand(true)
+        toolbar.add(chooser_item)
+
+        chooser_button = new FileChooserButton( \
+            "Select folder", FileChooserAction.SELECT_FOLDER)
+        chooser_item.add(chooser_button)
+        chooser_button.set_create_folders(false)
+        chooser_button.current_folder_changed += on_chooser_folder_changed
+        
+        return toolbar
 
     def on_chooser_folder_changed()
         var folder = chooser_button.get_current_folder()

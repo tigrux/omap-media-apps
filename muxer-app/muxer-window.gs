@@ -17,10 +17,10 @@ class MuxerWindow: Window
     combo_box: ComboBox
     combo_model: ListStore
     chooser_button: FileChooserButton
-    record_button: Button
-    quit_button: Button
-    probe_button: ToggleButton
-    stop_button: Button
+    record_button: ToolButton
+    quit_button: ToolButton
+    probe_button: ToggleToolButton
+    stop_button: ToolButton
     muxer_control: MuxerControl
     video_area: VideoArea
 
@@ -36,12 +36,25 @@ class MuxerWindow: Window
         var main_box = new VBox(false, 6)
         add(main_box)
 
-        var buttons_box = new HBox(false, 6)
-        main_box.pack_start(buttons_box, false, false, 0)
+        var toolbar = new_toolbar()
+        main_box.pack_start(toolbar, false, false, 0)
 
+        video_area = new VideoArea()
+        main_box.pack_start(video_area, true, true, 6)
+
+        main_box.show_all()
+        video_area.realize()
+
+    def new_toolbar(): Toolbar
+        var toolbar = new Toolbar()
+        toolbar.set_icon_size(ICON_SIZE)
+
+        var chooser_item = new ToolItem()
+        toolbar.add(chooser_item)
+        chooser_item.set_expand(true)
         chooser_button = new FileChooserButton( \
             "Config file", FileChooserAction.OPEN)
-        buttons_box.pack_start(chooser_button, true, true, 0)
+        chooser_item.add(chooser_button)
         chooser_button.file_set += on_chooser_file_set
 
         var file_filter = new FileFilter()
@@ -50,50 +63,40 @@ class MuxerWindow: Window
         file_filter.add_pattern("*.xml")
         chooser_button.add_filter(file_filter)
 
+        var combo_item = new ToolItem()
+        toolbar.add(combo_item)
         var s = typeof(string)
         combo_model = new ListStore(3, s, s, s)
         combo_box = new ComboBox.with_model(combo_model)
-        buttons_box.pack_start(combo_box, false, false, 0)
+        combo_item.add(combo_box)
         
         var renderer = new CellRendererText()
         combo_box.pack_start(renderer, true)
         combo_box.set_attributes(renderer, "text", MuxerComboCol.GROUP, null)
         combo_box.changed += on_combo_changed
 
-        record_button = new Button()
-        buttons_box.pack_start(record_button, false, false, 0)
+        toolbar.add(new_expander())
+
+        record_button = new ToolButton.from_stock(STOCK_MEDIA_RECORD)
+        toolbar.add(record_button)
         record_button.set_sensitive(false)
         record_button.clicked += on_record
-        var record_image = new Image()
-        record_button.add(record_image)
-        record_image.set_from_stock(STOCK_MEDIA_RECORD, ICON_SIZE)
 
-        probe_button = new ToggleButton()
-        buttons_box.pack_start(probe_button, false, false, 0)
-        var probe_image = new Image()
-        probe_button.add(probe_image)
-        probe_image.set_from_stock(STOCK_CONVERT, ICON_SIZE)
+        probe_button = new ToggleToolButton.from_stock(STOCK_CONVERT)
+        toolbar.add(probe_button)
 
-        stop_button = new Button()
-        buttons_box.pack_start(stop_button, false, false, 0)
+        stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
+        toolbar.add(stop_button)
         stop_button.set_sensitive(false)
         stop_button.clicked += on_stop
-        var stop_image = new Image()
-        stop_button.add(stop_image)
-        stop_image.set_from_stock(STOCK_MEDIA_STOP, ICON_SIZE)
 
-        quit_button = new Button()
-        buttons_box.pack_start(quit_button, false, false, 0)
+        toolbar.add(new_expander())
+
+        quit_button = new ToolButton.from_stock(STOCK_QUIT)
+        toolbar.add(quit_button)
         quit_button.clicked += on_quit
-        var quit_image = new Image()
-        quit_button.add(quit_image)
-        quit_image.set_from_stock(STOCK_QUIT, ICON_SIZE)
 
-        video_area = new VideoArea()
-        main_box.pack_start(video_area, true, true, 6)
-
-        main_box.show_all()
-        video_area.realize()
+        return toolbar
 
     def on_combo_changed()
         preview: string
