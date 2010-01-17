@@ -119,9 +119,9 @@ class PlayListControl: GLib.Object implements Control
             return move_to(current_row)
         return false
 
-    def add_file(file: string, out iter: TreeIter)
+    def add_file(file: string)
         playlist_store.insert_with_values( \
-            out iter, -1, \
+            null, -1, \
             PlayListCol.NAME, Filename.display_basename(file), \
             PlayListCol.FULLNAME, file, \
             -1)

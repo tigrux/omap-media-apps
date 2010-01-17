@@ -11,7 +11,6 @@ enum PlayListCol
 enum PlayerTab
     LIST
     VIDEO
-    CHOOSER
 
 const UPDATE_INTERVAL: uint = 200
 const TITLE: string = "PlayerApp"
@@ -39,9 +38,7 @@ class PlayerWindow: Window
     previous_volume: double
     muted_icon_name: string
     is_muted: bool
-
-    chooser_widget: FileChooserWidget
-    chooser_view: TreeView
+    chooser: FileChooserDialog
 
     update_seeking_scale_id: uint
     stream_position: int64
@@ -80,7 +77,6 @@ class PlayerWindow: Window
         notebook.set_show_tabs(false)
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.append_page(new_chooser_box(), new Label("Chooser"))
         notebook.switch_page += on_notebook_switch_page
         notebook.change_current_page += def(page)
             print "page %d", page
@@ -109,41 +105,20 @@ class PlayerWindow: Window
         playlist_control.stop()
 
     def on_next()
-        if notebook.get_current_page() == PlayerTab.CHOOSER
-            var selection = chooser_view.get_selection()
-            iter: TreeIter
-            if selection.get_selected(null, out iter)
-                var model = chooser_view.get_model()
-                if model.iter_next(ref iter)
-                    selection.select_iter(iter)
-                    var path = model.get_path(iter)
-                    chooser_view.scroll_to_cell(path, null, false, 0, 0)
+        var was_playing = is_playing()
+        if playlist_control.next()
+            if was_playing
+                on_play()
         else
-            var was_playing = is_playing()
-            if playlist_control.next()
-                if was_playing
-                    on_play()
-            else
-                iter: TreeIter
-                if playlist_store.get_iter_first(out iter)
-                    playlist_selection.select_iter(iter)
+            iter: TreeIter
+            if playlist_store.get_iter_first(out iter)
+                playlist_selection.select_iter(iter)
 
     def on_prev()
-        if notebook.get_current_page() == PlayerTab.CHOOSER
-            iter: TreeIter
-            var selection = chooser_view.get_selection()
-            if selection.get_selected(null, out iter)
-                var model = chooser_view.get_model()
-                var path = model.get_path(iter)
-                if path.prev()
-                    if model.get_iter(out iter, path)
-                        selection.select_iter(iter)
-                        chooser_view.scroll_to_cell(path, null, false, 0, 0)
-        else
-            var was_playing = is_playing()
-            if playlist_control.prev()
-                if was_playing
-                    on_play()
+        var was_playing = is_playing()
+        if playlist_control.prev()
+            if was_playing
+                on_play()
 
     def on_quit()
         Idle.add(on_delete)
@@ -270,28 +245,6 @@ class PlayerWindow: Window
         box.show_all()
         return box
 
-    def new_chooser_box(): Box
-        var box = new VBox(false, 0)
-
-        chooser_widget = new FileChooserWidget(FileChooserAction.OPEN)
-        box.pack_start(chooser_widget, true, true, 0)
-        chooser_widget.show()
-        chooser_widget.set_select_multiple(false)
-        chooser_widget.file_activated += def() add_button.activate()
-
-        indices: array of int
-        indices = {0, 0, 2, 1, 0, 0, 0}
-        chooser_view = child_widget_at_path(chooser_widget, indices) as TreeView
-
-        var columns = chooser_view.get_columns()
-        var first_column = columns.data
-        for column in columns
-            if column != first_column
-                column.set_visible(false)
-
-        box.show()
-        return box
-
     def new_playlist_view(): TreeView
         var view = new TreeView()
         view.set_headers_visible(false)
@@ -330,19 +283,12 @@ class PlayerWindow: Window
             when Gst.State.PAUSED
                 on_play()
             when Gst.State.NULL
-                if notebook.get_current_page() == PlayerTab.CHOOSER
-                    add_file_from_chooser(out iter)
-                    if playlist_store.iter_is_valid(iter)
-                        playlist_selection.select_iter(iter)
-                        if get_and_select_iter(out iter)
-                            on_play()
-                else
-                    if not get_and_select_iter(out iter)
-                        return
-                    var row = playlist_store.get_path(iter)
-                    playlist_control.move_to(row)
-                    notebook.set_current_page(PlayerTab.LIST)
-                    on_play()
+                if not get_and_select_iter(out iter)
+                    return
+                var row = playlist_store.get_path(iter)
+                playlist_control.move_to(row)
+                notebook.set_current_page(PlayerTab.LIST)
+                on_play()
 
     def on_playlist_control_playing(iter: TreeIter)
         name: string
@@ -359,7 +305,7 @@ class PlayerWindow: Window
     def on_playlist_control_stopped(iter: TreeIter)
         set_title(TITLE)
         var page = notebook.get_current_page()
-        if not (page == PlayerTab.LIST or page == PlayerTab.CHOOSER)
+        if page != PlayerTab.LIST
             notebook.set_current_page(PlayerTab.LIST)
         play_pause_image.set_from_stock(STOCK_MEDIA_PLAY, ICON_SIZE)
         remove_update_scale_timeout()
@@ -370,26 +316,34 @@ class PlayerWindow: Window
 
     def on_add()
         iter: TreeIter
-        if notebook.get_current_page() != PlayerTab.CHOOSER
-            notebook.set_current_page(PlayerTab.CHOOSER)
-        else
-            add_file_from_chooser(out iter)
-            get_and_select_iter(out iter)
+        setup_chooser()
+        chooser.show_all()
+        chooser.run()
+        get_and_select_iter(out iter)
 
-    def add_file_from_chooser(out iter: TreeIter)
-        var filename = chooser_widget.get_filename()
-        if FileUtils.test(filename, FileTest.IS_DIR)
-            chooser_widget.set_current_folder(filename)
-        else if FileUtils.test(filename, FileTest.IS_REGULAR)
-            playlist_control.add_file(filename, out iter)
+    def setup_chooser()
+        if chooser != null
+            return
+        chooser = new FileChooserDialog( \
+            "Add files to playlist", \
+            this, \
+            FileChooserAction.OPEN, \
+            STOCK_CLOSE, ResponseType.CLOSE, \
+            STOCK_ADD, ResponseType.OK, \
+            null)
+        chooser.response += on_chooser_response
+
+    def on_chooser_response(response: int)
+        case response
+            when ResponseType.CLOSE
+                chooser.hide()
+            when ResponseType.OK
+                playlist_control.add_file(chooser.get_filename())
 
     def on_remove()
-        if notebook.get_current_page() == PlayerTab.CHOOSER
-            notebook.set_current_page(notebook_previous_page)
-        else
-            on_remove_files()
-            iter: TreeIter
-            get_and_select_iter(out iter)
+        on_remove_files()
+        iter: TreeIter
+        get_and_select_iter(out iter)
 
     def on_remove_files()
         iter: TreeIter
@@ -455,10 +409,6 @@ class PlayerWindow: Window
         return true
 
     def on_notebook_switch_page(page: void*, page_num: uint)
-        if page_num == PlayerTab.CHOOSER
-            remove_close_image.set_from_stock(STOCK_CLOSE, ICON_SIZE)
-        else
-            remove_close_image.set_from_stock(STOCK_REMOVE, ICON_SIZE)
         notebook_previous_page = notebook.get_current_page()
 
     def on_video_area_activated()
