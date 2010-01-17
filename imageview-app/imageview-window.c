@@ -186,7 +186,6 @@ void image_view_window_on_chooser_folder_changed (ImageViewWindow* self) {
 		return;
 	}
 	self->current_folder = (_tmp0_ = g_strdup (folder), _g_free0 (self->current_folder), _tmp0_);
-	g_print ("current folder %s\n", self->current_folder);
 	image_view_window_change_folder (self);
 	_g_free0 (folder);
 }

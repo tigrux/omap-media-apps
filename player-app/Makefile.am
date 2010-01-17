@@ -4,8 +4,6 @@ AM_CPPFLAGS = \
 
 BUILT_SOURCES = vala.stamp
 
-VALA_DEPS = $$(for pkg in $(PROGRAM_MODULES); do echo --pkg $$pkg; done)
-
 bin_PROGRAMS = omap4-player-app
 
 omap4_player_app_VALASOURCES = \

@@ -14,11 +14,18 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
-PROGRAM_MODULES="gtk+-2.0 gdk-x11-2.0 gstreamer-0.10 gstreamer-interfaces-0.10"
-
+VALA_DEPS="--pkg gtk+-2.0 --pkg gdk-x11-2.0 --pkg gstreamer-0.10 --pkg gstreamer-interfaces-0.10"
 AC_SUBST(VALA_DEPS)
-PKG_CHECK_MODULES(PROGRAM, $PROGRAM_MODULES )
-AC_SUBST(PROGRAM_MODULES)
+
+min_gtk_ver=2.14
+min_gst_ver=0.10
+
+PKG_CHECK_MODULES(PROGRAM, 
+    gtk+-2.0 >= $min_gst_ver
+    gdk-x11-2.0 >= $min_gst_ver
+    gstreamer-0.10 >= $min_gst_ver
+    gstreamer-interfaces-0.10 >= $min_gst_ver
+    )
 AC_SUBST(PROGRAM_CFLAGS)
 AC_SUBST(PROGRAM_LIBS)
 
