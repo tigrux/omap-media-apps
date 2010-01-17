@@ -64,7 +64,7 @@ struct _IconListControlAddFolderData {
 	GCancellable* cancellable;
 	GFile* dir;
 	GFileEnumerator* file_etor;
-	GList* files;
+	GList* next_files;
 	char* _tmp0_;
 	GError * e1;
 	GError * _inner_error_;
@@ -86,15 +86,16 @@ struct _IconListControlRetrieveThumbnailsData {
 	GtkTreeIter iter;
 	GSourceFunc _tmp0_;
 	gboolean _tmp1_;
+	gboolean _tmp2_;
 	char* file;
 	char* display;
-	GdkPixbuf* _tmp2_;
 	GError* _tmp3_;
 	GdkPixbuf* pixbuf;
-	gboolean is_valid;
+	gboolean valid;
 	gboolean _tmp4_;
-	GdkPixbuf* _tmp5_;
 	GdkPixbuf* _tmp6_;
+	GdkPixbuf* _tmp5_;
+	GdkPixbuf* _tmp7_;
 };
 
 
@@ -298,7 +299,7 @@ void icon_list_control_setup_elements (IconListControl* self, GError** error) {
 			return;
 		}
 	}
-	bus = _gst_object_ref0 (((GstElement*) self->pipeline)->bus);
+	bus = gst_pipeline_get_bus (self->pipeline);
 	gst_bus_add_signal_watch (bus);
 	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
 	_gst_object_unref0 (bus);
@@ -371,18 +372,18 @@ static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* d
 					data->_state_ = 2;
 					return FALSE;
 					case 2:
-					data->files = g_file_enumerator_next_files_finish (data->file_etor, data->_res_, &data->_inner_error_);
+					data->next_files = g_file_enumerator_next_files_finish (data->file_etor, data->_res_, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
 						_g_object_unref0 (data->file_etor);
 						goto __catch1_g_error;
 						goto __finally1;
 					}
-					if (data->files == NULL) {
-						__g_list_free_g_object_unref0 (data->files);
+					if (data->next_files == NULL) {
+						__g_list_free_g_object_unref0 (data->next_files);
 						break;
 					}
-					icon_list_control_add_next_files (data->self, data->dirname, data->files);
-					__g_list_free_g_object_unref0 (data->files);
+					icon_list_control_add_next_files (data->self, data->dirname, data->next_files);
+					__g_list_free_g_object_unref0 (data->next_files);
 				}
 				if (!g_cancellable_is_cancelled (data->cancellable)) {
 					icon_list_control_retrieve_thumbnails (data->self, data->cancellable, icon_list_control_add_folder_ready, data);
@@ -507,28 +508,22 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 		{
 			if (gtk_tree_model_get_iter_first ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter)) {
 				data->self->continuation = (data->_tmp0_ = _icon_list_control_retrieve_thumbnails_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp0_);
+				gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_READY);
 				{
 					data->_tmp1_ = TRUE;
 					while (TRUE) {
 						if (!data->_tmp1_) {
-							if (!gtk_tree_model_iter_next ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter)) {
+							if (gtk_tree_model_iter_next ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter)) {
+								data->_tmp2_ = !g_cancellable_is_cancelled (data->cancellable);
+							} else {
+								data->_tmp2_ = FALSE;
+							}
+							if (!data->_tmp2_) {
 								break;
 							}
 						}
 						data->_tmp1_ = FALSE;
-						if (g_cancellable_is_cancelled (data->cancellable)) {
-							{
-								if (data->_state_ == 0) {
-									g_simple_async_result_complete_in_idle (data->_async_result);
-								} else {
-									g_simple_async_result_complete (data->_async_result);
-								}
-								g_object_unref (data->_async_result);
-								return FALSE;
-							}
-						}
 						gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, IMAGE_LIST_COL_TEXT, &data->display, IMAGE_LIST_COL_FILE, &data->file, -1, -1);
-						icon_list_control_last_pixbuf = (data->_tmp2_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp2_);
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
 						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_PLAYING);
@@ -536,25 +531,24 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 						return FALSE;
 						case 4:
 						;
+						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_READY);
 						if (data->self->continuation_error == NULL) {
 							data->_tmp4_ = icon_list_control_last_pixbuf != NULL;
 						} else {
 							data->_tmp4_ = FALSE;
 						}
-						if (data->_tmp4_) {
-							data->pixbuf = (data->_tmp5_ = _g_object_ref0 (icon_list_control_last_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp5_);
-							data->is_valid = TRUE;
+						if (data->valid = data->_tmp4_) {
+							data->pixbuf = (data->_tmp6_ = (data->_tmp5_ = icon_list_control_last_pixbuf, icon_list_control_last_pixbuf = NULL, data->_tmp5_), _g_object_unref0 (data->pixbuf), data->_tmp6_);
 						} else {
-							data->pixbuf = (data->_tmp6_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp6_);
-							data->is_valid = FALSE;
+							data->pixbuf = (data->_tmp7_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp7_);
 						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, IMAGE_LIST_COL_PIXBUF, data->pixbuf, IMAGE_LIST_COL_VALID, data->is_valid, -1, -1);
-						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_READY);
+						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, IMAGE_LIST_COL_PIXBUF, data->pixbuf, IMAGE_LIST_COL_VALID, data->valid, -1, -1);
 						_g_free0 (data->file);
 						_g_free0 (data->display);
 						_g_object_unref0 (data->pixbuf);
 					}
 				}
+				gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_NULL);
 			}
 		}
 		{
@@ -668,11 +662,6 @@ static void icon_list_control_instance_init (IconListControl * self) {
 static void icon_list_control_finalize (GObject* obj) {
 	IconListControl * self;
 	self = ICON_LIST_CONTROL (obj);
-	{
-		if (self->pipeline != NULL) {
-			gst_element_set_state ((GstElement*) self->pipeline, GST_STATE_NULL);
-		}
-	}
 	_gst_object_unref0 (self->pipeline);
 	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->imagesink);

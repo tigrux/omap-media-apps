@@ -34,11 +34,7 @@ class IconListControl: GLib.Object
             setup_icons()
             pixbufs_loaded = true
         setup_elements()
-
-    final
-        if pipeline != null
-            pipeline.set_state(State.NULL)
-
+            
     def setup_icons() raises Error
         var icon_theme = IconTheme.get_default()
         icon_info: IconInfo
@@ -72,7 +68,7 @@ class IconListControl: GLib.Object
         if (imagesink = pipeline.get_by_name("imagesink")) == null
             raise new CoreError.FAILED( \
                         "No element named imagesink in the pixbuf pipeline")
-        var bus = pipeline.bus
+        var bus = pipeline.get_bus()
         bus.add_signal_watch()
         bus.message += on_bus_message
 
@@ -84,11 +80,11 @@ class IconListControl: GLib.Object
                                     FileQueryInfoFlags.NONE, \
                                     Priority.DEFAULT, cancellable)
             while not cancellable.is_cancelled()
-                var files = yield file_etor.next_files_async( \
+                var next_files = yield file_etor.next_files_async( \
                                     5, Priority.DEFAULT, cancellable)
-                if files == null
+                if next_files == null
                     break
-                add_next_files(dirname, files)
+                add_next_files(dirname, next_files)
             if not cancellable.is_cancelled()
                 yield retrieve_thumbnails(cancellable)
         except e1: Error
@@ -111,34 +107,33 @@ class IconListControl: GLib.Object
         iter: TreeIter
         if iconlist_store.get_iter_first(out iter)
             continuation = retrieve_thumbnails.callback
+            pipeline.set_state(State.READY)
             do
-                if cancellable.is_cancelled()
-                    return
                 file: string
                 display: string
                 iconlist_store.get(iter, \
                     ImageListCol.TEXT, out display, \
                     ImageListCol.FILE, out file, \
                     -1)
-                last_pixbuf = null
                 continuation_error = null
                 filesrc.location = file
                 pipeline.set_state(State.PLAYING)
                 yield
+                pipeline.set_state(State.READY)
                 pixbuf: Gdk.Pixbuf
-                is_valid: bool
-                if continuation_error == null and last_pixbuf != null
-                    pixbuf = last_pixbuf
-                    is_valid = true
+                valid: bool
+                if (valid = continuation_error == null and last_pixbuf != null)
+                    pixbuf = (owned)last_pixbuf
                 else
                     pixbuf = missing_pixbuf
-                    is_valid = false
                 iconlist_store.set(iter, \
                     ImageListCol.PIXBUF, pixbuf, \
-                    ImageListCol.VALID, is_valid, \
+                    ImageListCol.VALID, valid, \
                     -1)
-                pipeline.set_state(State.READY)
-            while iconlist_store.iter_next(ref iter)
+            while \
+                iconlist_store.iter_next(ref iter) and \
+                not cancellable.is_cancelled()
+            pipeline.set_state(State.NULL)
 
     def on_bus_message(message: Gst.Message)
         case message.type
