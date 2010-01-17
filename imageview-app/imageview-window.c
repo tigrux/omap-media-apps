@@ -51,6 +51,7 @@ struct _ImageViewWindow {
 	GtkListStore* iconlist_store;
 	IconListControl* iconlist_control;
 	GCancellable* cancellable;
+	char* current_folder;
 };
 
 struct _ImageViewWindowClass {
@@ -78,13 +79,15 @@ static void _gtk_main_quit_gtk_object_destroy (ImageViewWindow* _sender, gpointe
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
+void image_view_window_change_folder (ImageViewWindow* self);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
-gboolean image_view_window_retry_chooser_folder_change (ImageViewWindow* self);
-static gboolean _image_view_window_retry_chooser_folder_change_gsource_func (gpointer self);
+gboolean image_view_window_retry_change_folder (ImageViewWindow* self);
+static gboolean _image_view_window_retry_change_folder_gsource_func (gpointer self);
 GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self);
 static GObject * image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void image_view_window_finalize (GObject* obj);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
@@ -152,6 +155,7 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) buttons_box, FALSE, FALSE, (guint) 0);
 	self->chooser_button = (_tmp0_ = g_object_ref_sink ((GtkFileChooserButton*) gtk_file_chooser_button_new ("Select folder", GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)), _g_object_unref0 (self->chooser_button), _tmp0_);
 	gtk_box_pack_start ((GtkBox*) buttons_box, (GtkWidget*) self->chooser_button, TRUE, TRUE, (guint) 0);
+	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
 	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
 	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
@@ -172,37 +176,50 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 }
 
 
-static gboolean _image_view_window_retry_chooser_folder_change_gsource_func (gpointer self) {
-	return image_view_window_retry_chooser_folder_change (self);
+void image_view_window_on_chooser_folder_changed (ImageViewWindow* self) {
+	char* folder;
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	folder = gtk_file_chooser_get_current_folder ((GtkFileChooser*) self->chooser_button);
+	if (_vala_strcmp0 (folder, self->current_folder) == 0) {
+		_g_free0 (folder);
+		return;
+	}
+	self->current_folder = (_tmp0_ = g_strdup (folder), _g_free0 (self->current_folder), _tmp0_);
+	g_print ("current folder %s\n", self->current_folder);
+	image_view_window_change_folder (self);
+	_g_free0 (folder);
 }
 
 
-void image_view_window_on_chooser_folder_changed (ImageViewWindow* self) {
+static gboolean _image_view_window_retry_change_folder_gsource_func (gpointer self) {
+	return image_view_window_retry_change_folder (self);
+}
+
+
+void image_view_window_change_folder (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->cancellable == NULL) {
-		char* folder;
 		GCancellable* _tmp0_;
-		folder = gtk_file_chooser_get_filename ((GtkFileChooser*) self->chooser_button);
 		gtk_list_store_clear (self->iconlist_store);
 		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
-		icon_list_control_add_folder (self->iconlist_control, folder, self->cancellable, NULL, NULL);
-		_g_free0 (folder);
+		icon_list_control_add_folder (self->iconlist_control, self->current_folder, self->cancellable, NULL, NULL);
 	} else {
 		g_cancellable_cancel (self->cancellable);
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_chooser_folder_change_gsource_func, g_object_ref (self), g_object_unref);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_change_folder_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 
 
-gboolean image_view_window_retry_chooser_folder_change (ImageViewWindow* self) {
+gboolean image_view_window_retry_change_folder (ImageViewWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->cancellable == NULL) {
-		image_view_window_on_chooser_folder_changed (self);
-	} else {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_chooser_folder_change_gsource_func, g_object_ref (self), g_object_unref);
+		image_view_window_change_folder (self);
+		result = FALSE;
+		return result;
 	}
-	result = FALSE;
+	result = TRUE;
 	return result;
 }
 
@@ -265,6 +282,7 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->iconlist_store);
 	_g_object_unref0 (self->iconlist_control);
 	_g_object_unref0 (self->cancellable);
+	_g_free0 (self->current_folder);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);
 }
 
@@ -276,6 +294,17 @@ GType image_view_window_get_type (void) {
 		image_view_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "ImageViewWindow", &g_define_type_info, 0);
 	}
 	return image_view_window_type_id;
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

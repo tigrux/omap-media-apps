@@ -16,6 +16,7 @@ class ImageViewWindow: Window
     iconlist_store: ListStore
     iconlist_control: IconListControl
     cancellable: Cancellable
+    current_folder: string
 
     init
         iconlist_store = new_imagelist_store()
@@ -38,6 +39,7 @@ class ImageViewWindow: Window
         chooser_button = new FileChooserButton( \
             "Select folder", FileChooserAction.SELECT_FOLDER)
         buttons_box.pack_start(chooser_button, true, true, 0)
+        chooser_button.set_create_folders(false)
         chooser_button.current_folder_changed += on_chooser_folder_changed
         
         var scrolled_window = new ScrolledWindow(null, null)
@@ -57,21 +59,26 @@ class ImageViewWindow: Window
         main_box.show_all()
 
     def on_chooser_folder_changed()
+        var folder = chooser_button.get_current_folder()
+        if folder == current_folder
+            return
+        current_folder = folder
+        change_folder()
+
+    def change_folder()
         if cancellable == null
-            var folder = chooser_button.get_filename()
             iconlist_store.clear()
             cancellable = new Cancellable()
-            iconlist_control.add_folder(folder, cancellable)
+            iconlist_control.add_folder(current_folder, cancellable)
         else
             cancellable.cancel()
-            Idle.add(retry_chooser_folder_change)
+            Idle.add(retry_change_folder)
     
-    def retry_chooser_folder_change(): bool
+    def retry_change_folder(): bool
         if cancellable == null
-            on_chooser_folder_changed()
-        else
-            Idle.add(retry_chooser_folder_change)
-        return false
+            change_folder()
+            return false
+        return true
 
     def on_iconlist_done()
         cancellable = null
