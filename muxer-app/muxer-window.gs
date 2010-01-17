@@ -24,7 +24,7 @@ class MuxerWindow: Window
     muxer_control: MuxerControl
     video_area: VideoArea
 
-    error_dialog: ErrorDialog
+    debug_dialog: DebugDialog
 
     init
         setup_widgets()
@@ -104,11 +104,11 @@ class MuxerWindow: Window
         shutdown()
         muxer_control = new MuxerControl(preview, record)
         muxer_control.enable_buffer_probe(probe_button.get_active())
-        muxer_control.error_message += on_error_message
+        muxer_control.error += on_control_error
         try
             muxer_control.load()
         except e: Error
-            show_error(e, null)
+            show_error(e)
             return
         video_area.set_control(muxer_control)
         muxer_control.start_preview()
@@ -122,7 +122,7 @@ class MuxerWindow: Window
             record_button.set_sensitive(false)
             quit_button.set_sensitive(false)
         except e: Error
-            show_error(e, null)
+            show_error(e)
 
     def on_stop()
         muxer_control.stop_record()
@@ -152,13 +152,13 @@ class MuxerWindow: Window
                 var xml_parser = new MuxerConfigParser()
                 xml_parser.parse_file(config_file, ref key_file)
         except e: FileError
-            show_error(e, null)
+            show_error(e)
             return
         except e: KeyFileError
-            show_error(e, null)
+            show_error(e)
             return
         except e: MarkupError
-            show_error(e, null)
+            show_error(e)
             return
 
         try
@@ -175,7 +175,7 @@ class MuxerWindow: Window
                     MuxerComboCol.RECORD, record, \
                     -1)
         except e: KeyFileError
-            show_error(e, null)
+            show_error(e)
 
     def get_pipelines(out preview: string, out record: string): bool
         iter: TreeIter
@@ -187,21 +187,20 @@ class MuxerWindow: Window
             -1)
         return true
 
-    def on_error_message(error: Error, debug: string)
-        show_error(error, debug)
+    def on_control_error(error: Error, debug: string)
+        show_debug(error, debug)
 
-    def show_error(error: Error, debug: string?)
-        setup_error_dialog()
-        error_dialog.add_error_with_debug(error, debug)
+    def show_debug(error: Error, debug: string)
+        setup_debug_dialog()
+        debug_dialog.add_error_debug(error, debug)
 
-    def setup_error_dialog()
-        if error_dialog == null
-            error_dialog = new ErrorDialog()
-            error_dialog.closed += on_error_dialog_closed
-            error_dialog.set_transient_for(this)
-            error_dialog.show_all()
+    def setup_debug_dialog()
+        if debug_dialog == null
+            debug_dialog = new DebugDialog(this)
+            debug_dialog.closed += on_debug_dialog_closed
+            debug_dialog.show_all()
 
-    def on_error_dialog_closed()
+    def on_debug_dialog_closed()
         shutdown()
-        error_dialog = null
+        debug_dialog = null
 

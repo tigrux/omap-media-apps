@@ -49,15 +49,15 @@ typedef struct _PlayListControlClass PlayListControlClass;
 typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
 
-#define TYPE_ERROR_DIALOG (error_dialog_get_type ())
-#define ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ERROR_DIALOG, ErrorDialog))
-#define ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_ERROR_DIALOG, ErrorDialogClass))
-#define IS_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_ERROR_DIALOG))
-#define IS_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_ERROR_DIALOG))
-#define ERROR_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_ERROR_DIALOG, ErrorDialogClass))
+#define TYPE_DEBUG_DIALOG (debug_dialog_get_type ())
+#define DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_DEBUG_DIALOG, DebugDialog))
+#define DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_DEBUG_DIALOG, DebugDialogClass))
+#define IS_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_DEBUG_DIALOG))
+#define IS_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_DEBUG_DIALOG))
+#define DEBUG_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_DEBUG_DIALOG, DebugDialogClass))
 
-typedef struct _ErrorDialog ErrorDialog;
-typedef struct _ErrorDialogClass ErrorDialogClass;
+typedef struct _DebugDialog DebugDialog;
+typedef struct _DebugDialogClass DebugDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
@@ -115,7 +115,7 @@ struct _PlayerWindow {
 	gint64 stream_duration;
 	gboolean should_resume_playback;
 	gboolean is_fullscreen;
-	ErrorDialog* error_dialog;
+	DebugDialog* debug_dialog;
 };
 
 struct _PlayerWindowClass {
@@ -137,7 +137,7 @@ GType player_tab_get_type (void);
 GType player_window_get_type (void);
 GType play_list_control_get_type (void);
 GType video_area_get_type (void);
-GType error_dialog_get_type (void);
+GType debug_dialog_get_type (void);
 enum  {
 	PLAYER_WINDOW_DUMMY_PROPERTY
 };
@@ -239,12 +239,12 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
 gint64 play_list_control_get_position (PlayListControl* self);
 gint64 play_list_control_get_duration (PlayListControl* self);
-ErrorDialog* error_dialog_new (void);
-ErrorDialog* error_dialog_construct (GType object_type);
-void player_window_on_error_dialog_closed (PlayerWindow* self);
-static void _player_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self);
-void player_window_setup_error_dialog (PlayerWindow* self);
-void error_dialog_add_error_with_debug (ErrorDialog* self, GError* _error_, const char* debug);
+DebugDialog* debug_dialog_new (void);
+DebugDialog* debug_dialog_construct (GType object_type);
+void player_window_on_debug_dialog_closed (PlayerWindow* self);
+static void _player_window_on_debug_dialog_closed_debug_dialog_closed (DebugDialog* _sender, gpointer self);
+void player_window_setup_debug_dialog (PlayerWindow* self);
+void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const char* debug);
 PlayerWindow* player_window_new (void);
 PlayerWindow* player_window_construct (GType object_type);
 static GObject * player_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -1199,31 +1199,31 @@ void player_window_on_video_area_activated (PlayerWindow* self) {
 }
 
 
-static void _player_window_on_error_dialog_closed_error_dialog_closed (ErrorDialog* _sender, gpointer self) {
-	player_window_on_error_dialog_closed (self);
+static void _player_window_on_debug_dialog_closed_debug_dialog_closed (DebugDialog* _sender, gpointer self) {
+	player_window_on_debug_dialog_closed (self);
 }
 
 
-void player_window_setup_error_dialog (PlayerWindow* self) {
+void player_window_setup_debug_dialog (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
-	if (self->error_dialog == NULL) {
-		ErrorDialog* _tmp0_;
+	if (self->debug_dialog == NULL) {
+		DebugDialog* _tmp0_;
 		gtk_widget_hide ((GtkWidget*) self->seeking_scale);
 		gtk_widget_hide ((GtkWidget*) self->controls_box);
-		self->error_dialog = (_tmp0_ = g_object_ref_sink (error_dialog_new ()), _g_object_unref0 (self->error_dialog), _tmp0_);
-		g_signal_connect_object (self->error_dialog, "closed", (GCallback) _player_window_on_error_dialog_closed_error_dialog_closed, self, 0);
-		gtk_window_set_transient_for ((GtkWindow*) self->error_dialog, (GtkWindow*) self);
-		gtk_widget_show_all ((GtkWidget*) self->error_dialog);
+		self->debug_dialog = (_tmp0_ = g_object_ref_sink (debug_dialog_new ()), _g_object_unref0 (self->debug_dialog), _tmp0_);
+		g_signal_connect_object (self->debug_dialog, "closed", (GCallback) _player_window_on_debug_dialog_closed_debug_dialog_closed, self, 0);
+		gtk_window_set_transient_for ((GtkWindow*) self->debug_dialog, (GtkWindow*) self);
+		gtk_widget_show_all ((GtkWidget*) self->debug_dialog);
 	}
 }
 
 
-void player_window_on_error_dialog_closed (PlayerWindow* self) {
-	ErrorDialog* _tmp0_;
+void player_window_on_debug_dialog_closed (PlayerWindow* self) {
+	DebugDialog* _tmp0_;
 	g_return_if_fail (self != NULL);
 	gtk_widget_show ((GtkWidget*) self->controls_box);
 	player_window_on_stop (self);
-	self->error_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->error_dialog), _tmp0_);
+	self->debug_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->debug_dialog), _tmp0_);
 }
 
 
@@ -1236,8 +1236,8 @@ void player_window_on_playlist_control_eos (PlayerWindow* self) {
 void player_window_on_playlist_control_error (PlayerWindow* self, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (debug != NULL);
-	player_window_setup_error_dialog (self);
-	error_dialog_add_error_with_debug (self->error_dialog, _error_, debug);
+	player_window_setup_debug_dialog (self);
+	debug_dialog_add_error_debug (self->debug_dialog, _error_, debug);
 }
 
 
@@ -1304,7 +1304,7 @@ static void player_window_finalize (GObject* obj) {
 	_g_free0 (self->muted_icon_name);
 	_g_object_unref0 (self->chooser_widget);
 	_g_object_unref0 (self->chooser_view);
-	_g_object_unref0 (self->error_dialog);
+	_g_object_unref0 (self->debug_dialog);
 	G_OBJECT_CLASS (player_window_parent_class)->finalize (obj);
 }
 

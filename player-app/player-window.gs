@@ -49,7 +49,7 @@ class PlayerWindow: Window
     should_resume_playback: bool
     is_fullscreen: bool
 
-    error_dialog: ErrorDialog
+    debug_dialog: DebugDialog
 
     init
         playlist_store = new_playlist_store()
@@ -475,24 +475,23 @@ class PlayerWindow: Window
             is_fullscreen = true
             controls_box.grab_focus()
 
-    def setup_error_dialog()
-        if error_dialog == null
+    def setup_debug_dialog()
+        if debug_dialog == null
             seeking_scale.hide()
             controls_box.hide()
-            error_dialog = new ErrorDialog()
-            error_dialog.closed += on_error_dialog_closed
-            error_dialog.set_transient_for(this)
-            error_dialog.show_all()
+            debug_dialog = new DebugDialog(this)
+            debug_dialog.closed += on_debug_dialog_closed
+            debug_dialog.show_all()
 
-    def on_error_dialog_closed()
+    def on_debug_dialog_closed()
         controls_box.show()
         on_stop()
-        error_dialog = null
+        debug_dialog = null
 
     def on_playlist_control_eos()
         next_button.activate()
 
     def on_playlist_control_error(error: Error, debug: string)
-        setup_error_dialog()
-        error_dialog.add_error_with_debug(error, debug)
+        setup_debug_dialog()
+        debug_dialog.add_error_debug(error, debug)
 
