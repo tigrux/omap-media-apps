@@ -442,6 +442,9 @@ static void muxer_control_instance_init (MuxerControl * self) {
 static void muxer_control_finalize (GObject* obj) {
 	MuxerControl * self;
 	self = MUXER_CONTROL (obj);
+	{
+		muxer_control_shutdown (self);
+	}
 	_g_free0 (self->preview_desc);
 	_g_free0 (self->record_desc);
 	_gst_object_unref0 (self->overlay);

@@ -8,21 +8,15 @@ enum PlayListCol
     NAME
     FULLNAME
 
-enum PlayerTab
-    LIST
-    VIDEO
-
 const UPDATE_INTERVAL: uint = 200
 const TITLE: string = "PlayerApp"
 
 
-class PlayerWindow: Window
+class PlayerWindow: ApplicationWindow
     playlist_view: TreeView
     playlist_store: ListStore
     playlist_selection: TreeSelection
     playlist_control: PlayListControl
-    toolbar: Toolbar
-    notebook: Notebook
     play_pause_button: ToolButton
     add_button: ToolButton
     next_button: ToolButton
@@ -62,30 +56,57 @@ class PlayerWindow: Window
 
     def setup_widgets()
         set_title(TITLE)
-        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
-        delete_event += on_delete
+        setup_toolbar()
+        setup_notebook()
+        main_box.show_all()
+        setup_seeking()
+        video_area.realize()
 
-        var main_box = new VBox(false, 0)
-        add(main_box)
-
-        main_box.pack_start(new_toolbar(), false, false, 0)
-
-        notebook = new Notebook()
-        main_box.pack_start(notebook, true, true, 0)
-        notebook.set_show_tabs(false)
+    def setup_notebook()
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.show()
 
+    def setup_toolbar()
+        var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
+        prev_button.clicked += on_prev
+        toolbar.add(prev_button)
+
+        play_pause_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(play_pause_button)
+        play_pause_button.clicked += on_play_pause
+
+        next_button = new ToolButton.from_stock(STOCK_MEDIA_NEXT)
+        toolbar.add(next_button)
+        next_button.clicked += on_next
+
+        var stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
+        toolbar.add(stop_button)
+        stop_button.clicked += on_stop
+
+        var volume_button_item = new ToolItem()
+        toolbar.add(volume_button_item)
+        volume_button = new_volume_button_with_mute()
+        volume_button_item.add(volume_button)
+
+        toolbar_add_expander()
+
+        add_button = new ToolButton.from_stock(STOCK_ADD)
+        toolbar.add(add_button)
+        add_button.clicked += on_add
+
+        var remove_button = new ToolButton.from_stock(STOCK_REMOVE)
+        toolbar.add(remove_button)
+        remove_button.clicked += on_remove
+
+        toolbar_add_quit_button()
+
+    def setup_seeking()
         seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
         seeking_scale = new HScale(seeking_adjustment)
         main_box.pack_start(seeking_scale, false, false, 0)
         seeking_scale.button_press_event += on_seeking_scale_pressed
         seeking_scale.button_release_event += on_seeking_scale_released
         seeking_scale.format_value += on_scale_format_value
-
-        main_box.show()
-        video_area.realize()
 
     def is_playing(): bool
         return playlist_control.get_state() == Gst.State.PLAYING
@@ -114,59 +135,6 @@ class PlayerWindow: Window
         if playlist_control.prev()
             if was_playing
                 on_play()
-
-    def on_quit()
-        Idle.add(on_delete)
-
-    def on_delete(): bool
-        main_quit()
-        return true
-
-    def new_toolbar(): Toolbar
-        toolbar = new Toolbar()
-        toolbar.set_icon_size(ICON_SIZE)
-
-        toolbar.add(new_expander())
-
-        var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
-        prev_button.clicked += on_prev
-        toolbar.add(prev_button)
-
-        play_pause_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
-        toolbar.add(play_pause_button)
-        play_pause_button.clicked += on_play_pause
-
-        next_button = new ToolButton.from_stock(STOCK_MEDIA_NEXT)
-        toolbar.add(next_button)
-        next_button.clicked += on_next
-
-        var stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
-        toolbar.add(stop_button)
-        stop_button.clicked += on_stop
-
-        var volume_button_item = new ToolItem()
-        toolbar.add(volume_button_item)
-        volume_button = new_volume_button_with_mute()
-        volume_button_item.add(volume_button)
-
-        toolbar.add(new_expander())
-
-        add_button = new ToolButton.from_stock(STOCK_ADD)
-        toolbar.add(add_button)
-        add_button.clicked += on_add
-
-        var remove_button = new ToolButton.from_stock(STOCK_REMOVE)
-        toolbar.add(remove_button)
-        remove_button.clicked += on_remove
-
-        var quit_button = new ToolButton.from_stock(STOCK_QUIT)
-        toolbar.add(quit_button)
-        quit_button.clicked += on_quit
-
-        toolbar.add(new_expander())
-
-        toolbar.show_all()
-        return toolbar
 
     def on_mute_clicked()
         var volume = volume_button.get_adjustment()
@@ -216,7 +184,7 @@ class PlayerWindow: Window
         return volume_button
 
     def new_playlist_box(): Box
-        var box = new VBox(false, 6)
+        var box = new VBox(false, 0)
 
         var scrolled_window = new ScrolledWindow(null, null)
         box.pack_start(scrolled_window, true, true, 0)
@@ -228,19 +196,17 @@ class PlayerWindow: Window
         playlist_selection = playlist_view.get_selection()
         playlist_selection.set_mode(SelectionMode.BROWSE)
 
-        box.show_all()
         return box
 
     def new_video_box(): Box
-        var box = new VBox(false, 6)
+        var box = new VBox(false, 0)
         video_area = new VideoArea()
         box.pack_start(video_area, true, true, 0)
         video_area.activated += on_video_area_activated
         video_area.prepared += def()
-            notebook.set_current_page(PlayerTab.VIDEO)
+            notebook.set_current_page(ApplicationTab.VIDEO)
         video_area.set_control(playlist_control)
 
-        box.show_all()
         return box
 
     def new_playlist_view(): TreeView
@@ -256,7 +222,6 @@ class PlayerWindow: Window
             -1, "Song", new CellRendererText(), \
             "markup", PlayListCol.NAME, null)
 
-        view.show_all()
         return view
 
     def new_playlist_store(): ListStore
@@ -285,7 +250,7 @@ class PlayerWindow: Window
                     return
                 var row = playlist_store.get_path(iter)
                 playlist_control.move_to(row)
-                notebook.set_current_page(PlayerTab.LIST)
+                notebook.set_current_page(ApplicationTab.LIST)
                 on_play()
 
     def on_playlist_control_playing(iter: TreeIter)
@@ -303,8 +268,8 @@ class PlayerWindow: Window
     def on_playlist_control_stopped(iter: TreeIter)
         set_title(TITLE)
         var page = notebook.get_current_page()
-        if page != PlayerTab.LIST
-            notebook.set_current_page(PlayerTab.LIST)
+        if page != ApplicationTab.LIST
+            notebook.set_current_page(ApplicationTab.LIST)
         play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
         remove_update_scale_timeout()
         seeking_scale.hide()

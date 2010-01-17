@@ -35,6 +35,9 @@ class MuxerControl: GLib.Object implements Control
         preview_desc = preview
         record_desc = record
 
+    final
+        shutdown()
+
     def load() raises Error
         load_preview_pipeline()
 

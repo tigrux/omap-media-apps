@@ -13,7 +13,16 @@
 
 #define TYPE_IMAGE_LIST_COL (image_list_col_get_type ())
 
-#define TYPE_IMAGE_VIEW_TAB (image_view_tab_get_type ())
+#define TYPE_APPLICATION_WINDOW (application_window_get_type ())
+#define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
+#define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
+#define IS_APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_APPLICATION_WINDOW))
+#define IS_APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_APPLICATION_WINDOW))
+#define APPLICATION_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
+
+typedef struct _ApplicationWindow ApplicationWindow;
+typedef struct _ApplicationWindowClass ApplicationWindowClass;
+typedef struct _ApplicationWindowPrivate ApplicationWindowPrivate;
 
 #define TYPE_IMAGE_VIEW_WINDOW (image_view_window_get_type ())
 #define IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindow))
@@ -48,6 +57,8 @@ typedef struct _IconListControlClass IconListControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
+#define TYPE_APPLICATION_TAB (application_tab_get_type ())
+
 typedef enum  {
 	IMAGE_LIST_COL_TEXT,
 	IMAGE_LIST_COL_FILE,
@@ -55,15 +66,21 @@ typedef enum  {
 	IMAGE_LIST_COL_VALID
 } ImageListCol;
 
-typedef enum  {
-	IMAGE_VIEW_TAB_LIST,
-	IMAGE_VIEW_TAB_VIDEO
-} ImageViewTab;
+struct _ApplicationWindow {
+	GtkWindow parent_instance;
+	ApplicationWindowPrivate * priv;
+	GtkNotebook* notebook;
+	GtkToolbar* toolbar;
+	GtkVBox* main_box;
+};
+
+struct _ApplicationWindowClass {
+	GtkWindowClass parent_class;
+};
 
 struct _ImageViewWindow {
-	GtkWindow parent_instance;
+	ApplicationWindow parent_instance;
 	ImageViewWindowPrivate * priv;
-	GtkNotebook* notebook;
 	GtkFileChooserButton* chooser_button;
 	GtkIconView* icon_view;
 	VideoArea* video_area;
@@ -74,14 +91,20 @@ struct _ImageViewWindow {
 };
 
 struct _ImageViewWindowClass {
-	GtkWindowClass parent_class;
+	ApplicationWindowClass parent_class;
 };
+
+typedef enum  {
+	APPLICATION_TAB_LIST,
+	APPLICATION_TAB_VIDEO
+} ApplicationTab;
 
 
 static gpointer image_view_window_parent_class = NULL;
 
+#define TITLE "ImageViewApp"
 GType image_list_col_get_type (void);
-GType image_view_tab_get_type (void);
+GType application_window_get_type (void);
 GType image_view_window_get_type (void);
 GType video_area_get_type (void);
 GType icon_list_control_get_type (void);
@@ -94,19 +117,19 @@ void image_view_window_on_iconlist_done (ImageViewWindow* self);
 static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self);
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 480
-static void _gtk_main_quit_gtk_object_destroy (ImageViewWindow* _sender, gpointer self);
-GtkToolbar* image_view_window_new_toolbar (ImageViewWindow* self);
+void image_view_window_setup_toolbar (ImageViewWindow* self);
+void image_view_window_setup_notebook (ImageViewWindow* self);
+void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
-void image_view_window_setup_widgets (ImageViewWindow* self);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
+GType application_tab_get_type (void);
 static void _lambda1_ (ImageViewWindow* self);
 static void __lambda1__video_area_prepared (VideoArea* _sender, gpointer self);
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
+void application_window_toolbar_add_quit_button (ApplicationWindow* self);
 void image_view_window_change_folder (ImageViewWindow* self);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
@@ -127,17 +150,6 @@ GType image_list_col_get_type (void) {
 		image_list_col_type_id = g_enum_register_static ("ImageListCol", values);
 	}
 	return image_list_col_type_id;
-}
-
-
-
-GType image_view_tab_get_type (void) {
-	static GType image_view_tab_type_id = 0;
-	if (G_UNLIKELY (image_view_tab_type_id == 0)) {
-		static const GEnumValue values[] = {{IMAGE_VIEW_TAB_LIST, "IMAGE_VIEW_TAB_LIST", "list"}, {IMAGE_VIEW_TAB_VIDEO, "IMAGE_VIEW_TAB_VIDEO", "video"}, {0, NULL, NULL}};
-		image_view_tab_type_id = g_enum_register_static ("ImageViewTab", values);
-	}
-	return image_view_tab_type_id;
 }
 
 
@@ -169,36 +181,27 @@ ImageViewWindow* image_view_window_new (GError** error) {
 }
 
 
-static void _gtk_main_quit_gtk_object_destroy (ImageViewWindow* _sender, gpointer self) {
-	gtk_main_quit ();
+void image_view_window_setup_widgets (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	gtk_window_set_title ((GtkWindow*) self, TITLE);
+	image_view_window_setup_toolbar (self);
+	image_view_window_setup_notebook (self);
+	gtk_widget_show_all ((GtkWidget*) ((ApplicationWindow*) self)->main_box);
 }
 
 
-void image_view_window_setup_widgets (ImageViewWindow* self) {
-	GtkVBox* main_box;
-	GtkToolbar* _tmp0_;
-	GtkNotebook* _tmp1_;
+void image_view_window_setup_notebook (ImageViewWindow* self) {
+	GtkLabel* _tmp1_;
+	GtkBox* _tmp0_;
 	GtkLabel* _tmp3_;
 	GtkBox* _tmp2_;
-	GtkLabel* _tmp5_;
-	GtkBox* _tmp4_;
 	g_return_if_fail (self != NULL);
-	gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-	g_signal_connect ((GtkObject*) self, "destroy", (GCallback) _gtk_main_quit_gtk_object_destroy, NULL);
-	main_box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 6));
-	gtk_container_add ((GtkContainer*) self, (GtkWidget*) main_box);
-	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) (_tmp0_ = image_view_window_new_toolbar (self)), FALSE, FALSE, (guint) 0);
+	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) (_tmp0_ = image_view_window_new_iconlist_box (self)), (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("List"))));
+	_g_object_unref0 (_tmp1_);
 	_g_object_unref0 (_tmp0_);
-	self->notebook = (_tmp1_ = g_object_ref_sink ((GtkNotebook*) gtk_notebook_new ()), _g_object_unref0 (self->notebook), _tmp1_);
-	gtk_box_pack_start ((GtkBox*) main_box, (GtkWidget*) self->notebook, TRUE, TRUE, (guint) 0);
-	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_iconlist_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("List"))));
+	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp4_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp5_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
-	_g_object_unref0 (_tmp5_);
-	_g_object_unref0 (_tmp4_);
-	gtk_widget_show_all ((GtkWidget*) main_box);
-	_g_object_unref0 (main_box);
 }
 
 
@@ -208,7 +211,7 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	GtkScrolledWindow* scrolled_window;
 	GtkIconView* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
-	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 6));
+	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
 	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -228,7 +231,7 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 
 
 static void _lambda1_ (ImageViewWindow* self) {
-	gtk_notebook_set_current_page (self->notebook, (gint) IMAGE_VIEW_TAB_VIDEO);
+	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
 }
 
 
@@ -242,11 +245,10 @@ GtkBox* image_view_window_new_video_box (ImageViewWindow* self) {
 	GtkVBox* box;
 	VideoArea* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
-	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 6));
+	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 0);
 	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda1__video_area_prepared, self, 0);
-	gtk_widget_show_all ((GtkWidget*) box);
 	result = (GtkBox*) box;
 	return result;
 }
@@ -257,23 +259,19 @@ static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_curren
 }
 
 
-GtkToolbar* image_view_window_new_toolbar (ImageViewWindow* self) {
-	GtkToolbar* result;
-	GtkToolbar* toolbar;
+void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	GtkToolItem* chooser_item;
 	GtkFileChooserButton* _tmp0_;
-	g_return_val_if_fail (self != NULL, NULL);
-	toolbar = g_object_ref_sink ((GtkToolbar*) gtk_toolbar_new ());
+	g_return_if_fail (self != NULL);
 	chooser_item = g_object_ref_sink (gtk_tool_item_new ());
 	gtk_tool_item_set_expand (chooser_item, TRUE);
-	gtk_container_add ((GtkContainer*) toolbar, (GtkWidget*) chooser_item);
+	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) chooser_item);
 	self->chooser_button = (_tmp0_ = g_object_ref_sink ((GtkFileChooserButton*) gtk_file_chooser_button_new ("Select folder", GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)), _g_object_unref0 (self->chooser_button), _tmp0_);
 	gtk_container_add ((GtkContainer*) chooser_item, (GtkWidget*) self->chooser_button);
 	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
-	result = toolbar;
+	application_window_toolbar_add_quit_button ((ApplicationWindow*) self);
 	_g_object_unref0 (chooser_item);
-	return result;
 }
 
 
@@ -377,7 +375,6 @@ static void image_view_window_instance_init (ImageViewWindow * self) {
 static void image_view_window_finalize (GObject* obj) {
 	ImageViewWindow * self;
 	self = IMAGE_VIEW_WINDOW (obj);
-	_g_object_unref0 (self->notebook);
 	_g_object_unref0 (self->chooser_button);
 	_g_object_unref0 (self->icon_view);
 	_g_object_unref0 (self->video_area);
@@ -393,7 +390,7 @@ GType image_view_window_get_type (void) {
 	static GType image_view_window_type_id = 0;
 	if (image_view_window_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (ImageViewWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) image_view_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (ImageViewWindow), 0, (GInstanceInitFunc) image_view_window_instance_init, NULL };
-		image_view_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "ImageViewWindow", &g_define_type_info, 0);
+		image_view_window_type_id = g_type_register_static (TYPE_APPLICATION_WINDOW, "ImageViewWindow", &g_define_type_info, 0);
 	}
 	return image_view_window_type_id;
 }

@@ -2,6 +2,7 @@
 
 uses Gtk
 
+const TITLE: string = "ImageViewApp"
 
 enum ImageListCol
     TEXT
@@ -9,13 +10,8 @@ enum ImageListCol
     PIXBUF
     VALID
 
-enum ImageViewTab
-    LIST
-    VIDEO
 
-
-class ImageViewWindow: Window
-    notebook: Notebook
+class ImageViewWindow: ApplicationWindow
     chooser_button: FileChooserButton
     icon_view: IconView
     video_area: VideoArea
@@ -33,24 +29,17 @@ class ImageViewWindow: Window
         iconlist_control.done += on_iconlist_done
 
     def setup_widgets()
-        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
-        destroy += Gtk.main_quit
+        set_title(TITLE)
+        setup_toolbar()
+        setup_notebook()
+        main_box.show_all()
 
-        var main_box = new VBox(false, 6)
-        add(main_box)
-
-        main_box.pack_start(new_toolbar(), false, false, 0)
-        
-        notebook = new Notebook()
-        main_box.pack_start(notebook, true, true, 0)
-        //notebook.set_show_tabs(false)
+    def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
 
-        main_box.show_all()
-
     def new_iconlist_box(): Box
-        var box = new VBox(false, 6)
+        var box = new VBox(false, 0)
         var scrolled_window = new ScrolledWindow(null, null)
         box.pack_start(scrolled_window, true, true, 0)
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
@@ -68,17 +57,15 @@ class ImageViewWindow: Window
         return box
 
     def new_video_box(): Box
-        var box = new VBox(false, 6)
+        var box = new VBox(false, 0)
         video_area = new VideoArea()
         box.pack_start(video_area, true, true, 0)
         video_area.prepared += def()
-            notebook.set_current_page(ImageViewTab.VIDEO)
+            notebook.set_current_page(ApplicationTab.VIDEO)
         //video_area.set_control(playlist_control)
         return box
 
-    def new_toolbar(): Toolbar
-        var toolbar = new Toolbar()
-
+    def setup_toolbar()
         var chooser_item = new ToolItem()
         chooser_item.set_expand(true)
         toolbar.add(chooser_item)
@@ -89,8 +76,8 @@ class ImageViewWindow: Window
         chooser_button.set_create_folders(false)
         chooser_button.current_folder_changed += on_chooser_folder_changed
         
-        return toolbar
-
+        toolbar_add_quit_button()
+        
     def on_chooser_folder_changed()
         var folder = chooser_button.get_current_folder()
         if folder == current_folder
