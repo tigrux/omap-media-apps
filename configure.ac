@@ -21,8 +21,8 @@ min_gtk_ver=2.14
 min_gst_ver=0.10
 
 PKG_CHECK_MODULES(PROGRAM, 
-    gtk+-2.0 >= $min_gst_ver
-    gdk-x11-2.0 >= $min_gst_ver
+    gtk+-2.0 >= $min_gtk_ver
+    gdk-x11-2.0 >= $min_gtk_ver
     gstreamer-0.10 >= $min_gst_ver
     gstreamer-interfaces-0.10 >= $min_gst_ver
     )
