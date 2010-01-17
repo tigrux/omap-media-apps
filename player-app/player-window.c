@@ -158,8 +158,6 @@ static gboolean _player_window_on_delete_gtk_widget_delete_event (PlayerWindow* 
 GtkButtonBox* player_window_new_buttons_box (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
-static gboolean _lambda5_ (gint page, PlayerWindow* self);
-static gboolean __lambda5__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self);
 gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self);
 static gboolean _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
 gboolean player_window_on_seeking_scale_released (PlayerWindow* self);
@@ -315,17 +313,6 @@ static gboolean _player_window_on_delete_gtk_widget_delete_event (PlayerWindow* 
 }
 
 
-static gboolean _lambda5_ (gint page, PlayerWindow* self) {
-	gboolean result;
-	g_print ("page %d\n", page);
-}
-
-
-static gboolean __lambda5__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self) {
-	return _lambda5_ (offset, self);
-}
-
-
 static gboolean _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self) {
 	return player_window_on_seeking_scale_pressed (self);
 }
@@ -368,7 +355,6 @@ void player_window_setup_widgets (PlayerWindow* self) {
 	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp4_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp5_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp5_);
 	_g_object_unref0 (_tmp4_);
-	g_signal_connect_object (self->notebook, "change-current-page", (GCallback) __lambda5__gtk_notebook_change_current_page, self, 0);
 	gtk_widget_show ((GtkWidget*) self->notebook);
 	self->seeking_adjustment = (_tmp6_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp6_);
 	self->seeking_scale = (_tmp7_ = (GtkScale*) g_object_ref_sink ((GtkHScale*) gtk_hscale_new (self->seeking_adjustment)), _g_object_unref0 (self->seeking_scale), _tmp7_);

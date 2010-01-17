@@ -76,8 +76,6 @@ class PlayerWindow: Window
         notebook.set_show_tabs(false)
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.change_current_page += def(page)
-            print "page %d", page
         notebook.show()
 
         seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
