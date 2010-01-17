@@ -90,7 +90,6 @@ struct _PlayerWindow {
 	PlayListControl* playlist_control;
 	GtkBox* controls_box;
 	GtkNotebook* notebook;
-	gint notebook_previous_page;
 	GtkButton* add_button;
 	GtkButton* next_button;
 	GtkImage* play_pause_image;
@@ -159,8 +158,6 @@ static gboolean _player_window_on_delete_gtk_widget_delete_event (PlayerWindow* 
 GtkButtonBox* player_window_new_buttons_box (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
-void player_window_on_notebook_switch_page (PlayerWindow* self, void* page, guint page_num);
-static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 static gboolean _lambda5_ (gint page, PlayerWindow* self);
 static gboolean __lambda5__gtk_notebook_change_current_page (GtkNotebook* _sender, gint offset, gpointer self);
 gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self);
@@ -318,11 +315,6 @@ static gboolean _player_window_on_delete_gtk_widget_delete_event (PlayerWindow* 
 }
 
 
-static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
-	player_window_on_notebook_switch_page (self, page, page_num);
-}
-
-
 static gboolean _lambda5_ (gint page, PlayerWindow* self) {
 	gboolean result;
 	g_print ("page %d\n", page);
@@ -376,7 +368,6 @@ void player_window_setup_widgets (PlayerWindow* self) {
 	gtk_notebook_append_page (self->notebook, (GtkWidget*) (_tmp4_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp5_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp5_);
 	_g_object_unref0 (_tmp4_);
-	g_signal_connect_object (self->notebook, "switch-page", (GCallback) _player_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
 	g_signal_connect_object (self->notebook, "change-current-page", (GCallback) __lambda5__gtk_notebook_change_current_page, self, 0);
 	gtk_widget_show ((GtkWidget*) self->notebook);
 	self->seeking_adjustment = (_tmp6_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp6_);
@@ -1060,12 +1051,6 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self) {
 	}
 	result = TRUE;
 	return result;
-}
-
-
-void player_window_on_notebook_switch_page (PlayerWindow* self, void* page, guint page_num) {
-	g_return_if_fail (self != NULL);
-	self->notebook_previous_page = gtk_notebook_get_current_page (self->notebook);
 }
 
 

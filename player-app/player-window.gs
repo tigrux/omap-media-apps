@@ -23,7 +23,6 @@ class PlayerWindow: Window
     playlist_control: PlayListControl
     controls_box: Box
     notebook: Notebook
-    notebook_previous_page: int
     add_button: Button
     next_button: Button
     play_pause_image: Gtk.Image
@@ -77,7 +76,6 @@ class PlayerWindow: Window
         notebook.set_show_tabs(false)
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.switch_page += on_notebook_switch_page
         notebook.change_current_page += def(page)
             print "page %d", page
         notebook.show()
@@ -407,9 +405,6 @@ class PlayerWindow: Window
             var stream_value = stream_position * 100.0 / stream_duration
             seeking_adjustment.set_value(stream_value)
         return true
-
-    def on_notebook_switch_page(page: void*, page_num: uint)
-        notebook_previous_page = notebook.get_current_page()
 
     def on_video_area_activated()
         if is_fullscreen
