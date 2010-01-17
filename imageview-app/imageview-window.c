@@ -375,6 +375,12 @@ static void image_view_window_instance_init (ImageViewWindow * self) {
 static void image_view_window_finalize (GObject* obj) {
 	ImageViewWindow * self;
 	self = IMAGE_VIEW_WINDOW (obj);
+	{
+		if (self->iconlist_control != NULL) {
+			guint _tmp1_;
+			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("done", TYPE_ICON_LIST_CONTROL, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _image_view_window_on_iconlist_done_icon_list_control_done, self);
+		}
+	}
 	_g_object_unref0 (self->chooser_button);
 	_g_object_unref0 (self->icon_view);
 	_g_object_unref0 (self->video_area);

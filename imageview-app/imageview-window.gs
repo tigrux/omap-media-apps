@@ -23,7 +23,11 @@ class ImageViewWindow: ApplicationWindow
     init
         iconlist_store = new_imagelist_store()
         setup_widgets()
-    
+
+    final
+        if iconlist_control != null
+            iconlist_control.done.disconnect(on_iconlist_done)
+
     construct() raises Error
         iconlist_control = new IconListControl(iconlist_store)
         iconlist_control.done += on_iconlist_done
