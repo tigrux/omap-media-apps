@@ -9,12 +9,14 @@ bin_PROGRAMS = omap4-imageview-app
 omap4_imageview_app_VALASOURCES = \
 	imageview-window.gs \
 	imageview-app.gs \
-	iconlist-control.gs
+	iconlist-control.gs \
+	image-control.gs
 
 common_VALASOURCES = \
 	$(top_srcdir)/common/video-area.gs \
 	$(top_srcdir)/common/error-dialog.gs \
 	$(top_srcdir)/common/application-window.gs \
+	$(top_srcdir)/common/media-control.gs \
 	$(top_srcdir)/common/defaults.gs
 
 omap4_imageview_app_SOURCES = \

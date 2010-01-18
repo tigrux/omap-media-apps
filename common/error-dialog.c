@@ -23,7 +23,6 @@ typedef struct _DebugDialogClass DebugDialogClass;
 typedef struct _DebugDialogPrivate DebugDialogPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-typedef struct _Block1Data Block1Data;
 
 struct _DebugDialog {
 	GtkDialog parent_instance;
@@ -34,11 +33,6 @@ struct _DebugDialog {
 
 struct _DebugDialogClass {
 	GtkDialogClass parent_class;
-};
-
-struct _Block1Data {
-	int _ref_count_;
-	GtkMessageDialog* dialog;
 };
 
 
@@ -61,11 +55,9 @@ static gboolean _lambda2_ (DebugDialog* self);
 static gboolean __lambda2__gtk_widget_delete_event (DebugDialog* _sender, GdkEvent* event, gpointer self);
 static GObject * debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void debug_dialog_finalize (GObject* obj);
-static void _lambda3_ (Block1Data* _data1_);
-static void __lambda3__gtk_dialog_response (GtkMessageDialog* _sender, gint response_id, gpointer self);
-static Block1Data* block1_data_ref (Block1Data* _data1_);
-static void block1_data_unref (Block1Data* _data1_);
-void show_error (GError* _error_);
+static void _lambda3_ (GtkDialog* widget, gint response);
+static void __lambda3__gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
+void error_dialog (GError* _error_);
 
 
 
@@ -227,40 +219,26 @@ GType debug_dialog_get_type (void) {
 }
 
 
-static void _lambda3_ (Block1Data* _data1_) {
-	gtk_object_destroy ((GtkObject*) _data1_->dialog);
-}
-
-
-static void __lambda3__gtk_dialog_response (GtkMessageDialog* _sender, gint response_id, gpointer self) {
-	_lambda3_ (self);
-}
-
-
-static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	++_data1_->_ref_count_;
-	return _data1_;
-}
-
-
-static void block1_data_unref (Block1Data* _data1_) {
-	if ((--_data1_->_ref_count_) == 0) {
-		_g_object_unref0 (_data1_->dialog);
-		g_slice_free (Block1Data, _data1_);
+static void _lambda3_ (GtkDialog* widget, gint response) {
+	g_return_if_fail (widget != NULL);
+	if (widget != NULL) {
+		gtk_object_destroy ((GtkObject*) widget);
 	}
 }
 
 
-void show_error (GError* _error_) {
-	Block1Data* _data1_;
-	_data1_ = g_slice_new0 (Block1Data);
-	_data1_->_ref_count_ = 1;
-	_data1_->dialog = g_object_ref_sink ((GtkMessageDialog*) gtk_message_dialog_new (NULL, GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", _error_->message));
-	gtk_window_set_title ((GtkWindow*) _data1_->dialog, "Error");
-	g_signal_connect_data ((GtkDialog*) _data1_->dialog, "response", (GCallback) __lambda3__gtk_dialog_response, _data1_, (GClosureNotify) NULL, 0);
-	gtk_widget_show ((GtkWidget*) _data1_->dialog);
-	gtk_dialog_run ((GtkDialog*) _data1_->dialog);
-	block1_data_unref (_data1_);
+static void __lambda3__gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self) {
+	_lambda3_ (_sender, response_id);
+}
+
+
+void error_dialog (GError* _error_) {
+	GtkDialog* dialog;
+	dialog = (GtkDialog*) g_object_ref_sink ((GtkMessageDialog*) gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", _error_->message));
+	gtk_window_set_title ((GtkWindow*) dialog, "Error");
+	g_signal_connect (dialog, "response", (GCallback) __lambda3__gtk_dialog_response, NULL);
+	gtk_dialog_run (dialog);
+	_g_object_unref0 (dialog);
 }
 
 

@@ -4,20 +4,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gst/gst.h>
 #include <gtk/gtk.h>
+#include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
-
-#define TYPE_CONTROL (control_get_type ())
-#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
-#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
-#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
-
-typedef struct _Control Control;
-typedef struct _ControlIface ControlIface;
 
 #define TYPE_VIDEO_AREA (video_area_get_type ())
 #define VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_VIDEO_AREA, VideoArea))
@@ -30,12 +22,17 @@ typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
 typedef struct _VideoAreaPrivate VideoAreaPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
-#define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
 
-struct _ControlIface {
-	GTypeInterface parent_iface;
-	GstBus* (*get_bus) (Control* self);
-};
+#define TYPE_MEDIA_CONTROL (media_control_get_type ())
+#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
+#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
+#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
+#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
+
+typedef struct _MediaControl MediaControl;
+typedef struct _MediaControlClass MediaControlClass;
+#define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
 
 struct _VideoArea {
 	GtkDrawingArea parent_instance;
@@ -54,8 +51,6 @@ extern GQuark video_area_prepare_xwindow_q;
 GQuark video_area_prepare_xwindow_q = 0U;
 static gpointer video_area_parent_class = NULL;
 
-GType control_get_type (void);
-GstBus* control_get_bus (Control* self);
 GType video_area_get_type (void);
 enum  {
 	VIDEO_AREA_DUMMY_PROPERTY
@@ -64,9 +59,11 @@ static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean 
 void video_area_set_sink (VideoArea* self, GstXOverlay* sink);
 static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
 static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* event);
+GType media_control_get_type (void);
+GstBus* media_control_get_bus (MediaControl* self);
 void video_area_on_bus_sync_message (VideoArea* self, GstMessage* message);
 static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
-void video_area_set_control (VideoArea* self, Control* control);
+void video_area_set_control (VideoArea* self, MediaControl* control);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 static void _lambda0_ (VideoArea* self);
@@ -74,29 +71,6 @@ static void __lambda0__gtk_widget_realize (VideoArea* _sender, gpointer self);
 static GObject * video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void video_area_finalize (GObject* obj);
 
-
-
-GstBus* control_get_bus (Control* self) {
-	return CONTROL_GET_INTERFACE (self)->get_bus (self);
-}
-
-
-static void control_base_init (ControlIface * iface) {
-	static gboolean initialized = FALSE;
-	if (!initialized) {
-		initialized = TRUE;
-	}
-}
-
-
-GType control_get_type (void) {
-	static GType control_type_id = 0;
-	if (control_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (ControlIface), (GBaseInitFunc) control_base_init, (GBaseFinalizeFunc) NULL, (GClassInitFunc) NULL, (GClassFinalizeFunc) NULL, NULL, 0, 0, (GInstanceInitFunc) NULL, NULL };
-		control_type_id = g_type_register_static (G_TYPE_INTERFACE, "Control", &g_define_type_info, 0);
-	}
-	return control_type_id;
-}
 
 
 static gpointer _gst_object_ref0 (gpointer self) {
@@ -150,11 +124,11 @@ static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sende
 }
 
 
-void video_area_set_control (VideoArea* self, Control* control) {
+void video_area_set_control (VideoArea* self, MediaControl* control) {
 	GstBus* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (control != NULL);
-	self->bus = (_tmp0_ = control_get_bus (control), _gst_object_unref0 (self->bus), _tmp0_);
+	self->bus = (_tmp0_ = media_control_get_bus (control), _gst_object_unref0 (self->bus), _tmp0_);
 	gst_bus_enable_sync_message_emission (self->bus);
 	g_signal_connect_object (self->bus, "sync-message", (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self, 0);
 }

@@ -8,6 +8,7 @@ init
     try
         var window = new ImageViewWindow()
         window.show()
+        Gtk.main()
     except e: Error
-        print e.message
-    Gtk.main()
+        error_dialog(e)
+

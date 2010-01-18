@@ -4,35 +4,27 @@ uses Gtk
 uses Gst
 
 
-class PlayListControl: GLib.Object implements Control
+class PlayListControl: MediaControl
     enum Col
         ICON
         NAME
         FILE
 
-    player: Element
     playlist_store: ListStore
     current_row: TreePath
     number_of_rows: int
-
-    prop pipeline: Element
-        get
-            return player
+    player: dynamic Element
 
     prop volume: double
         get
-            value: double
-            player.get("volume", out value, null)
-            return value
+            return player.volume
         set
-            player.set("volume", value, null)
+            player.volume = value
 
     prop n_rows: uint
         get
             return number_of_rows
 
-    event eos()
-    event error(e: Error, debug: string)
     event playing(iter: TreeIter)
     event paused(iter: TreeIter)
     event stopped(iter: TreeIter)
@@ -42,9 +34,7 @@ class PlayListControl: GLib.Object implements Control
         player = ElementFactory.make("playbin2", "player")
         if player == null
             player = ElementFactory.make("playbin", "player")
-        var bus = player.get_bus()
-        bus.add_signal_watch()
-        bus.message += on_bus_message
+        set_pipeline(player as Gst.Bin)
 
     construct(store: ListStore)
         playlist_store = store
@@ -52,22 +42,7 @@ class PlayListControl: GLib.Object implements Control
         playlist_store.row_deleted += on_row_deleted
 
     def set_location(location: string)
-        player.set("uri", "file://%s".printf(location), null)
-
-    def get_bus(): Bus
-        return player.get_bus()
-
-    def get_position(): int64
-        var format = Format.TIME
-        position: int64
-        player.query_position(ref format, out position)
-        return position
-
-    def get_duration(): int64
-        var format = Format.TIME
-        duration: int64
-        player.query_duration(ref format, out duration)
-        return duration
+        player.uri = "file://%s".printf(location)
 
     def play(): bool
         iter: TreeIter
@@ -81,14 +56,14 @@ class PlayListControl: GLib.Object implements Control
         if state == State.NULL
             set_location(filename)
 
-        if player.set_state(State.PLAYING) != StateChangeReturn.FAILURE
+        if set_state(State.PLAYING) != StateChangeReturn.FAILURE
             playlist_store.set(iter, Col.ICON, STOCK_MEDIA_PLAY, -1)
             playing(iter)
             return true
         return false
 
     def pause(): bool
-        if player.set_state(State.PAUSED) != StateChangeReturn.FAILURE
+        if set_state(State.PAUSED) != StateChangeReturn.FAILURE
             iter: TreeIter
             if get_iter(out iter)
                 playlist_store.set(iter, \
@@ -98,7 +73,7 @@ class PlayListControl: GLib.Object implements Control
         return false
 
     def stop(): bool
-        if player.set_state(State.NULL) != StateChangeReturn.FAILURE
+        if set_state(State.NULL) != StateChangeReturn.FAILURE
             iter: TreeIter
             if get_iter(out iter)
                 playlist_store.set(iter, Col.ICON, null, -1)
@@ -131,19 +106,6 @@ class PlayListControl: GLib.Object implements Control
             Col.FILE, file, \
             -1)
 
-    def seek(location: int64)
-        var seek_event = new Event.seek( \
-            1.0, Format.TIME, \
-            SeekFlags.FLUSH | SeekFlags.ACCURATE, \
-            Gst.SeekType.SET, location, \
-            Gst.SeekType.NONE, 0)
-        player.send_event(seek_event)
-
-    def get_state(): Gst.State
-        state: State
-        player.get_state(out state, null, (ClockTime)(MSECOND*50))
-        return state
-
     def move_to(row: TreePath): bool
         iter: TreeIter
         if playlist_store.get_iter(out iter, row)
@@ -168,18 +130,6 @@ class PlayListControl: GLib.Object implements Control
 
     def on_row_inserted(row: TreePath)
         number_of_rows ++
-
-    def on_bus_message(message: Message)
-        case message.type
-            when Gst.MessageType.EOS
-                eos()
-            when Gst.MessageType.ERROR
-                e: Error
-                debug: string
-                message.parse_error(out e, out debug)
-                error(e, debug)
-            default
-                pass
 
     def static get_name_column(): int
         return Col.NAME

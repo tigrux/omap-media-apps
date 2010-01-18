@@ -16,6 +16,7 @@ common_VALASOURCES = \
 	$(top_srcdir)/common/video-area.gs \
 	$(top_srcdir)/common/error-dialog.gs \
 	$(top_srcdir)/common/application-window.gs \
+	$(top_srcdir)/common/media-control.gs \
 	$(top_srcdir)/common/defaults.gs
 
 omap4_muxer_app_SOURCES = \

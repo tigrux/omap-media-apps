@@ -42,8 +42,8 @@ class PlayerWindow: ApplicationWindow
 
     def setup_elements()
         playlist_control = new PlayListControl(playlist_store)
-        playlist_control.eos += on_playlist_control_eos
-        playlist_control.error += on_playlist_control_error
+        playlist_control.eos_message += on_playlist_control_eos
+        playlist_control.error_message += on_playlist_control_error
         playlist_control.playing += on_playlist_control_playing
         playlist_control.paused += on_playlist_control_paused
         playlist_control.stopped += on_playlist_control_stopped

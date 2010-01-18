@@ -30,7 +30,6 @@ typedef struct _ApplicationWindowClass ApplicationWindowClass;
 typedef struct _ImageViewWindow ImageViewWindow;
 typedef struct _ImageViewWindowClass ImageViewWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 
@@ -40,6 +39,7 @@ ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
 GType application_window_get_type (void);
 GType image_view_window_get_type (void);
+void error_dialog (GError* _error_);
 void _main (char** args, int args_length1);
 
 
@@ -58,6 +58,7 @@ void _main (char** args, int args_length1) {
 			goto __finally0;
 		}
 		gtk_widget_show ((GtkWidget*) window);
+		gtk_main ();
 		_g_object_unref0 (window);
 	}
 	goto __finally0;
@@ -67,9 +68,7 @@ void _main (char** args, int args_length1) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp0_;
-			g_print ("%s", _tmp0_ = g_strconcat (e->message, "\n", NULL));
-			_g_free0 (_tmp0_);
+			error_dialog (e);
 			_g_error_free0 (e);
 		}
 	}
@@ -79,7 +78,6 @@ void _main (char** args, int args_length1) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	gtk_main ();
 }
 
 

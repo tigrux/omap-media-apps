@@ -7,10 +7,21 @@
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gtk/gtk.h>
-#include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gio/gio.h>
 
+
+#define TYPE_MEDIA_CONTROL (media_control_get_type ())
+#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
+#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
+#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
+#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
+
+typedef struct _MediaControl MediaControl;
+typedef struct _MediaControlClass MediaControlClass;
+typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_ICON_LIST_CONTROL (icon_list_control_get_type ())
 #define ICON_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ICON_LIST_CONTROL, IconListControl))
@@ -32,12 +43,21 @@ typedef struct _IconListControlPrivate IconListControlPrivate;
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 typedef struct _IconListControlAddFolderData IconListControlAddFolderData;
 typedef struct _IconListControlRetrieveThumbnailsData IconListControlRetrieveThumbnailsData;
-#define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
+
+struct _MediaControl {
+	GObject parent_instance;
+	MediaControlPrivate * priv;
+	GstBus* bus;
+	GstBin* pipeline;
+};
+
+struct _MediaControlClass {
+	GObjectClass parent_class;
+};
 
 struct _IconListControl {
-	GObject parent_instance;
+	MediaControl parent_instance;
 	IconListControlPrivate * priv;
-	GstPipeline* pipeline;
 	GstElement* filesrc;
 	GstElement* imagesink;
 	GdkPixbuf* missing_pixbuf;
@@ -48,7 +68,7 @@ struct _IconListControl {
 };
 
 struct _IconListControlClass {
-	GObjectClass parent_class;
+	MediaControlClass parent_class;
 };
 
 struct _IconListControlPrivate {
@@ -109,8 +129,9 @@ extern gboolean icon_list_control_pixbufs_loaded;
 gboolean icon_list_control_pixbufs_loaded = FALSE;
 static gpointer icon_list_control_parent_class = NULL;
 
-#define PIXBUF_PIPELINE_DESC "\nfilesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink\n"
+#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
+GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
 #define ICON_LIST_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_ICON_LIST_CONTROL, IconListControlPrivate))
 enum  {
@@ -123,8 +144,10 @@ void icon_list_control_setup_icons (IconListControl* self, GError** error);
 void icon_list_control_setup_elements (IconListControl* self, GError** error);
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
-void icon_list_control_on_bus_message (IconListControl* self, GstMessage* message);
-static void _icon_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+void icon_list_control_setup_pipeline (IconListControl* self, GError** error);
+void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+void icon_list_control_on_structure (IconListControl* self, GstObject* src, const char* name);
+static void _icon_list_control_on_structure_media_control_structure_message (IconListControl* _sender, GstObject* src, const char* name, gpointer self);
 static void icon_list_control_add_folder_data_free (gpointer _data);
 static void icon_list_control_add_folder_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static void _g_list_free_g_object_unref (GList* self);
@@ -138,13 +161,18 @@ GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self);
 static void icon_list_control_retrieve_thumbnails_data_free (gpointer _data);
 static void icon_list_control_retrieve_thumbnails_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean _icon_list_control_retrieve_thumbnails_co_gsource_func (gpointer self);
-static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
+static inline void _dynamic_set_location1 (GstElement* obj, const char* value);
 static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetrieveThumbnailsData* data);
-static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj);
+static inline GdkPixbuf* _dynamic_get_last_pixbuf2 (GstElement* obj);
+void icon_list_control_on_error (IconListControl* self, GError* _error_, const char* debug);
+void icon_list_control_on_eos (IconListControl* self);
 IconListControlCol icon_list_control_get_text_column (void);
 IconListControlCol icon_list_control_get_pixbuf_column (void);
 gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
+static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, gpointer self);
+static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GError* _error_, const char* debug, gpointer self);
+static GObject * icon_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void icon_list_control_finalize (GObject* obj);
 static void icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void icon_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
@@ -168,7 +196,7 @@ IconListControl* icon_list_control_construct (GType object_type, GtkListStore* m
 	IconListControl * self;
 	g_return_val_if_fail (model != NULL, NULL);
 	_inner_error_ = NULL;
-	self = (IconListControl*) g_object_new (object_type, NULL);
+	self = g_object_newv (object_type, 0, NULL);
 	icon_list_control_set_iconlist_store (self, model);
 	if (!icon_list_control_pixbufs_loaded) {
 		icon_list_control_setup_icons (self, &_inner_error_);
@@ -197,28 +225,12 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gpointer _gst_object_ref0 (gpointer self) {
-	return self ? gst_object_ref (self) : NULL;
-}
-
-
-static void _icon_list_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
-	icon_list_control_on_bus_message (self, message);
-}
-
-
 void icon_list_control_setup_icons (IconListControl* self, GError** error) {
 	GError * _inner_error_;
 	GtkIconTheme* icon_theme;
 	GtkIconInfo* icon_info;
 	GtkIconInfo* _tmp0_;
 	GtkIconInfo* _tmp3_;
-	GstElement* _tmp6_;
-	GstPipeline* _tmp8_;
-	GstElement* _tmp7_;
-	GstElement* _tmp9_;
-	GstElement* _tmp10_;
-	GstBus* bus;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	icon_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
@@ -249,75 +261,63 @@ void icon_list_control_setup_icons (IconListControl* self, GError** error) {
 		}
 		icon_list_control_loading_pixbuf = (_tmp5_ = _tmp4_, _g_object_unref0 (icon_list_control_loading_pixbuf), _tmp5_);
 	}
-	_tmp6_ = gst_parse_launch (PIXBUF_PIPELINE_DESC, &_inner_error_);
-	if (_inner_error_ != NULL) {
-		g_propagate_error (error, _inner_error_);
-		_g_object_unref0 (icon_theme);
-		_gtk_icon_info_free0 (icon_info);
-		return;
-	}
-	self->pipeline = (_tmp8_ = (_tmp7_ = _tmp6_, GST_IS_PIPELINE (_tmp7_) ? ((GstPipeline*) _tmp7_) : NULL), _gst_object_unref0 (self->pipeline), _tmp8_);
-	if ((self->filesrc = (_tmp9_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp9_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the pixbuf pipeline");
-		if (_inner_error_ != NULL) {
-			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (icon_theme);
-			_gtk_icon_info_free0 (icon_info);
-			return;
-		}
-	}
-	if ((self->imagesink = (_tmp10_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp10_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the pixbuf pipeline");
-		if (_inner_error_ != NULL) {
-			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (icon_theme);
-			_gtk_icon_info_free0 (icon_info);
-			return;
-		}
-	}
-	bus = _gst_object_ref0 (((GstElement*) self->pipeline)->bus);
-	gst_bus_add_signal_watch (bus);
-	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
 	_g_object_unref0 (icon_theme);
 	_gtk_icon_info_free0 (icon_info);
-	_gst_object_unref0 (bus);
 }
 
 
 void icon_list_control_setup_elements (IconListControl* self, GError** error) {
 	GError * _inner_error_;
-	GstElement* _tmp0_;
-	GstPipeline* _tmp2_;
-	GstElement* _tmp1_;
-	GstElement* _tmp3_;
-	GstElement* _tmp4_;
-	GstBus* bus;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	_tmp0_ = gst_parse_launch (PIXBUF_PIPELINE_DESC, &_inner_error_);
+	icon_list_control_setup_pipeline (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	self->pipeline = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->pipeline), _tmp2_);
-	if ((self->filesrc = (_tmp3_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp3_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the pixbuf pipeline");
+}
+
+
+static void _icon_list_control_on_structure_media_control_structure_message (IconListControl* _sender, GstObject* src, const char* name, gpointer self) {
+	icon_list_control_on_structure (self, src, name);
+}
+
+
+void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
+	GError * _inner_error_;
+	GstElement* _tmp0_;
+	GstElement* _tmp1_;
+	GstPipeline* icon_pipeline;
+	GstElement* _tmp2_;
+	GstElement* _tmp3_;
+	g_return_if_fail (self != NULL);
+	_inner_error_ = NULL;
+	_tmp0_ = gst_parse_launch (ICON_PIPELINE_DESC, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		g_propagate_error (error, _inner_error_);
+		return;
+	}
+	icon_pipeline = (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL);
+	gst_object_set_name ((GstObject*) icon_pipeline, "icon_pipeline");
+	if ((self->filesrc = (_tmp2_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp2_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the icon pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
+			_gst_object_unref0 (icon_pipeline);
 			return;
 		}
 	}
-	if ((self->imagesink = (_tmp4_ = gst_bin_get_by_name ((GstBin*) self->pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp4_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the pixbuf pipeline");
+	if ((self->imagesink = (_tmp3_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp3_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the icon pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
+			_gst_object_unref0 (icon_pipeline);
 			return;
 		}
 	}
-	bus = gst_pipeline_get_bus (self->pipeline);
-	gst_bus_add_signal_watch (bus);
-	g_signal_connect_object (bus, "message", (GCallback) _icon_list_control_on_bus_message_gst_bus_message, self, 0);
-	_gst_object_unref0 (bus);
+	media_control_set_pipeline ((MediaControl*) self, (GstBin*) icon_pipeline);
+	g_signal_connect_object ((MediaControl*) self, "structure-message", (GCallback) _icon_list_control_on_structure_media_control_structure_message, self, 0);
+	_gst_object_unref0 (icon_pipeline);
 }
 
 
@@ -510,7 +510,7 @@ static gboolean _icon_list_control_retrieve_thumbnails_co_gsource_func (gpointer
 }
 
 
-static inline void _dynamic_set_location0 (GstElement* obj, const char* value) {
+static inline void _dynamic_set_location1 (GstElement* obj, const char* value) {
 	g_object_set (obj, "location", value, NULL);
 }
 
@@ -523,7 +523,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 		{
 			if (gtk_tree_model_get_iter_first ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter)) {
 				data->self->continuation = (data->_tmp0_ = _icon_list_control_retrieve_thumbnails_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp0_);
-				gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_READY);
+				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
 				{
 					data->_tmp1_ = TRUE;
 					while (TRUE) {
@@ -540,13 +540,13 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 						data->_tmp1_ = FALSE;
 						gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_TEXT, &data->display, ICON_LIST_CONTROL_COL_FILE, &data->file, -1, -1);
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
-						_dynamic_set_location0 (data->self->filesrc, data->file);
-						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_PLAYING);
+						_dynamic_set_location1 (data->self->filesrc, data->file);
+						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_PLAYING);
 						data->_state_ = 4;
 						return FALSE;
 						case 4:
 						;
-						gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_READY);
+						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
 						if (data->self->continuation_error == NULL) {
 							data->_tmp4_ = icon_list_control_last_pixbuf != NULL;
 						} else {
@@ -563,7 +563,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 						_g_object_unref0 (data->pixbuf);
 					}
 				}
-				gst_element_set_state ((GstElement*) data->self->pipeline, GST_STATE_NULL);
+				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_NULL);
 			}
 		}
 		{
@@ -579,66 +579,47 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 }
 
 
-static gpointer _gst_structure_copy0 (gpointer self) {
-	return self ? gst_structure_copy (self) : NULL;
-}
-
-
-static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj) {
+static inline GdkPixbuf* _dynamic_get_last_pixbuf2 (GstElement* obj) {
 	GdkPixbuf* result;
 	g_object_get (obj, "last-pixbuf", &result, NULL);
 	return result;
 }
 
 
-void icon_list_control_on_bus_message (IconListControl* self, GstMessage* message) {
+void icon_list_control_on_structure (IconListControl* self, GstObject* src, const char* name) {
+	gboolean _tmp0_ = FALSE;
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (message != NULL);
-	switch (message->type) {
-		case GST_MESSAGE_ERROR:
-		{
-			{
-				GError* _tmp1_;
-				GError* _tmp0_ = NULL;
-				gst_message_parse_error (message, &_tmp0_, NULL);
-				self->continuation_error = (_tmp1_ = _tmp0_, _g_error_free0 (self->continuation_error), _tmp1_);
-				g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
-			}
-			break;
-		}
-		case GST_MESSAGE_ELEMENT:
-		{
-			{
-				if (message->src == GST_OBJECT (self->imagesink)) {
-					GstStructure* structure;
-					GstStructure* _tmp2_;
-					structure = NULL;
-					if ((structure = (_tmp2_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (structure), _tmp2_)) != NULL) {
-						if (structure->name == icon_list_control_pixbuf_q) {
-							GdkPixbuf* _tmp3_;
-							icon_list_control_last_pixbuf = (_tmp3_ = _dynamic_get_last_pixbuf1 (self->imagesink), _g_object_unref0 (icon_list_control_last_pixbuf), _tmp3_);
-						}
-					}
-					_gst_structure_free0 (structure);
-				}
-			}
-			break;
-		}
-		case GST_MESSAGE_EOS:
-		{
-			{
-				g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
-			}
-			break;
-		}
-		default:
-		{
-			{
-				;
-			}
-			break;
-		}
+	g_return_if_fail (src != NULL);
+	g_return_if_fail (name != NULL);
+	if (src == GST_OBJECT (self->imagesink)) {
+		_tmp0_ = _vala_strcmp0 (name, "pixbuf") == 0;
+	} else {
+		_tmp0_ = FALSE;
 	}
+	if (_tmp0_) {
+		GdkPixbuf* _tmp1_;
+		icon_list_control_last_pixbuf = (_tmp1_ = _dynamic_get_last_pixbuf2 (self->imagesink), _g_object_unref0 (icon_list_control_last_pixbuf), _tmp1_);
+	}
+}
+
+
+static gpointer _g_error_copy0 (gpointer self) {
+	return self ? g_error_copy (self) : NULL;
+}
+
+
+void icon_list_control_on_error (IconListControl* self, GError* _error_, const char* debug) {
+	GError* _tmp0_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (debug != NULL);
+	self->continuation_error = (_tmp0_ = _g_error_copy0 (_error_), _g_error_free0 (self->continuation_error), _tmp0_);
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
+}
+
+
+void icon_list_control_on_eos (IconListControl* self) {
+	g_return_if_fail (self != NULL);
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
 }
 
 
@@ -692,11 +673,37 @@ void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* 
 }
 
 
+static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, gpointer self) {
+	icon_list_control_on_eos (self);
+}
+
+
+static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GError* _error_, const char* debug, gpointer self) {
+	icon_list_control_on_error (self, _error_, debug);
+}
+
+
+static GObject * icon_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+	GObject * obj;
+	GObjectClass * parent_class;
+	IconListControl * self;
+	parent_class = G_OBJECT_CLASS (icon_list_control_parent_class);
+	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
+	self = ICON_LIST_CONTROL (obj);
+	{
+		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _icon_list_control_on_eos_media_control_eos_message, self, 0);
+		g_signal_connect_object ((MediaControl*) self, "error-message", (GCallback) _icon_list_control_on_error_media_control_error_message, self, 0);
+	}
+	return obj;
+}
+
+
 static void icon_list_control_class_init (IconListControlClass * klass) {
 	icon_list_control_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (IconListControlPrivate));
 	G_OBJECT_CLASS (klass)->get_property = icon_list_control_get_property;
 	G_OBJECT_CLASS (klass)->set_property = icon_list_control_set_property;
+	G_OBJECT_CLASS (klass)->constructor = icon_list_control_constructor;
 	G_OBJECT_CLASS (klass)->finalize = icon_list_control_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), ICON_LIST_CONTROL_ICONLIST_STORE, g_param_spec_object ("iconlist-store", "iconlist-store", "iconlist-store", GTK_TYPE_LIST_STORE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_signal_new ("done", TYPE_ICON_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
@@ -712,7 +719,6 @@ static void icon_list_control_instance_init (IconListControl * self) {
 static void icon_list_control_finalize (GObject* obj) {
 	IconListControl * self;
 	self = ICON_LIST_CONTROL (obj);
-	_gst_object_unref0 (self->pipeline);
 	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->imagesink);
 	_g_object_unref0 (self->missing_pixbuf);
@@ -729,7 +735,7 @@ GType icon_list_control_get_type (void) {
 	static GType icon_list_control_type_id = 0;
 	if (icon_list_control_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (IconListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) icon_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (IconListControl), 0, (GInstanceInitFunc) icon_list_control_instance_init, NULL };
-		icon_list_control_type_id = g_type_register_static (G_TYPE_OBJECT, "IconListControl", &g_define_type_info, 0);
+		icon_list_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "IconListControl", &g_define_type_info, 0);
 	}
 	return icon_list_control_type_id;
 }

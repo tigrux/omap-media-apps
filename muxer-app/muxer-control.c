@@ -9,13 +9,16 @@
 #include <string.h>
 
 
-#define TYPE_CONTROL (control_get_type ())
-#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
-#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
-#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
+#define TYPE_MEDIA_CONTROL (media_control_get_type ())
+#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
+#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
+#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
+#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
 
-typedef struct _Control Control;
-typedef struct _ControlIface ControlIface;
+typedef struct _MediaControl MediaControl;
+typedef struct _MediaControlClass MediaControlClass;
+typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_MUXER_CONTROL (muxer_control_get_type ())
 #define MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONTROL, MuxerControl))
@@ -29,16 +32,21 @@ typedef struct _MuxerControlClass MuxerControlClass;
 typedef struct _MuxerControlPrivate MuxerControlPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
-#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
 
-struct _ControlIface {
-	GTypeInterface parent_iface;
-	GstBus* (*get_bus) (Control* self);
+struct _MediaControl {
+	GObject parent_instance;
+	MediaControlPrivate * priv;
+	GstBus* bus;
+	GstBin* pipeline;
+};
+
+struct _MediaControlClass {
+	GObjectClass parent_class;
 };
 
 struct _MuxerControl {
-	GObject parent_instance;
+	MediaControl parent_instance;
 	MuxerControlPrivate * priv;
 	char* preview_desc;
 	char* record_desc;
@@ -48,8 +56,8 @@ struct _MuxerControl {
 	GstElement* overlay;
 	GstElement* tee;
 	GstElement* audiosrc;
-	GstBin* preview_bin;
-	GstBin* record_bin;
+	GstBin* preview_pipeline;
+	GstBin* record_pipeline;
 	GstElement* queue;
 	GstClockTime adjust_ts_video;
 	GstClockTime adjust_ts_audio;
@@ -58,19 +66,17 @@ struct _MuxerControl {
 };
 
 struct _MuxerControlClass {
-	GObjectClass parent_class;
+	MediaControlClass parent_class;
 };
 
 
 static gpointer muxer_control_parent_class = NULL;
-static ControlIface* muxer_control_control_parent_iface = NULL;
 
-GType control_get_type (void);
+GType media_control_get_type (void);
 GType muxer_control_get_type (void);
 enum  {
 	MUXER_CONTROL_DUMMY_PROPERTY
 };
-static GstBus* muxer_control_real_get_bus (Control* base);
 void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled);
 MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
@@ -87,26 +93,15 @@ gboolean muxer_control_audio_buffer_probe (MuxerControl* self, GstPad* pad, GstB
 static gboolean _muxer_control_audio_buffer_probe_gst_buffer_probe_callback (GstPad* pad, GstBuffer* buffer, gpointer self);
 void muxer_control_start_record (MuxerControl* self, GError** error);
 void muxer_control_stop_record (MuxerControl* self);
-void muxer_control_on_bus_message (MuxerControl* self, GstMessage* message);
-static void _muxer_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+void muxer_control_on_eos (MuxerControl* self);
 void muxer_control_shutdown (MuxerControl* self);
+void muxer_control_on_error (MuxerControl* self, GError* e, const char* debug);
+static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self);
+static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, gpointer self);
+static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void muxer_control_finalize (GObject* obj);
 
-
-static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-
-static gpointer _gst_object_ref0 (gpointer self) {
-	return self ? gst_object_ref (self) : NULL;
-}
-
-
-static GstBus* muxer_control_real_get_bus (Control* base) {
-	MuxerControl * self;
-	GstBus* result;
-	self = (MuxerControl*) base;
-	result = _gst_object_ref0 (((GstElement*) self->preview_bin)->bus);
-	return result;
-}
 
 
 void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled) {
@@ -121,7 +116,7 @@ MuxerControl* muxer_control_construct (GType object_type, const char* preview, c
 	char* _tmp1_;
 	g_return_val_if_fail (preview != NULL, NULL);
 	g_return_val_if_fail (record != NULL, NULL);
-	self = (MuxerControl*) g_object_new (object_type, NULL);
+	self = g_object_newv (object_type, 0, NULL);
 	self->preview_desc = (_tmp0_ = g_strdup (preview), _g_free0 (self->preview_desc), _tmp0_);
 	self->record_desc = (_tmp1_ = g_strdup (record), _g_free0 (self->record_desc), _tmp1_);
 	return self;
@@ -163,7 +158,7 @@ gboolean muxer_control_is_recording (MuxerControl* self) {
 
 void muxer_control_start_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	if (gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) self->preview_pipeline, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
 		self->previewing = TRUE;
 	}
 }
@@ -171,8 +166,13 @@ void muxer_control_start_preview (MuxerControl* self) {
 
 void muxer_control_stop_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
+	gst_element_set_state ((GstElement*) self->preview_pipeline, GST_STATE_NULL);
 	self->previewing = FALSE;
+}
+
+
+static gpointer _gst_object_ref0 (gpointer self) {
+	return self ? gst_object_ref (self) : NULL;
 }
 
 
@@ -193,16 +193,16 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	if (self->buffer_probe_enabled) {
-		gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PAUSED);
+		gst_element_set_state ((GstElement*) self->preview_pipeline, GST_STATE_PAUSED);
 	} else {
-		gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
+		gst_element_set_state ((GstElement*) self->preview_pipeline, GST_STATE_NULL);
 	}
 	muxer_control_load_record_pipeline (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	gst_bin_add (self->preview_bin, _gst_object_ref0 ((GstElement*) self->record_bin));
+	gst_bin_add (self->preview_pipeline, _gst_object_ref0 ((GstElement*) self->record_pipeline));
 	gst_element_link (self->tee, self->queue);
 	tee_src1_pad = gst_element_get_static_pad (self->tee, "src1");
 	if (self->buffer_probe_enabled) {
@@ -222,7 +222,7 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	if (self->overlay != NULL) {
 		g_object_set ((GObject*) self->overlay, "silent", FALSE, NULL);
 	}
-	if (gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) self->preview_pipeline, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
 		self->recording = TRUE;
 	}
 	_gst_object_unref0 (tee_src1_pad);
@@ -240,8 +240,8 @@ void muxer_control_stop_record (MuxerControl* self) {
 		g_object_set ((GObject*) self->overlay, "silent", TRUE, NULL);
 	}
 	gst_element_unlink (self->tee, self->queue);
-	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
-	gst_element_set_bus ((GstElement*) self->record_bin, _tmp0_ = gst_element_get_bus ((GstElement*) self->preview_bin));
+	gst_bin_remove (self->preview_pipeline, (GstElement*) self->record_pipeline);
+	gst_element_set_bus ((GstElement*) self->record_pipeline, _tmp0_ = gst_element_get_bus ((GstElement*) self->preview_pipeline));
 	_gst_object_unref0 (_tmp0_);
 	gst_element_send_event (self->queue, gst_event_new_eos ());
 	if (self->audiosrc != NULL) {
@@ -251,17 +251,11 @@ void muxer_control_stop_record (MuxerControl* self) {
 }
 
 
-static void _muxer_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
-	muxer_control_on_bus_message (self, message);
-}
-
-
 void muxer_control_load_preview_pipeline (MuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	GstElement* _tmp0_;
 	GstBin* _tmp2_;
 	GstElement* _tmp1_;
-	GstBus* bus;
 	GstElement* _tmp3_;
 	GstElement* _tmp4_;
 	g_return_if_fail (self != NULL);
@@ -271,21 +265,17 @@ void muxer_control_load_preview_pipeline (MuxerControl* self, GError** error) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	self->preview_bin = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->preview_bin), _tmp2_);
-	bus = gst_element_get_bus ((GstElement*) self->preview_bin);
-	gst_bus_add_signal_watch (bus);
-	g_signal_connect_object (bus, "message", (GCallback) _muxer_control_on_bus_message_gst_bus_message, self, 0);
-	gst_object_set_name ((GstObject*) self->preview_bin, "preview_bin");
-	self->overlay = (_tmp3_ = gst_bin_get_by_name (self->preview_bin, "overlay"), _gst_object_unref0 (self->overlay), _tmp3_);
-	if ((self->tee = (_tmp4_ = gst_bin_get_by_name (self->preview_bin, "tee"), _gst_object_unref0 (self->tee), _tmp4_)) == NULL) {
+	self->preview_pipeline = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->preview_pipeline), _tmp2_);
+	gst_object_set_name ((GstObject*) self->preview_pipeline, "preview_pipeline");
+	media_control_set_pipeline ((MediaControl*) self, self->preview_pipeline);
+	self->overlay = (_tmp3_ = gst_bin_get_by_name (self->preview_pipeline, "overlay"), _gst_object_unref0 (self->overlay), _tmp3_);
+	if ((self->tee = (_tmp4_ = gst_bin_get_by_name (self->preview_pipeline, "tee"), _gst_object_unref0 (self->tee), _tmp4_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named tee in the preview pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			_gst_object_unref0 (bus);
 			return;
 		}
 	}
-	_gst_object_unref0 (bus);
 }
 
 
@@ -303,61 +293,30 @@ void muxer_control_load_record_pipeline (MuxerControl* self, GError** error) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	self->record_bin = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->record_bin), _tmp2_);
-	gst_object_set_name ((GstObject*) self->record_bin, "record_bin");
-	if ((self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_bin, "queue"), _gst_object_unref0 (self->queue), _tmp3_)) == NULL) {
+	self->record_pipeline = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->record_pipeline), _tmp2_);
+	gst_object_set_name ((GstObject*) self->record_pipeline, "record_pipeline");
+	if ((self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_pipeline, "queue"), _gst_object_unref0 (self->queue), _tmp3_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named queue in the record pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
 			return;
 		}
 	}
-	self->audiosrc = (_tmp4_ = gst_bin_get_by_name (self->record_bin, "audiosrc"), _gst_object_unref0 (self->audiosrc), _tmp4_);
+	self->audiosrc = (_tmp4_ = gst_bin_get_by_name (self->record_pipeline, "audiosrc"), _gst_object_unref0 (self->audiosrc), _tmp4_);
 }
 
 
-void muxer_control_on_bus_message (MuxerControl* self, GstMessage* message) {
+void muxer_control_on_eos (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (message != NULL);
-	switch (message->type) {
-		case GST_MESSAGE_EOS:
-		{
-			{
-				gst_element_set_state ((GstElement*) self->record_bin, GST_STATE_NULL);
-				self->recording = FALSE;
-				g_signal_emit_by_name (self, "eos");
-			}
-			break;
-		}
-		case GST_MESSAGE_ERROR:
-		{
-			{
-				GError* e;
-				char* debug;
-				char* _tmp3_;
-				char* _tmp2_ = NULL;
-				GError* _tmp1_;
-				GError* _tmp0_ = NULL;
-				e = NULL;
-				debug = NULL;
-				(gst_message_parse_error (message, &_tmp0_, &_tmp2_), e = (_tmp1_ = _tmp0_, _g_error_free0 (e), _tmp1_));
-				debug = (_tmp3_ = _tmp2_, _g_free0 (debug), _tmp3_);
-				g_signal_emit_by_name (self, "error", e, debug);
-				muxer_control_shutdown (self);
-				g_signal_emit_by_name (self, "eos");
-				_g_error_free0 (e);
-				_g_free0 (debug);
-			}
-			break;
-		}
-		default:
-		{
-			{
-				;
-			}
-			break;
-		}
-	}
+	gst_element_set_state ((GstElement*) self->record_pipeline, GST_STATE_NULL);
+	self->recording = FALSE;
+}
+
+
+void muxer_control_on_error (MuxerControl* self, GError* e, const char* debug) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (debug != NULL);
+	muxer_control_shutdown (self);
 }
 
 
@@ -421,17 +380,35 @@ gboolean muxer_control_audio_buffer_probe (MuxerControl* self, GstPad* pad, GstB
 }
 
 
-static void muxer_control_class_init (MuxerControlClass * klass) {
-	muxer_control_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->finalize = muxer_control_finalize;
-	g_signal_new ("eos", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("error", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__POINTER_STRING, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_STRING);
+static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self) {
+	muxer_control_on_error (self, _error_, debug);
 }
 
 
-static void muxer_control_control_interface_init (ControlIface * iface) {
-	muxer_control_control_parent_iface = g_type_interface_peek_parent (iface);
-	iface->get_bus = muxer_control_real_get_bus;
+static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, gpointer self) {
+	muxer_control_on_eos (self);
+}
+
+
+static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+	GObject * obj;
+	GObjectClass * parent_class;
+	MuxerControl * self;
+	parent_class = G_OBJECT_CLASS (muxer_control_parent_class);
+	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
+	self = MUXER_CONTROL (obj);
+	{
+		g_signal_connect_object ((MediaControl*) self, "error-message", (GCallback) _muxer_control_on_error_media_control_error_message, self, 0);
+		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _muxer_control_on_eos_media_control_eos_message, self, 0);
+	}
+	return obj;
+}
+
+
+static void muxer_control_class_init (MuxerControlClass * klass) {
+	muxer_control_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->constructor = muxer_control_constructor;
+	G_OBJECT_CLASS (klass)->finalize = muxer_control_finalize;
 }
 
 
@@ -450,8 +427,8 @@ static void muxer_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->overlay);
 	_gst_object_unref0 (self->tee);
 	_gst_object_unref0 (self->audiosrc);
-	_gst_object_unref0 (self->preview_bin);
-	_gst_object_unref0 (self->record_bin);
+	_gst_object_unref0 (self->preview_pipeline);
+	_gst_object_unref0 (self->record_pipeline);
 	_gst_object_unref0 (self->queue);
 	G_OBJECT_CLASS (muxer_control_parent_class)->finalize (obj);
 }
@@ -461,32 +438,11 @@ GType muxer_control_get_type (void) {
 	static GType muxer_control_type_id = 0;
 	if (muxer_control_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (MuxerControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerControl), 0, (GInstanceInitFunc) muxer_control_instance_init, NULL };
-		static const GInterfaceInfo control_info = { (GInterfaceInitFunc) muxer_control_control_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
-		muxer_control_type_id = g_type_register_static (G_TYPE_OBJECT, "MuxerControl", &g_define_type_info, 0);
-		g_type_add_interface_static (muxer_control_type_id, TYPE_CONTROL, &control_info);
+		muxer_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "MuxerControl", &g_define_type_info, 0);
 	}
 	return muxer_control_type_id;
 }
 
-
-
-static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__POINTER_STRING) (gpointer data1, gpointer arg_1, const char* arg_2, gpointer data2);
-	register GMarshalFunc_VOID__POINTER_STRING callback;
-	register GCClosure * cc;
-	register gpointer data1, data2;
-	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 3);
-	if (G_CCLOSURE_SWAP_DATA (closure)) {
-		data1 = closure->data;
-		data2 = param_values->data[0].v_pointer;
-	} else {
-		data1 = param_values->data[0].v_pointer;
-		data2 = closure->data;
-	}
-	callback = (GMarshalFunc_VOID__POINTER_STRING) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_pointer (param_values + 1), g_value_get_string (param_values + 2), data2);
-}
 
 
 

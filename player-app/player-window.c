@@ -35,6 +35,16 @@ typedef struct _PlayerWindow PlayerWindow;
 typedef struct _PlayerWindowClass PlayerWindowClass;
 typedef struct _PlayerWindowPrivate PlayerWindowPrivate;
 
+#define TYPE_MEDIA_CONTROL (media_control_get_type ())
+#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
+#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
+#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
+#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
+
+typedef struct _MediaControl MediaControl;
+typedef struct _MediaControlClass MediaControlClass;
+
 #define TYPE_PLAY_LIST_CONTROL (play_list_control_get_type ())
 #define PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAY_LIST_CONTROL, PlayListControl))
 #define PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_PLAY_LIST_CONTROL, PlayListControlClass))
@@ -68,14 +78,6 @@ typedef struct _DebugDialogClass DebugDialogClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
-
-#define TYPE_CONTROL (control_get_type ())
-#define CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_CONTROL, Control))
-#define IS_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_CONTROL))
-#define CONTROL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), TYPE_CONTROL, ControlIface))
-
-typedef struct _Control Control;
-typedef struct _ControlIface ControlIface;
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define __g_list_free_gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_gtk_tree_path_free (var), NULL)))
 
@@ -129,11 +131,6 @@ typedef enum  {
 	APPLICATION_TAB_VIDEO
 } ApplicationTab;
 
-struct _ControlIface {
-	GTypeInterface parent_iface;
-	GstBus* (*get_bus) (Control* self);
-};
-
 
 static gpointer player_window_parent_class = NULL;
 
@@ -141,6 +138,7 @@ static gpointer player_window_parent_class = NULL;
 #define TITLE "PlayerApp"
 GType application_window_get_type (void);
 GType player_window_get_type (void);
+GType media_control_get_type (void);
 GType play_list_control_get_type (void);
 GType video_area_get_type (void);
 GType debug_dialog_get_type (void);
@@ -150,9 +148,9 @@ enum  {
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
 void player_window_on_playlist_control_eos (PlayerWindow* self);
-static void _player_window_on_playlist_control_eos_play_list_control_eos (PlayListControl* _sender, gpointer self);
+static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, gpointer self);
 void player_window_on_playlist_control_error (PlayerWindow* self, GError* _error_, const char* debug);
-static void _player_window_on_playlist_control_error_play_list_control_error (PlayListControl* _sender, GError* e, const char* debug, gpointer self);
+static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GError* _error_, const char* debug, gpointer self);
 void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_on_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_on_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter);
@@ -189,7 +187,7 @@ gboolean player_window_on_seeking_scale_released (PlayerWindow* self);
 static gboolean _player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
 char* player_window_on_scale_format_value (PlayerWindow* self, double scale_value);
 static char* _player_window_on_scale_format_value_gtk_scale_format_value (GtkScale* _sender, double value, gpointer self);
-GstState play_list_control_get_state (PlayListControl* self);
+GstState media_control_get_state (MediaControl* self);
 gboolean player_window_is_playing (PlayerWindow* self);
 gboolean play_list_control_play (PlayListControl* self);
 void player_window_on_play (PlayerWindow* self);
@@ -214,8 +212,7 @@ static void _player_window_on_video_area_activated_video_area_activated (VideoAr
 GType application_tab_get_type (void);
 static void _lambda4_ (PlayerWindow* self);
 static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self);
-GType control_get_type (void);
-void video_area_set_control (VideoArea* self, Control* control);
+void video_area_set_control (VideoArea* self, MediaControl* control);
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
 gint play_list_control_get_icon_column (void);
@@ -233,11 +230,11 @@ static void _player_window_on_chooser_response_gtk_dialog_response (GtkFileChoos
 void play_list_control_add_file (PlayListControl* self, const char* file);
 void player_window_on_remove_files (PlayerWindow* self);
 static void _g_list_free_gtk_tree_path_free (GList* self);
-void play_list_control_seek (PlayListControl* self, gint64 location);
+void media_control_seek (MediaControl* self, gint64 location);
 gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
-gint64 play_list_control_get_position (PlayListControl* self);
-gint64 play_list_control_get_duration (PlayListControl* self);
+gint64 media_control_get_position (MediaControl* self);
+gint64 media_control_get_duration (MediaControl* self);
 DebugDialog* debug_dialog_new (GtkWindow* parent);
 DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
 void player_window_on_debug_dialog_closed (PlayerWindow* self);
@@ -253,13 +250,13 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 
 
-static void _player_window_on_playlist_control_eos_play_list_control_eos (PlayListControl* _sender, gpointer self) {
+static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, gpointer self) {
 	player_window_on_playlist_control_eos (self);
 }
 
 
-static void _player_window_on_playlist_control_error_play_list_control_error (PlayListControl* _sender, GError* e, const char* debug, gpointer self) {
-	player_window_on_playlist_control_error (self, e, debug);
+static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GError* _error_, const char* debug, gpointer self) {
+	player_window_on_playlist_control_error (self, _error_, debug);
 }
 
 
@@ -287,8 +284,8 @@ void player_window_setup_elements (PlayerWindow* self) {
 	PlayListControl* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->playlist_control = (_tmp0_ = play_list_control_new (self->playlist_store), _g_object_unref0 (self->playlist_control), _tmp0_);
-	g_signal_connect_object (self->playlist_control, "eos", (GCallback) _player_window_on_playlist_control_eos_play_list_control_eos, self, 0);
-	g_signal_connect_object (self->playlist_control, "error", (GCallback) _player_window_on_playlist_control_error_play_list_control_error, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "eos-message", (GCallback) _player_window_on_playlist_control_eos_media_control_eos_message, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "error-message", (GCallback) _player_window_on_playlist_control_error_media_control_error_message, self, 0);
 	g_signal_connect_object (self->playlist_control, "playing", (GCallback) _player_window_on_playlist_control_playing_play_list_control_playing, self, 0);
 	g_signal_connect_object (self->playlist_control, "paused", (GCallback) _player_window_on_playlist_control_paused_play_list_control_paused, self, 0);
 	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _player_window_on_playlist_control_stopped_play_list_control_stopped, self, 0);
@@ -424,7 +421,7 @@ void player_window_setup_seeking (PlayerWindow* self) {
 gboolean player_window_is_playing (PlayerWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	result = play_list_control_get_state (self->playlist_control) == GST_STATE_PLAYING;
+	result = media_control_get_state ((MediaControl*) self->playlist_control) == GST_STATE_PLAYING;
 	return result;
 }
 
@@ -628,7 +625,7 @@ GtkBox* player_window_new_video_box (PlayerWindow* self) {
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 0);
 	g_signal_connect_object (self->video_area, "activated", (GCallback) _player_window_on_video_area_activated_video_area_activated, self, 0);
 	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda4__video_area_prepared, self, 0);
-	video_area_set_control (self->video_area, (Control*) self->playlist_control);
+	video_area_set_control (self->video_area, (MediaControl*) self->playlist_control);
 	result = (GtkBox*) box;
 	return result;
 }
@@ -692,7 +689,7 @@ gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* ite
 void player_window_on_play_pause (PlayerWindow* self) {
 	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
-	switch (play_list_control_get_state (self->playlist_control)) {
+	switch (media_control_get_state ((MediaControl*) self->playlist_control)) {
 		case GST_STATE_PLAYING:
 		{
 			{
@@ -882,7 +879,7 @@ gboolean player_window_on_seeking_scale_released (PlayerWindow* self) {
 	gint64 real_value = 0LL;
 	g_return_val_if_fail (self != NULL, FALSE);
 	real_value = (gint64) ((gtk_range_get_value ((GtkRange*) self->seeking_scale) * self->stream_duration) / 100);
-	play_list_control_seek (self->playlist_control, real_value);
+	media_control_seek ((MediaControl*) self->playlist_control, real_value);
 	if (self->should_resume_playback) {
 		player_window_on_play (self);
 	}
@@ -942,8 +939,8 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self) {
 	gboolean result;
 	gboolean _tmp0_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	self->stream_position = play_list_control_get_position (self->playlist_control);
-	self->stream_duration = play_list_control_get_duration (self->playlist_control);
+	self->stream_position = media_control_get_position ((MediaControl*) self->playlist_control);
+	self->stream_duration = media_control_get_duration ((MediaControl*) self->playlist_control);
 	if (self->stream_position >= 0) {
 		_tmp0_ = self->stream_duration > 0;
 	} else {

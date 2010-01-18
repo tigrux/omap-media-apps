@@ -4,6 +4,7 @@ VALASOURCES = \
 	video-area.gs \
 	error-dialog.gs \
 	application-window.gs \
+	media-control.gs \
 	defaults.gs
 
 SOURCES = \

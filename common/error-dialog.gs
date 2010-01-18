@@ -66,16 +66,15 @@ class DebugDialog: Dialog
         box.show_all()
         return box
 
-def show_error(error: Error)
-    var dialog = new MessageDialog( \
-        null, \
-        DialogFlags.DESTROY_WITH_PARENT, \
-        MessageType.ERROR, \
-        ButtonsType.CLOSE, \
+def error_dialog(error: Error)
+    dialog: Dialog = new MessageDialog( \
+        null, 0, \
+        MessageType.ERROR,  ButtonsType.CLOSE, \
         "%s", error.message)
     dialog.set_title("Error")
-    dialog.response += def()
-        dialog.destroy()
-    dialog.show()
+    dialog.response += def(widget, response)
+        if widget != null
+            widget.destroy()
     dialog.run()
+
 

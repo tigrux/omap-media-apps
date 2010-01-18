@@ -4,24 +4,25 @@ uses Gst
 uses Gtk
 
 
-const PIXBUF_PIPELINE_DESC: string = """
-filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !
-video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink
-"""
-
-const IMAGE_FILE_ATTRIBUTES: string = "standard::name,standard::display-name,standard::content-type"
+const ICON_PIPELINE_DESC: string = \
+"""filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !
+video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"""
 
 
-class IconListControl: GLib.Object
+const IMAGE_FILE_ATTRIBUTES: string = \
+"standard::name,standard::display-name,standard::content-type"
+
+
+class IconListControl: MediaControl
     enum Col
         TEXT
         FILE
         PIXBUF
         VALID
 
-    pipeline: Pipeline
     filesrc: dynamic Element
     imagesink: dynamic Element
+
     missing_pixbuf: Gdk.Pixbuf
     loading_pixbuf: static Gdk.Pixbuf
     last_pixbuf: static Gdk.Pixbuf
@@ -34,13 +35,17 @@ class IconListControl: GLib.Object
 
     event done()
 
+    init
+        eos_message += on_eos
+        error_message += on_error
+
     construct(model: ListStore) raises Error
         iconlist_store = model
         if not pixbufs_loaded
             setup_icons()
             pixbufs_loaded = true
         setup_elements()
-            
+
     def setup_icons() raises Error
         var icon_theme = IconTheme.get_default()
         icon_info: IconInfo
@@ -55,28 +60,20 @@ class IconListControl: GLib.Object
         if icon_info != null
             loading_pixbuf = icon_info.load_icon()
 
-        pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
-        if (filesrc = pipeline.get_by_name("filesrc")) == null
-            raise new CoreError.FAILED( \
-                        "No element named filesrc in the pixbuf pipeline")
-        if (imagesink = pipeline.get_by_name("imagesink")) == null
-            raise new CoreError.FAILED( \
-                        "No element named imagesink in the pixbuf pipeline")
-        var bus = pipeline.bus
-        bus.add_signal_watch()
-        bus.message += on_bus_message
-
     def setup_elements() raises Error
-        pipeline = parse_launch(PIXBUF_PIPELINE_DESC) as Pipeline
-        if (filesrc = pipeline.get_by_name("filesrc")) == null
+        setup_pipeline()
+
+    def setup_pipeline() raises Error
+        var icon_pipeline = parse_launch(ICON_PIPELINE_DESC) as Pipeline
+        icon_pipeline.set_name("icon_pipeline")
+        if (filesrc = icon_pipeline.get_by_name("filesrc")) == null
             raise new CoreError.FAILED( \
-                        "No element named filesrc in the pixbuf pipeline")
-        if (imagesink = pipeline.get_by_name("imagesink")) == null
+                        "No element named filesrc in the icon pipeline")
+        if (imagesink = icon_pipeline.get_by_name("imagesink")) == null
             raise new CoreError.FAILED( \
-                        "No element named imagesink in the pixbuf pipeline")
-        var bus = pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.message += on_bus_message
+                        "No element named imagesink in the icon pipeline")
+        set_pipeline(icon_pipeline)
+        structure_message += on_structure
 
     def async add_folder(dirname: string, cancellable: Cancellable)
         var dir = File.new_for_path (dirname)
@@ -141,21 +138,16 @@ class IconListControl: GLib.Object
                 not cancellable.is_cancelled()
             pipeline.set_state(State.NULL)
 
-    def on_bus_message(message: Gst.Message)
-        case message.type
-            when Gst.MessageType.ERROR
-                message.parse_error(out continuation_error, null)
-                Idle.add(continuation)
-            when Gst.MessageType.ELEMENT
-                if message.src == imagesink
-                    structure: Structure
-                    if (structure = message.structure) != null
-                        if structure.name == pixbuf_q
-                            last_pixbuf = imagesink.last_pixbuf
-            when Gst.MessageType.EOS
-                Idle.add(continuation)
-            default
-                pass
+    def on_structure(src: Gst.Object, name: string)
+        if src == imagesink and name == "pixbuf"
+            last_pixbuf = imagesink.last_pixbuf
+
+    def on_error(error: Error, debug: string)
+        continuation_error = error
+        Idle.add(continuation)
+
+    def on_eos()
+        Idle.add(continuation)
 
     def static get_text_column(): Col
         return Col.TEXT

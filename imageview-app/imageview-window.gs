@@ -11,6 +11,7 @@ class ImageViewWindow: ApplicationWindow
     video_area: VideoArea
     iconlist_store: ListStore
     iconlist_control: IconListControl
+    image_control: ImageControl
     cancellable: Cancellable
     current_folder: string
 
@@ -25,11 +26,14 @@ class ImageViewWindow: ApplicationWindow
     construct() raises Error
         iconlist_control = new IconListControl(iconlist_store)
         iconlist_control.done += on_iconlist_done
+        image_control = new ImageControl()
+        video_area.set_control(image_control)
 
     def setup_widgets()
         set_title(TITLE)
         setup_toolbar()
         setup_notebook()
+        video_area.realize()
         main_box.show_all()
 
     def setup_notebook()
@@ -58,16 +62,19 @@ class ImageViewWindow: ApplicationWindow
     def on_icon_activated(path: TreePath)
         iter: TreeIter
         iconlist_store.get_iter(out iter, path)
-        print "Valid = %s", iconlist_control.iter_get_valid(iter).to_string()
-        print "File = %s", iconlist_control.iter_get_file(iter).to_string()
+        if iconlist_control.iter_get_valid(iter)
+            image_control.filesrc.location = iconlist_control.iter_get_file(iter)
+            image_control.pipeline.set_state(Gst.State.PLAYING)
 
     def new_video_box(): Box
         var box = new VBox(false, 0)
+        var scrolled_window = new ScrolledWindow(null, null)
+        scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
+        box.pack_start(scrolled_window, true, true, 0)
         video_area = new VideoArea()
-        box.pack_start(video_area, true, true, 0)
+        scrolled_window.add_with_viewport(video_area)
         video_area.prepared += def()
             notebook.set_current_page(ApplicationTab.VIDEO)
-        //video_area.set_control(playlist_control)
         return box
 
     def setup_toolbar()

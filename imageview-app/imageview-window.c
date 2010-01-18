@@ -8,6 +8,7 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
 
@@ -43,6 +44,16 @@ typedef struct _ImageViewWindowPrivate ImageViewWindowPrivate;
 typedef struct _VideoArea VideoArea;
 typedef struct _VideoAreaClass VideoAreaClass;
 
+#define TYPE_MEDIA_CONTROL (media_control_get_type ())
+#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
+#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
+#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
+#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
+
+typedef struct _MediaControl MediaControl;
+typedef struct _MediaControlClass MediaControlClass;
+
 #define TYPE_ICON_LIST_CONTROL (icon_list_control_get_type ())
 #define ICON_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ICON_LIST_CONTROL, IconListControl))
 #define ICON_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_ICON_LIST_CONTROL, IconListControlClass))
@@ -52,10 +63,22 @@ typedef struct _VideoAreaClass VideoAreaClass;
 
 typedef struct _IconListControl IconListControl;
 typedef struct _IconListControlClass IconListControlClass;
+
+#define TYPE_IMAGE_CONTROL (image_control_get_type ())
+#define IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_CONTROL, ImageControl))
+#define IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_IMAGE_CONTROL, ImageControlClass))
+#define IS_IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_IMAGE_CONTROL))
+#define IS_IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_IMAGE_CONTROL))
+#define IMAGE_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_IMAGE_CONTROL, ImageControlClass))
+
+typedef struct _ImageControl ImageControl;
+typedef struct _ImageControlClass ImageControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
+typedef struct _MediaControlPrivate MediaControlPrivate;
+typedef struct _ImageControlPrivate ImageControlPrivate;
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
 
@@ -79,6 +102,7 @@ struct _ImageViewWindow {
 	VideoArea* video_area;
 	GtkListStore* iconlist_store;
 	IconListControl* iconlist_control;
+	ImageControl* image_control;
 	GCancellable* cancellable;
 	char* current_folder;
 };
@@ -94,6 +118,27 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_VALID
 } IconListControlCol;
 
+struct _MediaControl {
+	GObject parent_instance;
+	MediaControlPrivate * priv;
+	GstBus* bus;
+	GstBin* pipeline;
+};
+
+struct _MediaControlClass {
+	GObjectClass parent_class;
+};
+
+struct _ImageControl {
+	MediaControl parent_instance;
+	ImageControlPrivate * priv;
+	GstElement* filesrc;
+};
+
+struct _ImageControlClass {
+	MediaControlClass parent_class;
+};
+
 typedef enum  {
 	APPLICATION_TAB_LIST,
 	APPLICATION_TAB_VIDEO
@@ -106,7 +151,9 @@ static gpointer image_view_window_parent_class = NULL;
 GType application_window_get_type (void);
 GType image_view_window_get_type (void);
 GType video_area_get_type (void);
+GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
+GType image_control_get_type (void);
 enum  {
 	IMAGE_VIEW_WINDOW_DUMMY_PROPERTY
 };
@@ -114,6 +161,9 @@ IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
 void image_view_window_on_iconlist_done (ImageViewWindow* self);
 static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self);
+ImageControl* image_control_new (GError** error);
+ImageControl* image_control_construct (GType object_type, GError** error);
+void video_area_set_control (VideoArea* self, MediaControl* control);
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
 void image_view_window_setup_toolbar (ImageViewWindow* self);
@@ -128,6 +178,7 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self);
 gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
+static inline void _dynamic_set_location0 (GstElement* obj, char* value);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 GType application_tab_get_type (void);
@@ -158,6 +209,8 @@ ImageViewWindow* image_view_window_construct (GType object_type, GError** error)
 	ImageViewWindow * self;
 	IconListControl* _tmp0_;
 	IconListControl* _tmp1_;
+	ImageControl* _tmp2_;
+	ImageControl* _tmp3_;
 	_inner_error_ = NULL;
 	self = g_object_newv (object_type, 0, NULL);
 	_tmp0_ = icon_list_control_new (self->iconlist_store, &_inner_error_);
@@ -167,6 +220,13 @@ ImageViewWindow* image_view_window_construct (GType object_type, GError** error)
 	}
 	self->iconlist_control = (_tmp1_ = _tmp0_, _g_object_unref0 (self->iconlist_control), _tmp1_);
 	g_signal_connect_object (self->iconlist_control, "done", (GCallback) _image_view_window_on_iconlist_done_icon_list_control_done, self, 0);
+	_tmp2_ = image_control_new (&_inner_error_);
+	if (_inner_error_ != NULL) {
+		g_propagate_error (error, _inner_error_);
+		return NULL;
+	}
+	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
+	video_area_set_control (self->video_area, (MediaControl*) self->image_control);
 	return self;
 }
 
@@ -181,6 +241,7 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
 	image_view_window_setup_toolbar (self);
 	image_view_window_setup_notebook (self);
+	gtk_widget_realize ((GtkWidget*) self->video_area);
 	gtk_widget_show_all ((GtkWidget*) ((ApplicationWindow*) self)->main_box);
 }
 
@@ -231,37 +292,22 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 }
 
 
-static char* bool_to_string (gboolean self) {
-	char* result;
-	if (self) {
-		result = g_strdup ("true");
-		return result;
-	} else {
-		result = g_strdup ("false");
-		return result;
-	}
-}
-
-
-static const char* string_to_string (const char* self) {
-	const char* result;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = self;
-	return result;
+static inline void _dynamic_set_location0 (GstElement* obj, char* value) {
+	g_object_set (obj, "location", value, NULL);
 }
 
 
 void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path) {
 	GtkTreeIter iter = {0};
-	char* _tmp0_;
-	char* _tmp1_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (path != NULL);
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
-	g_print ("Valid = %s\n", _tmp0_ = bool_to_string (icon_list_control_iter_get_valid (self->iconlist_control, &iter)));
-	_g_free0 (_tmp0_);
-	g_print ("File = %s\n", string_to_string (_tmp1_ = icon_list_control_iter_get_file (self->iconlist_control, &iter)));
-	_g_free0 (_tmp1_);
+	if (icon_list_control_iter_get_valid (self->iconlist_control, &iter)) {
+		char* _tmp0_;
+		_dynamic_set_location0 (self->image_control->filesrc, _tmp0_ = icon_list_control_iter_get_file (self->iconlist_control, &iter));
+		_g_free0 (_tmp0_);
+		gst_element_set_state ((GstElement*) ((MediaControl*) self->image_control)->pipeline, GST_STATE_PLAYING);
+	}
 }
 
 
@@ -278,13 +324,18 @@ static void __lambda1__video_area_prepared (VideoArea* _sender, gpointer self) {
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
+	GtkScrolledWindow* scrolled_window;
 	VideoArea* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
 	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
+	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
+	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
-	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 0);
+	gtk_scrolled_window_add_with_viewport (scrolled_window, (GtkWidget*) self->video_area);
 	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda1__video_area_prepared, self, 0);
 	result = (GtkBox*) box;
+	_g_object_unref0 (scrolled_window);
 	return result;
 }
 
@@ -421,6 +472,7 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->video_area);
 	_g_object_unref0 (self->iconlist_store);
 	_g_object_unref0 (self->iconlist_control);
+	_g_object_unref0 (self->image_control);
 	_g_object_unref0 (self->cancellable);
 	_g_free0 (self->current_folder);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);

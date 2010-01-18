@@ -3,8 +3,6 @@
 uses Gtk
 uses Gst
 
-interface Control
-    def abstract get_bus(): Bus
 
 class VideoArea: DrawingArea
     xid: uint32
@@ -42,7 +40,7 @@ class VideoArea: DrawingArea
             return false
         return true
 
-    def set_control(control: Control)
+    def set_control(control: MediaControl)
         bus = control.get_bus()
         bus.enable_sync_message_emission()
         bus.sync_message += on_bus_sync_message

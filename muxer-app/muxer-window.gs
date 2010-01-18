@@ -4,7 +4,6 @@ uses Gtk
 
 
 const TITLE: string = "MuxerApp"
-const USE_BUFFER_PROBE: bool = false
 
 enum MuxerComboCol
     GROUP
@@ -92,15 +91,15 @@ class MuxerWindow: ApplicationWindow
             return
         muxer_control = new MuxerControl(preview, record)
         muxer_control.enable_buffer_probe(probe_button.get_active())
-        muxer_control.error += on_control_error
+        muxer_control.error_message += on_control_error
         try
             muxer_control.load()
         except e: Error
-            show_error(e)
+            error_dialog(e)
             return
         video_area.set_control(muxer_control)
         muxer_control.start_preview()
-        muxer_control.eos += record_stopped
+        muxer_control.eos_message += record_stopped
         record_button.set_sensitive(true)
 
     def on_record()
@@ -109,7 +108,7 @@ class MuxerWindow: ApplicationWindow
             stop_button.set_sensitive(true)
             record_button.set_sensitive(false)
         except e: Error
-            show_error(e)
+            error_dialog(e)
 
     def on_stop()
         muxer_control.stop_record()
@@ -128,13 +127,13 @@ class MuxerWindow: ApplicationWindow
                 var xml_parser = new MuxerConfigParser()
                 xml_parser.parse_file(config_file, ref key_file)
         except e: FileError
-            show_error(e)
+            error_dialog(e)
             return
         except e: KeyFileError
-            show_error(e)
+            error_dialog(e)
             return
         except e: MarkupError
-            show_error(e)
+            error_dialog(e)
             return
 
         try
@@ -151,7 +150,7 @@ class MuxerWindow: ApplicationWindow
                     MuxerComboCol.RECORD, record, \
                     -1)
         except e: KeyFileError
-            show_error(e)
+            error_dialog(e)
 
     def get_pipelines(out preview: string, out record: string): bool
         iter: TreeIter
