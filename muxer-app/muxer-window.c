@@ -7,6 +7,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/gst.h>
 
 
 #define TYPE_MUXER_COMBO_COL (muxer_combo_col_get_type ())
@@ -156,14 +157,14 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
 void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled);
-void muxer_window_on_control_error (MuxerWindow* self, GError* _error_, const char* debug);
-static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self);
+void muxer_window_on_control_error (MuxerWindow* self, GstObject* src, GError* _error_, const char* debug);
+static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 void muxer_control_load (MuxerControl* self, GError** error);
 void error_dialog (GError* _error_);
 void video_area_set_control (VideoArea* self, MediaControl* control);
 void muxer_control_start_preview (MuxerControl* self);
 void muxer_window_record_stopped (MuxerWindow* self);
-static void _muxer_window_record_stopped_media_control_eos_message (MuxerControl* _sender, gpointer self);
+static void _muxer_window_record_stopped_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self);
 void muxer_control_start_record (MuxerControl* self, GError** error);
 void muxer_control_stop_record (MuxerControl* self);
 MuxerConfigParser* muxer_config_parser_new (void);
@@ -290,12 +291,12 @@ void muxer_window_setup_notebook (MuxerWindow* self) {
 }
 
 
-static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self) {
-	muxer_window_on_control_error (self, _error_, debug);
+static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	muxer_window_on_control_error (self, src, _error_, debug);
 }
 
 
-static void _muxer_window_record_stopped_media_control_eos_message (MuxerControl* _sender, gpointer self) {
+static void _muxer_window_record_stopped_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self) {
 	muxer_window_record_stopped (self);
 }
 
@@ -600,8 +601,9 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 }
 
 
-void muxer_window_on_control_error (MuxerWindow* self, GError* _error_, const char* debug) {
+void muxer_window_on_control_error (MuxerWindow* self, GstObject* src, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
 	muxer_window_show_debug (self, _error_, debug);
 }

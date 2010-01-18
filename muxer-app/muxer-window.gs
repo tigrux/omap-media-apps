@@ -162,7 +162,7 @@ class MuxerWindow: ApplicationWindow
             -1)
         return true
 
-    def on_control_error(error: Error, debug: string)
+    def on_control_error(src: Gst.Object, error: Error, debug: string)
         show_debug(error, debug)
 
     def show_debug(error: Error, debug: string)

@@ -7,9 +7,9 @@
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gtk/gtk.h>
+#include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gio/gio.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -150,8 +150,6 @@ IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
 void icon_list_control_setup_pipeline (IconListControl* self, GError** error);
 void media_control_set_pipeline (MediaControl* self, GstBin* bin);
-void icon_list_control_on_structure (IconListControl* self, GstObject* src, const char* name);
-static void _icon_list_control_on_structure_media_control_structure_message (IconListControl* _sender, GstObject* src, const char* name, gpointer self);
 static void icon_list_control_add_folder_data_free (gpointer _data);
 static void icon_list_control_add_folder_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static void _g_list_free_g_object_unref (GList* self);
@@ -168,15 +166,17 @@ static gboolean _icon_list_control_fill_icons_co_gsource_func (gpointer self);
 static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
 static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* data);
 static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj);
-void icon_list_control_on_error (IconListControl* self, GError* _error_, const char* debug);
-void icon_list_control_on_eos (IconListControl* self);
+void icon_list_control_on_element (IconListControl* self, GstObject* src, const GstStructure* structure);
+void icon_list_control_on_error (IconListControl* self, GstObject* src, GError* _error_, const char* debug);
+void icon_list_control_on_eos (IconListControl* self, GstObject* src);
 IconListControlCol icon_list_control_get_text_column (void);
 IconListControlCol icon_list_control_get_pixbuf_column (void);
 gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* iter);
 gboolean icon_list_control_iter_is_filled (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
-static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, gpointer self);
-static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GError* _error_, const char* debug, gpointer self);
+static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, GstObject* src, gpointer self);
+static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+static void _icon_list_control_on_element_media_control_element_message (IconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
 static GObject * icon_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void icon_list_control_finalize (GObject* obj);
 static void icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -283,11 +283,6 @@ void icon_list_control_setup_elements (IconListControl* self, GError** error) {
 }
 
 
-static void _icon_list_control_on_structure_media_control_structure_message (IconListControl* _sender, GstObject* src, const char* name, gpointer self) {
-	icon_list_control_on_structure (self, src, name);
-}
-
-
 void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
 	GError * _inner_error_;
 	GstElement* _tmp0_;
@@ -321,7 +316,6 @@ void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
 		}
 	}
 	media_control_set_pipeline ((MediaControl*) self, (GstBin*) icon_pipeline);
-	g_signal_connect_object ((MediaControl*) self, "structure-message", (GCallback) _icon_list_control_on_structure_media_control_structure_message, self, 0);
 	_gst_object_unref0 (icon_pipeline);
 }
 
@@ -595,13 +589,13 @@ static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj) {
 }
 
 
-void icon_list_control_on_structure (IconListControl* self, GstObject* src, const char* name) {
+void icon_list_control_on_element (IconListControl* self, GstObject* src, const GstStructure* structure) {
 	gboolean _tmp0_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
-	g_return_if_fail (name != NULL);
+	g_return_if_fail (structure != NULL);
 	if (src == GST_OBJECT (self->imagesink)) {
-		_tmp0_ = _vala_strcmp0 (name, "pixbuf") == 0;
+		_tmp0_ = structure->name == icon_list_control_pixbuf_q;
 	} else {
 		_tmp0_ = FALSE;
 	}
@@ -617,17 +611,19 @@ static gpointer _g_error_copy0 (gpointer self) {
 }
 
 
-void icon_list_control_on_error (IconListControl* self, GError* _error_, const char* debug) {
+void icon_list_control_on_error (IconListControl* self, GstObject* src, GError* _error_, const char* debug) {
 	GError* _tmp0_;
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
 	self->continuation_error = (_tmp0_ = _g_error_copy0 (_error_), _g_error_free0 (self->continuation_error), _tmp0_);
 	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
 }
 
 
-void icon_list_control_on_eos (IconListControl* self) {
+void icon_list_control_on_eos (IconListControl* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
 }
 
@@ -692,13 +688,18 @@ void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* 
 }
 
 
-static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, gpointer self) {
-	icon_list_control_on_eos (self);
+static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, GstObject* src, gpointer self) {
+	icon_list_control_on_eos (self, src);
 }
 
 
-static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GError* _error_, const char* debug, gpointer self) {
-	icon_list_control_on_error (self, _error_, debug);
+static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	icon_list_control_on_error (self, src, _error_, debug);
+}
+
+
+static void _icon_list_control_on_element_media_control_element_message (IconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self) {
+	icon_list_control_on_element (self, src, structure);
 }
 
 
@@ -712,6 +713,7 @@ static GObject * icon_list_control_constructor (GType type, guint n_construct_pr
 	{
 		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _icon_list_control_on_eos_media_control_eos_message, self, 0);
 		g_signal_connect_object ((MediaControl*) self, "error-message", (GCallback) _icon_list_control_on_error_media_control_error_message, self, 0);
+		g_signal_connect_object ((MediaControl*) self, "element-message", (GCallback) _icon_list_control_on_element_media_control_element_message, self, 0);
 	}
 	return obj;
 }

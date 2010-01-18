@@ -9,8 +9,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gdk/gdk.h>
 #include <gst/gst.h>
+#include <gdk/gdk.h>
 
 
 #define TYPE_APPLICATION_WINDOW (application_window_get_type ())
@@ -147,10 +147,10 @@ enum  {
 };
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
-void player_window_on_playlist_control_eos (PlayerWindow* self);
-static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, gpointer self);
-void player_window_on_playlist_control_error (PlayerWindow* self, GError* _error_, const char* debug);
-static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GError* _error_, const char* debug, gpointer self);
+void player_window_on_playlist_control_eos (PlayerWindow* self, GstObject* src);
+static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self);
+void player_window_on_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug);
+static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_on_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_on_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter);
@@ -250,13 +250,13 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 
 
-static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, gpointer self) {
-	player_window_on_playlist_control_eos (self);
+static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self) {
+	player_window_on_playlist_control_eos (self, src);
 }
 
 
-static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GError* _error_, const char* debug, gpointer self) {
-	player_window_on_playlist_control_error (self, _error_, debug);
+static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	player_window_on_playlist_control_error (self, src, _error_, debug);
 }
 
 
@@ -1003,14 +1003,16 @@ void player_window_on_debug_dialog_closed (PlayerWindow* self) {
 }
 
 
-void player_window_on_playlist_control_eos (PlayerWindow* self) {
+void player_window_on_playlist_control_eos (PlayerWindow* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	gtk_widget_activate ((GtkWidget*) self->next_button);
 }
 
 
-void player_window_on_playlist_control_error (PlayerWindow* self, GError* _error_, const char* debug) {
+void player_window_on_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
 	player_window_setup_debug_dialog (self);
 	debug_dialog_add_error_debug (self->debug_dialog, _error_, debug);

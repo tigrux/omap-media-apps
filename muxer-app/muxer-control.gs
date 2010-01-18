@@ -103,11 +103,11 @@ class MuxerControl: MediaControl
                         "No element named queue in the record pipeline")
         audiosrc = record_pipeline.get_by_name("audiosrc")
 
-    def on_eos()
+    def on_eos(src: Gst.Object)
         record_pipeline.set_state(State.NULL)
         recording = false
 
-    def on_error(e: Error, debug: string)
+    def on_error(src: Gst.Object, e: Error, debug: string)
         shutdown()
 
     def shutdown()

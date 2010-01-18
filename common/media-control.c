@@ -57,8 +57,10 @@ MediaControl* media_control_construct (GType object_type);
 static void media_control_finalize (GObject* obj);
 
 
-static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-static void g_cclosure_user_marshal_VOID__OBJECT_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
 	media_control_on_bus_message (self, message);
@@ -110,7 +112,7 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 				GstStructure* _tmp0_;
 				st = NULL;
 				if ((st = (_tmp0_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (st), _tmp0_)) != NULL) {
-					g_signal_emit_by_name (self, "structure-message", message->src, gst_structure_get_name (st));
+					g_signal_emit_by_name (self, "element-message", message->src, st);
 				}
 				_gst_structure_free0 (st);
 			}
@@ -119,7 +121,7 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 		case GST_MESSAGE_EOS:
 		{
 			{
-				g_signal_emit_by_name (self, "eos-message");
+				g_signal_emit_by_name (self, "eos-message", message->src);
 			}
 			break;
 		}
@@ -136,9 +138,38 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 				d = NULL;
 				(gst_message_parse_error (message, &_tmp1_, &_tmp3_), e = (_tmp2_ = _tmp1_, _g_error_free0 (e), _tmp2_));
 				d = (_tmp4_ = _tmp3_, _g_free0 (d), _tmp4_);
-				g_signal_emit_by_name (self, "error-message", e, d);
+				g_signal_emit_by_name (self, "error-message", message->src, e, d);
 				_g_error_free0 (e);
 				_g_free0 (d);
+			}
+			break;
+		}
+		case GST_MESSAGE_STATE_CHANGED:
+		{
+			{
+				GstState old = 0;
+				GstState current = 0;
+				GstState pending = 0;
+				gst_message_parse_state_changed (message, &old, &current, &pending);
+				g_signal_emit_by_name (self, "state-changed-message", message->src, old, current, pending);
+			}
+			break;
+		}
+		case GST_MESSAGE_SEGMENT_START:
+		{
+			{
+				GstFormat format = 0;
+				gint64 position = 0LL;
+				gst_message_parse_segment_start (message, &format, &position);
+			}
+			break;
+		}
+		case GST_MESSAGE_SEGMENT_DONE:
+		{
+			{
+				GstFormat format = 0;
+				gint64 position = 0LL;
+				gst_message_parse_segment_done (message, &format, &position);
 			}
 			break;
 		}
@@ -224,9 +255,12 @@ MediaControl* media_control_new (void) {
 static void media_control_class_init (MediaControlClass * klass) {
 	media_control_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->finalize = media_control_finalize;
-	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__POINTER_STRING, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_STRING);
-	g_signal_new ("structure_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_STRING);
+	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
+	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
+	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
+	g_signal_new ("segment_start_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__ENUM_INT64, G_TYPE_NONE, 2, GST_TYPE_FORMAT, G_TYPE_INT64);
+	g_signal_new ("segment_done_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__ENUM_INT64, G_TYPE_NONE, 2, GST_TYPE_FORMAT, G_TYPE_INT64);
+	g_signal_new ("state_changed_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM, G_TYPE_NONE, 4, GST_TYPE_OBJECT, GST_TYPE_STATE, GST_TYPE_STATE, GST_TYPE_STATE);
 }
 
 
@@ -254,13 +288,13 @@ GType media_control_get_type (void) {
 
 
 
-static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__POINTER_STRING) (gpointer data1, gpointer arg_1, const char* arg_2, gpointer data2);
-	register GMarshalFunc_VOID__POINTER_STRING callback;
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_POINTER_STRING) (gpointer data1, gpointer arg_1, gpointer arg_2, const char* arg_3, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_POINTER_STRING callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 3);
+	g_return_if_fail (n_param_values == 4);
 	if (G_CCLOSURE_SWAP_DATA (closure)) {
 		data1 = closure->data;
 		data2 = param_values->data[0].v_pointer;
@@ -268,14 +302,14 @@ static void g_cclosure_user_marshal_VOID__POINTER_STRING (GClosure * closure, GV
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__POINTER_STRING) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_pointer (param_values + 1), g_value_get_string (param_values + 2), data2);
+	callback = (GMarshalFunc_VOID__OBJECT_POINTER_STRING) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_pointer (param_values + 2), g_value_get_string (param_values + 3), data2);
 }
 
 
-static void g_cclosure_user_marshal_VOID__OBJECT_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__OBJECT_STRING) (gpointer data1, gpointer arg_1, const char* arg_2, gpointer data2);
-	register GMarshalFunc_VOID__OBJECT_STRING callback;
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_POINTER) (gpointer data1, gpointer arg_1, gpointer arg_2, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_POINTER callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
@@ -287,8 +321,46 @@ static void g_cclosure_user_marshal_VOID__OBJECT_STRING (GClosure * closure, GVa
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__OBJECT_STRING) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_object (param_values + 1), g_value_get_string (param_values + 2), data2);
+	callback = (GMarshalFunc_VOID__OBJECT_POINTER) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_pointer (param_values + 2), data2);
+}
+
+
+static void g_cclosure_user_marshal_VOID__ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__ENUM_INT64) (gpointer data1, gint arg_1, gint64 arg_2, gpointer data2);
+	register GMarshalFunc_VOID__ENUM_INT64 callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 3);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__ENUM_INT64) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_enum (param_values + 1), g_value_get_int64 (param_values + 2), data2);
+}
+
+
+static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_ENUM_ENUM_ENUM) (gpointer data1, gpointer arg_1, gint arg_2, gint arg_3, gint arg_4, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_ENUM_ENUM_ENUM callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 5);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__OBJECT_ENUM_ENUM_ENUM) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_enum (param_values + 2), g_value_get_enum (param_values + 3), g_value_get_enum (param_values + 4), data2);
 }
 
 

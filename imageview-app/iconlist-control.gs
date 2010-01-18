@@ -40,6 +40,7 @@ class IconListControl: MediaControl
     init
         eos_message += on_eos
         error_message += on_error
+        element_message += on_element
 
     construct(model: ListStore) raises Error
         iconlist_store = model
@@ -75,7 +76,6 @@ class IconListControl: MediaControl
             raise new CoreError.FAILED( \
                         "No element named imagesink in the icon pipeline")
         set_pipeline(icon_pipeline)
-        structure_message += on_structure
 
     def async add_folder(dirname: string, cancellable: Cancellable)
         var dir = File.new_for_path (dirname)
@@ -140,15 +140,15 @@ class IconListControl: MediaControl
         pipeline.set_state(State.NULL)
         icons_filled()
 
-    def on_structure(src: Gst.Object, name: string)
-        if src == imagesink and name == "pixbuf"
+    def on_element(src: Gst.Object, structure: Structure)
+        if src == imagesink and structure.name == pixbuf_q
             last_pixbuf = imagesink.last_pixbuf
 
-    def on_error(error: Error, debug: string)
+    def on_error(src: Gst.Object, error: Error, debug: string)
         continuation_error = error
         Idle.add(continuation)
 
-    def on_eos()
+    def on_eos(src: Gst.Object)
         Idle.add(continuation)
 
     def static get_text_column(): Col

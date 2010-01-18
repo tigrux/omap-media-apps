@@ -94,11 +94,11 @@ static gboolean _muxer_control_audio_buffer_probe_gst_buffer_probe_callback (Gst
 void muxer_control_start_record (MuxerControl* self, GError** error);
 void muxer_control_stop_record (MuxerControl* self);
 void media_control_set_pipeline (MediaControl* self, GstBin* bin);
-void muxer_control_on_eos (MuxerControl* self);
+void muxer_control_on_eos (MuxerControl* self, GstObject* src);
 void muxer_control_shutdown (MuxerControl* self);
-void muxer_control_on_error (MuxerControl* self, GError* e, const char* debug);
-static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self);
-static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, gpointer self);
+void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, const char* debug);
+static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self);
 static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void muxer_control_finalize (GObject* obj);
 
@@ -306,15 +306,17 @@ void muxer_control_load_record_pipeline (MuxerControl* self, GError** error) {
 }
 
 
-void muxer_control_on_eos (MuxerControl* self) {
+void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	gst_element_set_state ((GstElement*) self->record_pipeline, GST_STATE_NULL);
 	self->recording = FALSE;
 }
 
 
-void muxer_control_on_error (MuxerControl* self, GError* e, const char* debug) {
+void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, const char* debug) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
 	muxer_control_shutdown (self);
 }
@@ -380,13 +382,13 @@ gboolean muxer_control_audio_buffer_probe (MuxerControl* self, GstPad* pad, GstB
 }
 
 
-static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GError* _error_, const char* debug, gpointer self) {
-	muxer_control_on_error (self, _error_, debug);
+static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	muxer_control_on_error (self, src, _error_, debug);
 }
 
 
-static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, gpointer self) {
-	muxer_control_on_eos (self);
+static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self) {
+	muxer_control_on_eos (self, src);
 }
 
 

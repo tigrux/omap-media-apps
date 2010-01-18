@@ -7,9 +7,13 @@ class MediaControl: GLib.Object
     bus: Bus
     pipeline: Bin
 
-    event eos_message()
-    event error_message(error: Error, debug: string)
-    event structure_message(src: Gst.Object, name: string)
+    event eos_message(src: Gst.Object)
+    event error_message(src: Gst.Object, error: Error, debug: string)
+    event element_message(src: Gst.Object, structure: Structure)
+    event segment_start_message(format: Format, position: int64)
+    event segment_done_message(format: Format, position: int64)
+    event state_changed_message(src: Gst.Object, \
+            old: Gst.State, current: Gst.State, pending: Gst.State)
 
     def set_pipeline(bin: Bin)
         if bus != null
@@ -27,14 +31,26 @@ class MediaControl: GLib.Object
             when Gst.MessageType.ELEMENT
                 st: Structure
                 if (st = message.structure) != null
-                    structure_message(message.src, st.get_name())
+                    element_message(message.src, st)
             when Gst.MessageType.EOS
-                eos_message()
+                eos_message(message.src)
             when Gst.MessageType.ERROR
                 e: Error
                 d: string
                 message.parse_error(out e, out d)
-                error_message(e, d)
+                error_message(message.src, e, d)
+            when Gst.MessageType.STATE_CHANGED
+                old, current, pending: Gst.State
+                message.parse_state_changed(out old, out current, out pending)
+                state_changed_message(message.src, old, current, pending)
+            when Gst.MessageType.SEGMENT_START
+                format: Format
+                position: int64
+                message.parse_segment_start(out format, out position)
+            when Gst.MessageType.SEGMENT_DONE
+                format: Format
+                position: int64
+                message.parse_segment_done(out format, out position)
             default
                 pass
 

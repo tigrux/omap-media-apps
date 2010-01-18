@@ -393,10 +393,10 @@ class PlayerWindow: ApplicationWindow
         on_stop()
         debug_dialog = null
 
-    def on_playlist_control_eos()
+    def on_playlist_control_eos(src: Gst.Object)
         next_button.activate()
 
-    def on_playlist_control_error(error: Error, debug: string)
+    def on_playlist_control_error(src: Gst.Object, error: Error, debug: string)
         setup_debug_dialog()
         debug_dialog.add_error_debug(error, debug)
 
