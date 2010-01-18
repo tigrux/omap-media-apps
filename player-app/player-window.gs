@@ -99,6 +99,7 @@ class PlayerWindow: ApplicationWindow
         seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
         seeking_scale = new HScale(seeking_adjustment)
         main_box.pack_start(seeking_scale, false, false, 0)
+        seeking_scale.set_update_policy(UpdateType.DISCONTINUOUS)
         seeking_scale.button_press_event += on_seeking_scale_pressed
         seeking_scale.button_release_event += on_seeking_scale_released
         seeking_scale.format_value += on_scale_format_value

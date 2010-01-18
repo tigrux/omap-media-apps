@@ -412,6 +412,7 @@ void player_window_setup_seeking (PlayerWindow* self) {
 	self->seeking_adjustment = (_tmp0_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp0_);
 	self->seeking_scale = (_tmp1_ = (GtkScale*) g_object_ref_sink ((GtkHScale*) gtk_hscale_new (self->seeking_adjustment)), _g_object_unref0 (self->seeking_scale), _tmp1_);
 	gtk_box_pack_start ((GtkBox*) ((ApplicationWindow*) self)->main_box, (GtkWidget*) self->seeking_scale, FALSE, FALSE, (guint) 0);
+	gtk_range_set_update_policy ((GtkRange*) self->seeking_scale, GTK_UPDATE_DISCONTINUOUS);
 	g_signal_connect_object ((GtkWidget*) self->seeking_scale, "button-press-event", (GCallback) _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event, self, 0);
 	g_signal_connect_object ((GtkWidget*) self->seeking_scale, "button-release-event", (GCallback) _player_window_on_seeking_scale_released_gtk_widget_button_release_event, self, 0);
 	g_signal_connect_object (self->seeking_scale, "format-value", (GCallback) _player_window_on_scale_format_value_gtk_scale_format_value, self, 0);
