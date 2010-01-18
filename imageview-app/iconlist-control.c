@@ -161,9 +161,9 @@ GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self);
 static void icon_list_control_retrieve_thumbnails_data_free (gpointer _data);
 static void icon_list_control_retrieve_thumbnails_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean _icon_list_control_retrieve_thumbnails_co_gsource_func (gpointer self);
-static inline void _dynamic_set_location1 (GstElement* obj, const char* value);
+static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
 static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetrieveThumbnailsData* data);
-static inline GdkPixbuf* _dynamic_get_last_pixbuf2 (GstElement* obj);
+static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj);
 void icon_list_control_on_error (IconListControl* self, GError* _error_, const char* debug);
 void icon_list_control_on_eos (IconListControl* self);
 IconListControlCol icon_list_control_get_text_column (void);
@@ -510,7 +510,7 @@ static gboolean _icon_list_control_retrieve_thumbnails_co_gsource_func (gpointer
 }
 
 
-static inline void _dynamic_set_location1 (GstElement* obj, const char* value) {
+static inline void _dynamic_set_location0 (GstElement* obj, const char* value) {
 	g_object_set (obj, "location", value, NULL);
 }
 
@@ -540,7 +540,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 						data->_tmp1_ = FALSE;
 						gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_TEXT, &data->display, ICON_LIST_CONTROL_COL_FILE, &data->file, -1, -1);
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
-						_dynamic_set_location1 (data->self->filesrc, data->file);
+						_dynamic_set_location0 (data->self->filesrc, data->file);
 						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_PLAYING);
 						data->_state_ = 4;
 						return FALSE;
@@ -579,7 +579,7 @@ static gboolean icon_list_control_retrieve_thumbnails_co (IconListControlRetriev
 }
 
 
-static inline GdkPixbuf* _dynamic_get_last_pixbuf2 (GstElement* obj) {
+static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj) {
 	GdkPixbuf* result;
 	g_object_get (obj, "last-pixbuf", &result, NULL);
 	return result;
@@ -598,7 +598,7 @@ void icon_list_control_on_structure (IconListControl* self, GstObject* src, cons
 	}
 	if (_tmp0_) {
 		GdkPixbuf* _tmp1_;
-		icon_list_control_last_pixbuf = (_tmp1_ = _dynamic_get_last_pixbuf2 (self->imagesink), _g_object_unref0 (icon_list_control_last_pixbuf), _tmp1_);
+		icon_list_control_last_pixbuf = (_tmp1_ = _dynamic_get_last_pixbuf1 (self->imagesink), _g_object_unref0 (icon_list_control_last_pixbuf), _tmp1_);
 	}
 }
 

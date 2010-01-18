@@ -78,7 +78,8 @@ GType play_list_control_get_type (void);
 enum  {
 	PLAY_LIST_CONTROL_DUMMY_PROPERTY,
 	PLAY_LIST_CONTROL_VOLUME,
-	PLAY_LIST_CONTROL_N_ROWS
+	PLAY_LIST_CONTROL_N_ROWS,
+	PLAY_LIST_CONTROL_LOCATION
 };
 GType play_list_control_col_get_type (void);
 void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row);
@@ -87,10 +88,9 @@ void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row);
 static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self);
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
-static inline void _dynamic_set_uri0 (GstElement* obj, char* value);
-void play_list_control_set_location (PlayListControl* self, const char* location);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 GstState media_control_get_state (MediaControl* self);
+void play_list_control_set_location (PlayListControl* self, const char* value);
 GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
 gboolean play_list_control_play (PlayListControl* self);
 gboolean play_list_control_pause (PlayListControl* self);
@@ -103,11 +103,12 @@ gint play_list_control_get_name_column (void);
 gint play_list_control_get_icon_column (void);
 char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
 char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
-static inline double _dynamic_get_volume1 (GstElement* obj);
+static inline double _dynamic_get_volume0 (GstElement* obj);
 double play_list_control_get_volume (PlayListControl* self);
-static inline void _dynamic_set_volume2 (GstElement* obj, double value);
+static inline void _dynamic_set_volume1 (GstElement* obj, double value);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
+static inline void _dynamic_set_uri2 (GstElement* obj, char* value);
 void media_control_set_pipeline (MediaControl* self, GstBin* bin);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
@@ -157,20 +158,6 @@ PlayListControl* play_list_control_construct (GType object_type, GtkListStore* s
 
 PlayListControl* play_list_control_new (GtkListStore* store) {
 	return play_list_control_construct (TYPE_PLAY_LIST_CONTROL, store);
-}
-
-
-static inline void _dynamic_set_uri0 (GstElement* obj, char* value) {
-	g_object_set (obj, "uri", value, NULL);
-}
-
-
-void play_list_control_set_location (PlayListControl* self, const char* location) {
-	char* _tmp0_;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (location != NULL);
-	_dynamic_set_uri0 (self->player, _tmp0_ = g_strdup_printf ("file://%s", location));
-	_g_free0 (_tmp0_);
 }
 
 
@@ -377,7 +364,7 @@ char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter)
 }
 
 
-static inline double _dynamic_get_volume1 (GstElement* obj) {
+static inline double _dynamic_get_volume0 (GstElement* obj) {
 	double result;
 	g_object_get (obj, "volume", &result, NULL);
 	return result;
@@ -387,19 +374,19 @@ static inline double _dynamic_get_volume1 (GstElement* obj) {
 double play_list_control_get_volume (PlayListControl* self) {
 	double result;
 	g_return_val_if_fail (self != NULL, 0.0);
-	result = _dynamic_get_volume1 (self->player);
+	result = _dynamic_get_volume0 (self->player);
 	return result;
 }
 
 
-static inline void _dynamic_set_volume2 (GstElement* obj, double value) {
+static inline void _dynamic_set_volume1 (GstElement* obj, double value) {
 	g_object_set (obj, "volume", value, NULL);
 }
 
 
 void play_list_control_set_volume (PlayListControl* self, double value) {
 	g_return_if_fail (self != NULL);
-	_dynamic_set_volume2 (self->player, value);
+	_dynamic_set_volume1 (self->player, value);
 	g_object_notify ((GObject *) self, "volume");
 }
 
@@ -409,6 +396,20 @@ guint play_list_control_get_n_rows (PlayListControl* self) {
 	g_return_val_if_fail (self != NULL, 0U);
 	result = (guint) self->number_of_rows;
 	return result;
+}
+
+
+static inline void _dynamic_set_uri2 (GstElement* obj, char* value) {
+	g_object_set (obj, "uri", value, NULL);
+}
+
+
+void play_list_control_set_location (PlayListControl* self, const char* value) {
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	_dynamic_set_uri2 (self->player, _tmp0_ = g_strdup_printf ("file://%s", value));
+	_g_free0 (_tmp0_);
+	g_object_notify ((GObject *) self, "location");
 }
 
 
@@ -441,6 +442,7 @@ static void play_list_control_class_init (PlayListControlClass * klass) {
 	G_OBJECT_CLASS (klass)->finalize = play_list_control_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_VOLUME, g_param_spec_double ("volume", "volume", "volume", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_N_ROWS, g_param_spec_uint ("n-rows", "n-rows", "n-rows", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
 	g_signal_new ("playing", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("paused", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("stopped", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
@@ -495,6 +497,9 @@ static void play_list_control_set_property (GObject * object, guint property_id,
 	switch (property_id) {
 		case PLAY_LIST_CONTROL_VOLUME:
 		play_list_control_set_volume (self, g_value_get_double (value));
+		break;
+		case PLAY_LIST_CONTROL_LOCATION:
+		play_list_control_set_location (self, g_value_get_string (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

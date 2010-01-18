@@ -25,6 +25,10 @@ class PlayListControl: MediaControl
         get
             return number_of_rows
 
+    prop location: string
+        set
+            player.uri = "file://%s".printf(value)
+
     event playing(iter: TreeIter)
     event paused(iter: TreeIter)
     event stopped(iter: TreeIter)
@@ -41,9 +45,6 @@ class PlayListControl: MediaControl
         playlist_store.row_inserted += on_row_inserted
         playlist_store.row_deleted += on_row_deleted
 
-    def set_location(location: string)
-        player.uri = "file://%s".printf(location)
-
     def play(): bool
         iter: TreeIter
         if not get_iter(out iter)
@@ -54,7 +55,7 @@ class PlayListControl: MediaControl
 
         var state = get_state()
         if state == State.NULL
-            set_location(filename)
+            location = filename
 
         if set_state(State.PLAYING) != StateChangeReturn.FAILURE
             playlist_store.set(iter, Col.ICON, STOCK_MEDIA_PLAY, -1)

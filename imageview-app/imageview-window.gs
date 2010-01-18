@@ -63,7 +63,9 @@ class ImageViewWindow: ApplicationWindow
         iter: TreeIter
         iconlist_store.get_iter(out iter, path)
         if iconlist_control.iter_get_valid(iter)
-            image_control.filesrc.location = iconlist_control.iter_get_file(iter)
+            var file = iconlist_control.iter_get_file(iter)
+            print "Opening %s", file
+            image_control.location = file
             image_control.pipeline.set_state(Gst.State.PLAYING)
 
     def new_video_box(): Box

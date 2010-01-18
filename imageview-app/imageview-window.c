@@ -78,7 +78,6 @@ typedef struct _ImageControlClass ImageControlClass;
 
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
 typedef struct _MediaControlPrivate MediaControlPrivate;
-typedef struct _ImageControlPrivate ImageControlPrivate;
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
 
@@ -129,16 +128,6 @@ struct _MediaControlClass {
 	GObjectClass parent_class;
 };
 
-struct _ImageControl {
-	MediaControl parent_instance;
-	ImageControlPrivate * priv;
-	GstElement* filesrc;
-};
-
-struct _ImageControlClass {
-	MediaControlClass parent_class;
-};
-
 typedef enum  {
 	APPLICATION_TAB_LIST,
 	APPLICATION_TAB_VIDEO
@@ -178,7 +167,7 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self);
 gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
-static inline void _dynamic_set_location0 (GstElement* obj, char* value);
+void image_control_set_location (ImageControl* self, const char* value);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 GType application_tab_get_type (void);
@@ -292,21 +281,18 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 }
 
 
-static inline void _dynamic_set_location0 (GstElement* obj, char* value) {
-	g_object_set (obj, "location", value, NULL);
-}
-
-
 void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path) {
 	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (path != NULL);
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
 	if (icon_list_control_iter_get_valid (self->iconlist_control, &iter)) {
-		char* _tmp0_;
-		_dynamic_set_location0 (self->image_control->filesrc, _tmp0_ = icon_list_control_iter_get_file (self->iconlist_control, &iter));
-		_g_free0 (_tmp0_);
+		char* file;
+		file = icon_list_control_iter_get_file (self->iconlist_control, &iter);
+		g_print ("Opening %s\n", file);
+		image_control_set_location (self->image_control, file);
 		gst_element_set_state ((GstElement*) ((MediaControl*) self->image_control)->pipeline, GST_STATE_PLAYING);
+		_g_free0 (file);
 	}
 }
 

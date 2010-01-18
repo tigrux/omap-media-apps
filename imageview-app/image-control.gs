@@ -10,6 +10,10 @@ const IMAGE_PIPELINE_DESC: string = \
 class ImageControl: MediaControl
     filesrc: dynamic Element
 
+    prop location: string
+        set
+            filesrc.location = value
+
     construct() raises Error
         setup_pipeline()
 

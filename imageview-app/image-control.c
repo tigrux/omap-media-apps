@@ -5,6 +5,8 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gst/gst.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -58,7 +60,8 @@ static gpointer image_control_parent_class = NULL;
 GType media_control_get_type (void);
 GType image_control_get_type (void);
 enum  {
-	IMAGE_CONTROL_DUMMY_PROPERTY
+	IMAGE_CONTROL_DUMMY_PROPERTY,
+	IMAGE_CONTROL_LOCATION
 };
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);
@@ -66,7 +69,10 @@ void image_control_setup_pipeline (ImageControl* self, GError** error);
 ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
 void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+static inline void _dynamic_set_location2 (GstElement* obj, const char* value);
+void image_control_set_location (ImageControl* self, const char* value);
 static void image_control_finalize (GObject* obj);
+static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
 
@@ -117,9 +123,23 @@ void image_control_setup_pipeline (ImageControl* self, GError** error) {
 }
 
 
+static inline void _dynamic_set_location2 (GstElement* obj, const char* value) {
+	g_object_set (obj, "location", value, NULL);
+}
+
+
+void image_control_set_location (ImageControl* self, const char* value) {
+	g_return_if_fail (self != NULL);
+	_dynamic_set_location2 (self->filesrc, value);
+	g_object_notify ((GObject *) self, "location");
+}
+
+
 static void image_control_class_init (ImageControlClass * klass) {
 	image_control_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->set_property = image_control_set_property;
 	G_OBJECT_CLASS (klass)->finalize = image_control_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), IMAGE_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
 }
 
 
@@ -142,6 +162,20 @@ GType image_control_get_type (void) {
 		image_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "ImageControl", &g_define_type_info, 0);
 	}
 	return image_control_type_id;
+}
+
+
+static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	ImageControl * self;
+	self = IMAGE_CONTROL (object);
+	switch (property_id) {
+		case IMAGE_CONTROL_LOCATION:
+		image_control_set_location (self, g_value_get_string (value));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
 
