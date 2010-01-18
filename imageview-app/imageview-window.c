@@ -77,9 +77,9 @@ typedef struct _ImageControlClass ImageControlClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
-typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
+#define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
@@ -104,6 +104,8 @@ struct _ImageViewWindow {
 	ImageControl* image_control;
 	GCancellable* cancellable;
 	char* current_folder;
+	GtkToolButton* open_button;
+	GtkToolButton* play_button;
 };
 
 struct _ImageViewWindowClass {
@@ -114,19 +116,9 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_TEXT,
 	ICON_LIST_CONTROL_COL_FILE,
 	ICON_LIST_CONTROL_COL_PIXBUF,
-	ICON_LIST_CONTROL_COL_VALID
+	ICON_LIST_CONTROL_COL_VALID,
+	ICON_LIST_CONTROL_COL_FILLED
 } IconListControlCol;
-
-struct _MediaControl {
-	GObject parent_instance;
-	MediaControlPrivate * priv;
-	GstBus* bus;
-	GstBin* pipeline;
-};
-
-struct _MediaControlClass {
-	GObjectClass parent_class;
-};
 
 typedef enum  {
 	APPLICATION_TAB_LIST,
@@ -148,8 +140,10 @@ enum  {
 };
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
-void image_view_window_on_iconlist_done (ImageViewWindow* self);
-static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self);
+void image_view_window_on_iconlist_files_added (ImageViewWindow* self);
+static void _image_view_window_on_iconlist_files_added_icon_list_control_files_added (IconListControl* _sender, gpointer self);
+void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self);
+static void _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled (IconListControl* _sender, gpointer self);
 ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
 void video_area_set_control (VideoArea* self, MediaControl* control);
@@ -160,27 +154,41 @@ void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
+void image_view_window_on_scrolled (ImageViewWindow* self);
+static void _image_view_window_on_scrolled_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 GType icon_list_control_col_get_type (void);
 IconListControlCol icon_list_control_get_text_column (void);
 IconListControlCol icon_list_control_get_pixbuf_column (void);
 void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path);
 static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self);
-gboolean icon_list_control_iter_get_valid (IconListControl* self, GtkTreeIter* iter);
+gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void image_control_set_location (ImageControl* self, const char* value);
+GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
+void image_view_window_on_video_area_prepared (ImageViewWindow* self);
+static void _image_view_window_on_video_area_prepared_video_area_prepared (VideoArea* _sender, gpointer self);
 GType application_tab_get_type (void);
-static void _lambda1_ (ImageViewWindow* self);
-static void __lambda1__video_area_prepared (VideoArea* _sender, gpointer self);
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
+void application_window_toolbar_add_expander (ApplicationWindow* self);
+void image_view_window_on_open (ImageViewWindow* self);
+static void _image_view_window_on_open_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void image_view_window_on_play (ImageViewWindow* self);
+static void _image_view_window_on_play_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void application_window_toolbar_add_quit_button (ApplicationWindow* self);
+gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter);
 void image_view_window_change_folder (ImageViewWindow* self);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 gboolean image_view_window_retry_change_folder (ImageViewWindow* self);
 static gboolean _image_view_window_retry_change_folder_gsource_func (gpointer self);
+void image_view_window_fill_visible_icons (ImageViewWindow* self, GCancellable* cancellable);
+gboolean image_view_window_retry_fill_visible_icons (ImageViewWindow* self);
+static gboolean _image_view_window_retry_fill_visible_icons_gsource_func (gpointer self);
+void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
 GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self);
 static GObject * image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void image_view_window_finalize (GObject* obj);
@@ -188,8 +196,13 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-static void _image_view_window_on_iconlist_done_icon_list_control_done (IconListControl* _sender, gpointer self) {
-	image_view_window_on_iconlist_done (self);
+static void _image_view_window_on_iconlist_files_added_icon_list_control_files_added (IconListControl* _sender, gpointer self) {
+	image_view_window_on_iconlist_files_added (self);
+}
+
+
+static void _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled (IconListControl* _sender, gpointer self) {
+	image_view_window_on_iconlist_icons_filled (self);
 }
 
 
@@ -208,7 +221,8 @@ ImageViewWindow* image_view_window_construct (GType object_type, GError** error)
 		return NULL;
 	}
 	self->iconlist_control = (_tmp1_ = _tmp0_, _g_object_unref0 (self->iconlist_control), _tmp1_);
-	g_signal_connect_object (self->iconlist_control, "done", (GCallback) _image_view_window_on_iconlist_done_icon_list_control_done, self, 0);
+	g_signal_connect_object (self->iconlist_control, "files-added", (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self, 0);
+	g_signal_connect_object (self->iconlist_control, "icons-filled", (GCallback) _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled, self, 0);
 	_tmp2_ = image_control_new (&_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
@@ -250,6 +264,16 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 }
 
 
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+static void _image_view_window_on_scrolled_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self) {
+	image_view_window_on_scrolled (self);
+}
+
+
 static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self) {
 	image_view_window_on_icon_activated (self, path);
 }
@@ -259,14 +283,33 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
 	GtkScrolledWindow* scrolled_window;
-	GtkIconView* _tmp0_;
+	GtkScrollbar* scrollbar;
+	GtkAdjustment* adjustment;
+	GtkScrollbar* _tmp1_;
+	GtkWidget* _tmp0_;
+	GtkAdjustment* _tmp2_;
+	GtkScrollbar* _tmp4_;
+	GtkWidget* _tmp3_;
+	GtkAdjustment* _tmp5_;
+	GtkIconView* _tmp6_;
 	g_return_val_if_fail (self != NULL, NULL);
 	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
 	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	self->icon_view = (_tmp0_ = g_object_ref_sink ((GtkIconView*) gtk_icon_view_new ()), _g_object_unref0 (self->icon_view), _tmp0_);
+	scrollbar = NULL;
+	adjustment = NULL;
+	scrollbar = (_tmp1_ = _g_object_ref0 ((_tmp0_ = gtk_scrolled_window_get_vscrollbar (scrolled_window), GTK_IS_SCROLLBAR (_tmp0_) ? ((GtkScrollbar*) _tmp0_) : NULL)), _g_object_unref0 (scrollbar), _tmp1_);
+	gtk_range_set_update_policy ((GtkRange*) scrollbar, GTK_UPDATE_DISCONTINUOUS);
+	adjustment = (_tmp2_ = _g_object_ref0 (gtk_scrolled_window_get_vadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp2_);
+	g_signal_connect_object (adjustment, "value-changed", (GCallback) _image_view_window_on_scrolled_gtk_adjustment_value_changed, self, 0);
+	scrollbar = (_tmp4_ = _g_object_ref0 ((_tmp3_ = gtk_scrolled_window_get_hscrollbar (scrolled_window), GTK_IS_SCROLLBAR (_tmp3_) ? ((GtkScrollbar*) _tmp3_) : NULL)), _g_object_unref0 (scrollbar), _tmp4_);
+	gtk_range_set_update_policy ((GtkRange*) scrollbar, GTK_UPDATE_DISCONTINUOUS);
+	adjustment = (_tmp5_ = _g_object_ref0 (gtk_scrolled_window_get_hadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp5_);
+	g_signal_connect_object (adjustment, "value-changed", (GCallback) _image_view_window_on_scrolled_gtk_adjustment_value_changed, self, 0);
+	self->icon_view = (_tmp6_ = g_object_ref_sink ((GtkIconView*) gtk_icon_view_new ()), _g_object_unref0 (self->icon_view), _tmp6_);
 	gtk_container_add ((GtkContainer*) scrolled_window, (GtkWidget*) self->icon_view);
+	gtk_icon_view_set_selection_mode (self->icon_view, GTK_SELECTION_BROWSE);
 	gtk_icon_view_set_model (self->icon_view, (GtkTreeModel*) self->iconlist_store);
 	gtk_icon_view_set_text_column (self->icon_view, (gint) icon_list_control_get_text_column ());
 	gtk_icon_view_set_pixbuf_column (self->icon_view, (gint) icon_list_control_get_pixbuf_column ());
@@ -277,6 +320,8 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	g_signal_connect_object (self->icon_view, "item-activated", (GCallback) _image_view_window_on_icon_activated_gtk_icon_view_item_activated, self, 0);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
+	_g_object_unref0 (scrollbar);
+	_g_object_unref0 (adjustment);
 	return result;
 }
 
@@ -286,24 +331,18 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (path != NULL);
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
-	if (icon_list_control_iter_get_valid (self->iconlist_control, &iter)) {
+	if (icon_list_control_iter_is_valid (self->iconlist_control, &iter)) {
 		char* file;
 		file = icon_list_control_iter_get_file (self->iconlist_control, &iter);
-		g_print ("Opening %s\n", file);
 		image_control_set_location (self->image_control, file);
-		gst_element_set_state ((GstElement*) ((MediaControl*) self->image_control)->pipeline, GST_STATE_PLAYING);
+		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_PLAYING);
 		_g_free0 (file);
 	}
 }
 
 
-static void _lambda1_ (ImageViewWindow* self) {
-	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
-}
-
-
-static void __lambda1__video_area_prepared (VideoArea* _sender, gpointer self) {
-	_lambda1_ (self);
+static void _image_view_window_on_video_area_prepared_video_area_prepared (VideoArea* _sender, gpointer self) {
+	image_view_window_on_video_area_prepared (self);
 }
 
 
@@ -319,10 +358,17 @@ GtkBox* image_view_window_new_video_box (ImageViewWindow* self) {
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
 	gtk_scrolled_window_add_with_viewport (scrolled_window, (GtkWidget*) self->video_area);
-	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda1__video_area_prepared, self, 0);
+	g_signal_connect_object (self->video_area, "prepared", (GCallback) _image_view_window_on_video_area_prepared_video_area_prepared, self, 0);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
 	return result;
+}
+
+
+void image_view_window_on_video_area_prepared (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
+	gtk_tool_button_set_stock_id (self->open_button, GTK_STOCK_CLOSE);
 }
 
 
@@ -331,9 +377,21 @@ static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_curren
 }
 
 
+static void _image_view_window_on_open_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	image_view_window_on_open (self);
+}
+
+
+static void _image_view_window_on_play_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	image_view_window_on_play (self);
+}
+
+
 void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	GtkToolItem* chooser_item;
 	GtkFileChooserButton* _tmp0_;
+	GtkToolButton* _tmp1_;
+	GtkToolButton* _tmp2_;
 	g_return_if_fail (self != NULL);
 	chooser_item = g_object_ref_sink (gtk_tool_item_new ());
 	gtk_tool_item_set_expand (chooser_item, TRUE);
@@ -342,8 +400,73 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	gtk_container_add ((GtkContainer*) chooser_item, (GtkWidget*) self->chooser_button);
 	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
+	application_window_toolbar_add_expander ((ApplicationWindow*) self);
+	self->open_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_OPEN)), _g_object_unref0 (self->open_button), _tmp1_);
+	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->open_button);
+	g_signal_connect_object (self->open_button, "clicked", (GCallback) _image_view_window_on_open_gtk_tool_button_clicked, self, 0);
+	self->play_button = (_tmp2_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->play_button), _tmp2_);
+	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->play_button);
+	g_signal_connect_object (self->play_button, "clicked", (GCallback) _image_view_window_on_play_gtk_tool_button_clicked, self, 0);
 	application_window_toolbar_add_quit_button ((ApplicationWindow*) self);
 	_g_object_unref0 (chooser_item);
+}
+
+
+void image_view_window_on_open (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (gtk_notebook_get_current_page (((ApplicationWindow*) self)->notebook) == APPLICATION_TAB_LIST) {
+		GtkTreeIter iter = {0};
+		if (image_view_window_get_and_select_iter (self, &iter)) {
+			GtkTreePath* _tmp0_;
+			gtk_icon_view_item_activated (self->icon_view, _tmp0_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, &iter));
+			_gtk_tree_path_free0 (_tmp0_);
+		}
+	} else {
+		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_NULL);
+		gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_LIST);
+		gtk_tool_button_set_stock_id (self->open_button, GTK_STOCK_OPEN);
+	}
+}
+
+
+void image_view_window_on_play (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	g_print ("Start slideshow\n");
+}
+
+
+static gpointer _gtk_tree_path_copy0 (gpointer self) {
+	return self ? gtk_tree_path_copy (self) : NULL;
+}
+
+
+gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter) {
+	gboolean result;
+	GtkTreePath* path;
+	GList* selected;
+	g_return_val_if_fail (self != NULL, FALSE);
+	path = NULL;
+	selected = gtk_icon_view_get_selected_items (self->icon_view);
+	if (selected != NULL) {
+		GtkTreePath* _tmp0_;
+		path = (_tmp0_ = _gtk_tree_path_copy0 ((GtkTreePath*) selected->data), _gtk_tree_path_free0 (path), _tmp0_);
+		gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, iter, path);
+		result = TRUE;
+		_gtk_tree_path_free0 (path);
+		return result;
+	} else {
+		if (gtk_tree_model_get_iter_first ((GtkTreeModel*) self->iconlist_store, iter)) {
+			GtkTreePath* _tmp1_;
+			path = (_tmp1_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, iter), _gtk_tree_path_free0 (path), _tmp1_);
+			gtk_icon_view_select_path (self->icon_view, path);
+			result = TRUE;
+			_gtk_tree_path_free0 (path);
+			return result;
+		}
+	}
+	result = FALSE;
+	_gtk_tree_path_free0 (path);
+	return result;
 }
 
 
@@ -394,7 +517,67 @@ gboolean image_view_window_retry_change_folder (ImageViewWindow* self) {
 }
 
 
-void image_view_window_on_iconlist_done (ImageViewWindow* self) {
+void image_view_window_on_iconlist_files_added (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->cancellable != NULL) {
+		image_view_window_fill_visible_icons (self, self->cancellable);
+	}
+}
+
+
+static gboolean _image_view_window_retry_fill_visible_icons_gsource_func (gpointer self) {
+	return image_view_window_retry_fill_visible_icons (self);
+}
+
+
+void image_view_window_on_scrolled (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->cancellable == NULL) {
+		GCancellable* _tmp0_;
+		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
+		image_view_window_fill_visible_icons (self, self->cancellable);
+	} else {
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
+	}
+}
+
+
+gboolean image_view_window_retry_fill_visible_icons (ImageViewWindow* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (self->cancellable == NULL) {
+		image_view_window_on_scrolled (self);
+		result = FALSE;
+		return result;
+	}
+	result = TRUE;
+	return result;
+}
+
+
+void image_view_window_fill_visible_icons (ImageViewWindow* self, GCancellable* cancellable) {
+	GtkTreePath* start;
+	GtkTreePath* end;
+	GtkTreePath* _tmp5_;
+	gboolean _tmp4_;
+	GtkTreePath* _tmp3_ = NULL;
+	GtkTreePath* _tmp2_;
+	gboolean _tmp1_;
+	GtkTreePath* _tmp0_ = NULL;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (cancellable != NULL);
+	start = NULL;
+	end = NULL;
+	_tmp4_ = (_tmp1_ = gtk_icon_view_get_visible_range (self->icon_view, &_tmp0_, &_tmp3_), start = (_tmp2_ = _gtk_tree_path_copy0 (_tmp0_), _gtk_tree_path_free0 (start), _tmp2_), _tmp1_);
+	end = (_tmp5_ = _gtk_tree_path_copy0 (_tmp3_), _gtk_tree_path_free0 (end), _tmp5_);
+	_tmp4_;
+	icon_list_control_fill_icons (self->iconlist_control, start, end, cancellable, NULL, NULL);
+	_gtk_tree_path_free0 (start);
+	_gtk_tree_path_free0 (end);
+}
+
+
+void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->cancellable), _tmp0_);
@@ -411,7 +594,7 @@ GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self) {
 	s = G_TYPE_STRING;
 	p = GDK_TYPE_PIXBUF;
 	b = G_TYPE_BOOLEAN;
-	model = gtk_list_store_new (4, s, s, p, b, NULL);
+	model = gtk_list_store_new (5, s, s, p, b, b, NULL);
 	result = model;
 	return result;
 }
@@ -450,7 +633,7 @@ static void image_view_window_finalize (GObject* obj) {
 	{
 		if (self->iconlist_control != NULL) {
 			guint _tmp1_;
-			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("done", TYPE_ICON_LIST_CONTROL, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _image_view_window_on_iconlist_done_icon_list_control_done, self);
+			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("files-added", TYPE_ICON_LIST_CONTROL, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self);
 		}
 	}
 	_g_object_unref0 (self->chooser_button);
@@ -461,6 +644,8 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->image_control);
 	_g_object_unref0 (self->cancellable);
 	_g_free0 (self->current_folder);
+	_g_object_unref0 (self->open_button);
+	_g_object_unref0 (self->play_button);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);
 }
 

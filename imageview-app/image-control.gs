@@ -17,6 +17,10 @@ class ImageControl: MediaControl
     construct() raises Error
         setup_pipeline()
 
+    final
+        if pipeline != null
+            pipeline.set_state(State.NULL)
+
     def setup_pipeline() raises Error
         var image_pipeline = parse_launch(IMAGE_PIPELINE_DESC) as Pipeline
         image_pipeline.set_name("image_pipeline")

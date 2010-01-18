@@ -14,6 +14,8 @@ class ImageViewWindow: ApplicationWindow
     image_control: ImageControl
     cancellable: Cancellable
     current_folder: string
+    open_button: ToolButton
+    play_button: ToolButton
 
     init
         iconlist_store = new_imagelist_store()
@@ -21,11 +23,12 @@ class ImageViewWindow: ApplicationWindow
 
     final
         if iconlist_control != null
-            iconlist_control.done.disconnect(on_iconlist_done)
+            iconlist_control.files_added.disconnect(on_iconlist_files_added)
 
     construct() raises Error
         iconlist_control = new IconListControl(iconlist_store)
-        iconlist_control.done += on_iconlist_done
+        iconlist_control.files_added += on_iconlist_files_added
+        iconlist_control.icons_filled += on_iconlist_icons_filled
         image_control = new ImageControl()
         video_area.set_control(image_control)
 
@@ -46,8 +49,22 @@ class ImageViewWindow: ApplicationWindow
         box.pack_start(scrolled_window, true, true, 0)
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
         
+        scrollbar: Scrollbar
+        adjustment: Adjustment
+
+        scrollbar = scrolled_window.get_vscrollbar() as Scrollbar
+        scrollbar.set_update_policy(UpdateType.DISCONTINUOUS)
+        adjustment = scrolled_window.get_vadjustment()
+        adjustment.value_changed += on_scrolled
+
+        scrollbar = scrolled_window.get_hscrollbar() as Scrollbar
+        scrollbar.set_update_policy(UpdateType.DISCONTINUOUS)
+        adjustment = scrolled_window.get_hadjustment()
+        adjustment.value_changed += on_scrolled
+        
         icon_view = new IconView()
         scrolled_window.add(icon_view)
+        icon_view.set_selection_mode(SelectionMode.BROWSE)
         icon_view.set_model(iconlist_store)
         icon_view.set_text_column(iconlist_control.get_text_column())
         icon_view.set_pixbuf_column(iconlist_control.get_pixbuf_column())
@@ -62,11 +79,10 @@ class ImageViewWindow: ApplicationWindow
     def on_icon_activated(path: TreePath)
         iter: TreeIter
         iconlist_store.get_iter(out iter, path)
-        if iconlist_control.iter_get_valid(iter)
+        if iconlist_control.iter_is_valid(iter)
             var file = iconlist_control.iter_get_file(iter)
-            print "Opening %s", file
             image_control.location = file
-            image_control.pipeline.set_state(Gst.State.PLAYING)
+            image_control.set_state(Gst.State.PLAYING)
 
     def new_video_box(): Box
         var box = new VBox(false, 0)
@@ -75,9 +91,12 @@ class ImageViewWindow: ApplicationWindow
         box.pack_start(scrolled_window, true, true, 0)
         video_area = new VideoArea()
         scrolled_window.add_with_viewport(video_area)
-        video_area.prepared += def()
-            notebook.set_current_page(ApplicationTab.VIDEO)
+        video_area.prepared += on_video_area_prepared
         return box
+
+    def on_video_area_prepared()
+        notebook.set_current_page(ApplicationTab.VIDEO)
+        open_button.set_stock_id(STOCK_CLOSE)
 
     def setup_toolbar()
         var chooser_item = new ToolItem()
@@ -89,9 +108,46 @@ class ImageViewWindow: ApplicationWindow
         chooser_item.add(chooser_button)
         chooser_button.set_create_folders(false)
         chooser_button.current_folder_changed += on_chooser_folder_changed
-        
+
+        toolbar_add_expander()
+
+        open_button = new ToolButton.from_stock(STOCK_OPEN)
+        toolbar.add(open_button)
+        open_button.clicked += on_open
+
+        play_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(play_button)
+        play_button.clicked += on_play
+
         toolbar_add_quit_button()
-        
+
+    def on_open()
+        if notebook.get_current_page() == ApplicationTab.LIST
+            iter: TreeIter
+            if get_and_select_iter(out iter)
+                icon_view.item_activated(iconlist_store.get_path(iter))
+        else
+            image_control.set_state(Gst.State.NULL)
+            notebook.set_current_page(ApplicationTab.LIST)
+            open_button.set_stock_id(STOCK_OPEN)
+
+    def on_play()
+        print "Start slideshow"
+
+    def get_and_select_iter(out iter: TreeIter): bool
+        path: TreePath
+        selected: unowned List of TreePath = icon_view.get_selected_items()
+        if selected != null
+            path = selected.data
+            iconlist_store.get_iter(out iter, path)
+            return true
+        else
+            if iconlist_store.get_iter_first(out iter)
+                path = iconlist_store.get_path(iter)
+                icon_view.select_path(path)
+                return true
+        return false
+
     def on_chooser_folder_changed()
         var folder = chooser_button.get_current_folder()
         if folder == current_folder
@@ -114,13 +170,36 @@ class ImageViewWindow: ApplicationWindow
             return false
         return true
 
-    def on_iconlist_done()
+    def on_iconlist_files_added()
+        if cancellable != null
+            fill_visible_icons(cancellable)
+
+    def on_scrolled()
+        if cancellable == null
+            cancellable = new Cancellable()
+            fill_visible_icons(cancellable)
+        else
+            Idle.add(retry_fill_visible_icons)
+
+    def retry_fill_visible_icons(): bool
+        if cancellable == null
+            on_scrolled()
+            return false
+        return true
+
+    def fill_visible_icons(cancellable: Cancellable)
+        start: TreePath
+        end: TreePath
+        icon_view.get_visible_range(out start, out end)
+        iconlist_control.fill_icons(start, end, cancellable)
+
+    def on_iconlist_icons_filled()
         cancellable = null
 
     def new_imagelist_store(): ListStore
         var s = typeof(string)
         var p = typeof(Gdk.Pixbuf)
         var b = typeof(bool)
-        var model = new ListStore(4, s, s, p, b)
+        var model = new ListStore(5, s, s, p, b, b)
         return model
 

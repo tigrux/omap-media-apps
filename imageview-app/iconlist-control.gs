@@ -19,6 +19,7 @@ class IconListControl: MediaControl
         FILE
         PIXBUF
         VALID
+        FILLED
 
     filesrc: dynamic Element
     imagesink: dynamic Element
@@ -33,7 +34,8 @@ class IconListControl: MediaControl
     continuation: SourceFunc
     continuation_error: Error
 
-    event done()
+    event files_added()
+    event icons_filled()
 
     init
         eos_message += on_eos
@@ -88,12 +90,10 @@ class IconListControl: MediaControl
                 if next_files == null
                     break
                 add_next_files(dirname, next_files)
-            if not cancellable.is_cancelled()
-                yield retrieve_thumbnails(cancellable)
         except e1: Error
             print e1.message
         finally
-            done()
+            files_added()
 
     def add_next_files(dirname: string, files: GLib.List of FileInfo)
         for info in files
@@ -106,18 +106,20 @@ class IconListControl: MediaControl
                     Col.PIXBUF, loading_pixbuf, \
                     -1)
 
-    def async retrieve_thumbnails(cancellable: Cancellable)
-        iter: TreeIter
-        if iconlist_store.get_iter_first(out iter)
-            continuation = retrieve_thumbnails.callback
-            pipeline.set_state(State.READY)
-            do
-                file: string
-                display: string
-                iconlist_store.get(iter, \
-                    Col.TEXT, out display, \
-                    Col.FILE, out file, \
-                    -1)
+    def async fill_icons(path: TreePath, end: TreePath, cancellable: Cancellable)
+        continuation = fill_icons.callback
+
+        pipeline.set_state(State.READY)
+        do
+            iter: TreeIter
+            iconlist_store.get_iter(out iter, path)
+            file: string
+            filled: bool
+            iconlist_store.get(iter, \
+                Col.FILE, out file, \
+                Col.FILLED, out filled, \
+                -1)
+            if not filled
                 continuation_error = null
                 filesrc.location = file
                 pipeline.set_state(State.PLAYING)
@@ -133,10 +135,10 @@ class IconListControl: MediaControl
                     Col.PIXBUF, pixbuf, \
                     Col.VALID, valid, \
                     -1)
-            while \
-                iconlist_store.iter_next(ref iter) and \
-                not cancellable.is_cancelled()
-            pipeline.set_state(State.NULL)
+            path.next()
+        while not(path.compare(end) > 0 or cancellable.is_cancelled())
+        pipeline.set_state(State.NULL)
+        icons_filled()
 
     def on_structure(src: Gst.Object, name: string)
         if src == imagesink and name == "pixbuf"
@@ -155,10 +157,15 @@ class IconListControl: MediaControl
     def static get_pixbuf_column(): Col
         return Col.PIXBUF
 
-    def iter_get_valid(iter: TreeIter): bool
+    def iter_is_valid(iter: TreeIter): bool
         valid: bool
         iconlist_store.get(iter, Col.VALID, out valid, -1)
         return valid
+
+    def iter_is_filled(iter: TreeIter): bool
+        filled: bool
+        iconlist_store.get(iter, Col.FILLED, out filled, -1)
+        return filled
 
     def iter_get_file(iter: TreeIter): string
         file: string

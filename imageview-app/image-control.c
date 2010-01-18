@@ -150,6 +150,11 @@ static void image_control_instance_init (ImageControl * self) {
 static void image_control_finalize (GObject* obj) {
 	ImageControl * self;
 	self = IMAGE_CONTROL (obj);
+	{
+		if (((MediaControl*) self)->pipeline != NULL) {
+			gst_element_set_state ((GstElement*) ((MediaControl*) self)->pipeline, GST_STATE_NULL);
+		}
+	}
 	_gst_object_unref0 (self->filesrc);
 	G_OBJECT_CLASS (image_control_parent_class)->finalize (obj);
 }
