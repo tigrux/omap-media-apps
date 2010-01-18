@@ -91,7 +91,7 @@ class IconListControl: MediaControl
                     break
                 add_next_files(dirname, next_files)
         except e1: Error
-            print e1.message
+            error_dialog(e1)
         finally
             files_added()
 
@@ -107,37 +107,39 @@ class IconListControl: MediaControl
                     -1)
 
     def async fill_icons(path: TreePath, end: TreePath, cancellable: Cancellable)
-        continuation = fill_icons.callback
-
-        pipeline.set_state(State.READY)
-        do
-            iter: TreeIter
-            iconlist_store.get_iter(out iter, path)
-            file: string
-            filled: bool
-            iconlist_store.get(iter, \
-                Col.FILE, out file, \
-                Col.FILLED, out filled, \
-                -1)
-            if not filled
-                continuation_error = null
-                filesrc.location = file
-                pipeline.set_state(State.PLAYING)
-                yield
-                pipeline.set_state(State.READY)
-                pixbuf: Gdk.Pixbuf
-                valid: bool
-                if (valid = continuation_error == null and last_pixbuf != null)
-                    pixbuf = (owned)last_pixbuf
-                else
-                    pixbuf = missing_pixbuf
-                iconlist_store.set(iter, \
-                    Col.PIXBUF, pixbuf, \
-                    Col.VALID, valid, \
+        if path != null and end != null
+            continuation = fill_icons.callback
+            pipeline.set_state(State.READY)
+            while not(path.compare(end) > 0 or cancellable.is_cancelled())
+                iter: TreeIter
+                iconlist_store.get_iter(out iter, path)
+                file: string
+                filled: bool
+                iconlist_store.get(iter, \
+                    Col.FILE, out file, \
+                    Col.FILLED, out filled, \
                     -1)
-            path.next()
-        while not(path.compare(end) > 0 or cancellable.is_cancelled())
-        pipeline.set_state(State.NULL)
+                if not filled
+                    continuation_error = null
+                    last_pixbuf = null
+                    filesrc.location = file
+                    pipeline.set_state(State.PLAYING)
+                    yield
+                    pipeline.set_state(State.READY)
+                    pixbuf: Gdk.Pixbuf
+                    valid: bool
+                    valid = (continuation_error == null and last_pixbuf != null)
+                    if valid
+                        pixbuf = (owned)last_pixbuf
+                    else
+                        pixbuf = missing_pixbuf
+                    iconlist_store.set(iter, \
+                        Col.PIXBUF, pixbuf, \
+                        Col.VALID, valid, \
+                        Col.FILLED, true, \
+                        -1)
+                path.next()
+            pipeline.set_state(State.NULL)
         icons_filled()
 
     def on_element(src: Gst.Object, structure: Structure)

@@ -106,6 +106,7 @@ struct _ImageViewWindow {
 	char* current_folder;
 	GtkToolButton* open_button;
 	GtkToolButton* play_button;
+	gboolean is_filling_icons;
 };
 
 struct _ImageViewWindowClass {
@@ -184,9 +185,10 @@ void icon_list_control_add_folder (IconListControl* self, const char* dirname, G
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 gboolean image_view_window_retry_change_folder (ImageViewWindow* self);
 static gboolean _image_view_window_retry_change_folder_gsource_func (gpointer self);
-void image_view_window_fill_visible_icons (ImageViewWindow* self, GCancellable* cancellable);
-gboolean image_view_window_retry_fill_visible_icons (ImageViewWindow* self);
-static gboolean _image_view_window_retry_fill_visible_icons_gsource_func (gpointer self);
+gboolean image_view_window_fill_visible_icons (ImageViewWindow* self);
+static gboolean _image_view_window_fill_visible_icons_gsource_func (gpointer self);
+gboolean image_view_window_retry_on_scrolled (ImageViewWindow* self);
+static gboolean _image_view_window_retry_on_scrolled_gsource_func (gpointer self);
 void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
 GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self);
@@ -283,31 +285,21 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
 	GtkScrolledWindow* scrolled_window;
-	GtkScrollbar* scrollbar;
 	GtkAdjustment* adjustment;
-	GtkScrollbar* _tmp1_;
-	GtkWidget* _tmp0_;
-	GtkAdjustment* _tmp2_;
-	GtkScrollbar* _tmp4_;
-	GtkWidget* _tmp3_;
-	GtkAdjustment* _tmp5_;
-	GtkIconView* _tmp6_;
+	GtkAdjustment* _tmp0_;
+	GtkAdjustment* _tmp1_;
+	GtkIconView* _tmp2_;
 	g_return_val_if_fail (self != NULL, NULL);
 	box = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0));
 	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	scrollbar = NULL;
 	adjustment = NULL;
-	scrollbar = (_tmp1_ = _g_object_ref0 ((_tmp0_ = gtk_scrolled_window_get_vscrollbar (scrolled_window), GTK_IS_SCROLLBAR (_tmp0_) ? ((GtkScrollbar*) _tmp0_) : NULL)), _g_object_unref0 (scrollbar), _tmp1_);
-	gtk_range_set_update_policy ((GtkRange*) scrollbar, GTK_UPDATE_DISCONTINUOUS);
-	adjustment = (_tmp2_ = _g_object_ref0 (gtk_scrolled_window_get_vadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp2_);
+	adjustment = (_tmp0_ = _g_object_ref0 (gtk_scrolled_window_get_vadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp0_);
 	g_signal_connect_object (adjustment, "value-changed", (GCallback) _image_view_window_on_scrolled_gtk_adjustment_value_changed, self, 0);
-	scrollbar = (_tmp4_ = _g_object_ref0 ((_tmp3_ = gtk_scrolled_window_get_hscrollbar (scrolled_window), GTK_IS_SCROLLBAR (_tmp3_) ? ((GtkScrollbar*) _tmp3_) : NULL)), _g_object_unref0 (scrollbar), _tmp4_);
-	gtk_range_set_update_policy ((GtkRange*) scrollbar, GTK_UPDATE_DISCONTINUOUS);
-	adjustment = (_tmp5_ = _g_object_ref0 (gtk_scrolled_window_get_hadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp5_);
+	adjustment = (_tmp1_ = _g_object_ref0 (gtk_scrolled_window_get_hadjustment (scrolled_window)), _g_object_unref0 (adjustment), _tmp1_);
 	g_signal_connect_object (adjustment, "value-changed", (GCallback) _image_view_window_on_scrolled_gtk_adjustment_value_changed, self, 0);
-	self->icon_view = (_tmp6_ = g_object_ref_sink ((GtkIconView*) gtk_icon_view_new ()), _g_object_unref0 (self->icon_view), _tmp6_);
+	self->icon_view = (_tmp2_ = g_object_ref_sink ((GtkIconView*) gtk_icon_view_new ()), _g_object_unref0 (self->icon_view), _tmp2_);
 	gtk_container_add ((GtkContainer*) scrolled_window, (GtkWidget*) self->icon_view);
 	gtk_icon_view_set_selection_mode (self->icon_view, GTK_SELECTION_BROWSE);
 	gtk_icon_view_set_model (self->icon_view, (GtkTreeModel*) self->iconlist_store);
@@ -320,7 +312,6 @@ GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self) {
 	g_signal_connect_object (self->icon_view, "item-activated", (GCallback) _image_view_window_on_icon_activated_gtk_icon_view_item_activated, self, 0);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
-	_g_object_unref0 (scrollbar);
 	_g_object_unref0 (adjustment);
 	return result;
 }
@@ -517,16 +508,21 @@ gboolean image_view_window_retry_change_folder (ImageViewWindow* self) {
 }
 
 
+static gboolean _image_view_window_fill_visible_icons_gsource_func (gpointer self) {
+	return image_view_window_fill_visible_icons (self);
+}
+
+
 void image_view_window_on_iconlist_files_added (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->cancellable != NULL) {
-		image_view_window_fill_visible_icons (self, self->cancellable);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 
 
-static gboolean _image_view_window_retry_fill_visible_icons_gsource_func (gpointer self) {
-	return image_view_window_retry_fill_visible_icons (self);
+static gboolean _image_view_window_retry_on_scrolled_gsource_func (gpointer self) {
+	return image_view_window_retry_on_scrolled (self);
 }
 
 
@@ -535,14 +531,17 @@ void image_view_window_on_scrolled (ImageViewWindow* self) {
 	if (self->cancellable == NULL) {
 		GCancellable* _tmp0_;
 		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
-		image_view_window_fill_visible_icons (self, self->cancellable);
+		image_view_window_fill_visible_icons (self);
 	} else {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
+		if (self->is_filling_icons) {
+			g_cancellable_cancel (self->cancellable);
+		}
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_on_scrolled_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 
 
-gboolean image_view_window_retry_fill_visible_icons (ImageViewWindow* self) {
+gboolean image_view_window_retry_on_scrolled (ImageViewWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->cancellable == NULL) {
@@ -555,7 +554,8 @@ gboolean image_view_window_retry_fill_visible_icons (ImageViewWindow* self) {
 }
 
 
-void image_view_window_fill_visible_icons (ImageViewWindow* self, GCancellable* cancellable) {
+gboolean image_view_window_fill_visible_icons (ImageViewWindow* self) {
+	gboolean result;
 	GtkTreePath* start;
 	GtkTreePath* end;
 	GtkTreePath* _tmp5_;
@@ -564,16 +564,18 @@ void image_view_window_fill_visible_icons (ImageViewWindow* self, GCancellable* 
 	GtkTreePath* _tmp2_;
 	gboolean _tmp1_;
 	GtkTreePath* _tmp0_ = NULL;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cancellable != NULL);
+	g_return_val_if_fail (self != NULL, FALSE);
 	start = NULL;
 	end = NULL;
 	_tmp4_ = (_tmp1_ = gtk_icon_view_get_visible_range (self->icon_view, &_tmp0_, &_tmp3_), start = (_tmp2_ = _gtk_tree_path_copy0 (_tmp0_), _gtk_tree_path_free0 (start), _tmp2_), _tmp1_);
 	end = (_tmp5_ = _gtk_tree_path_copy0 (_tmp3_), _gtk_tree_path_free0 (end), _tmp5_);
 	_tmp4_;
-	icon_list_control_fill_icons (self->iconlist_control, start, end, cancellable, NULL, NULL);
+	self->is_filling_icons = TRUE;
+	icon_list_control_fill_icons (self->iconlist_control, start, end, self->cancellable, NULL, NULL);
+	result = FALSE;
 	_gtk_tree_path_free0 (start);
 	_gtk_tree_path_free0 (end);
+	return result;
 }
 
 
@@ -581,6 +583,7 @@ void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->cancellable), _tmp0_);
+	self->is_filling_icons = FALSE;
 }
 
 

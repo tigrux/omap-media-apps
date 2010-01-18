@@ -94,7 +94,6 @@ struct _IconListControlAddFolderData {
 	GFile* dir;
 	GFileEnumerator* file_etor;
 	GList* next_files;
-	char* _tmp0_;
 	GError * e1;
 	GError * _inner_error_;
 };
@@ -107,19 +106,20 @@ struct _IconListControlFillIconsData {
 	GtkTreePath* path;
 	GtkTreePath* end;
 	GCancellable* cancellable;
-	GSourceFunc _tmp0_;
-	gboolean _tmp1_;
+	gboolean _tmp0_;
+	GSourceFunc _tmp1_;
 	gboolean _tmp2_;
 	GtkTreeIter iter;
 	char* file;
 	gboolean filled;
 	GError* _tmp3_;
+	GdkPixbuf* _tmp4_;
 	GdkPixbuf* pixbuf;
 	gboolean valid;
-	gboolean _tmp4_;
-	GdkPixbuf* _tmp6_;
-	GdkPixbuf* _tmp5_;
+	gboolean _tmp5_;
 	GdkPixbuf* _tmp7_;
+	GdkPixbuf* _tmp6_;
+	GdkPixbuf* _tmp8_;
 };
 
 
@@ -133,7 +133,7 @@ extern gboolean icon_list_control_pixbufs_loaded;
 gboolean icon_list_control_pixbufs_loaded = FALSE;
 static gpointer icon_list_control_parent_class = NULL;
 
-#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
+#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsin name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
 GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
@@ -154,6 +154,7 @@ static void icon_list_control_add_folder_data_free (gpointer _data);
 static void icon_list_control_add_folder_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static void _g_list_free_g_object_unref (GList* self);
 void icon_list_control_add_next_files (IconListControl* self, const char* dirname, GList* files);
+void error_dialog (GError* _error_);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* data);
@@ -407,8 +408,7 @@ static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* d
 				data->e1 = data->_inner_error_;
 				data->_inner_error_ = NULL;
 				{
-					g_print ("%s", data->_tmp0_ = g_strconcat (data->e1->message, "\n", NULL));
-					_g_free0 (data->_tmp0_);
+					error_dialog (data->e1);
 					_g_error_free0 (data->e1);
 				}
 			}
@@ -522,26 +522,28 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 		g_assert_not_reached ();
 		case 0:
 		{
-			data->self->continuation = (data->_tmp0_ = _icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp0_);
-			gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
-			{
-				data->_tmp1_ = TRUE;
+			if (data->path != NULL) {
+				data->_tmp0_ = data->end != NULL;
+			} else {
+				data->_tmp0_ = FALSE;
+			}
+			if (data->_tmp0_) {
+				data->self->continuation = (data->_tmp1_ = _icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
+				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
 				while (TRUE) {
-					if (!data->_tmp1_) {
-						if (gtk_tree_path_compare (data->path, data->end) > 0) {
-							data->_tmp2_ = TRUE;
-						} else {
-							data->_tmp2_ = g_cancellable_is_cancelled (data->cancellable);
-						}
-						if (!(!data->_tmp2_)) {
-							break;
-						}
+					if (gtk_tree_path_compare (data->path, data->end) > 0) {
+						data->_tmp2_ = TRUE;
+					} else {
+						data->_tmp2_ = g_cancellable_is_cancelled (data->cancellable);
 					}
-					data->_tmp1_ = FALSE;
+					if (!(!data->_tmp2_)) {
+						break;
+					}
 					gtk_tree_model_get_iter ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, data->path);
 					gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_FILE, &data->file, ICON_LIST_CONTROL_COL_FILLED, &data->filled, -1, -1);
 					if (!data->filled) {
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
+						icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp4_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
 						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_PLAYING);
 						data->_state_ = 3;
@@ -550,23 +552,24 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						;
 						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
 						if (data->self->continuation_error == NULL) {
-							data->_tmp4_ = icon_list_control_last_pixbuf != NULL;
+							data->_tmp5_ = icon_list_control_last_pixbuf != NULL;
 						} else {
-							data->_tmp4_ = FALSE;
+							data->_tmp5_ = FALSE;
 						}
-						if (data->valid = data->_tmp4_) {
-							data->pixbuf = (data->_tmp6_ = (data->_tmp5_ = icon_list_control_last_pixbuf, icon_list_control_last_pixbuf = NULL, data->_tmp5_), _g_object_unref0 (data->pixbuf), data->_tmp6_);
+						data->valid = data->_tmp5_;
+						if (data->valid) {
+							data->pixbuf = (data->_tmp7_ = (data->_tmp6_ = icon_list_control_last_pixbuf, icon_list_control_last_pixbuf = NULL, data->_tmp6_), _g_object_unref0 (data->pixbuf), data->_tmp7_);
 						} else {
-							data->pixbuf = (data->_tmp7_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp7_);
+							data->pixbuf = (data->_tmp8_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp8_);
 						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, -1, -1);
+						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, -1, -1);
 						_g_object_unref0 (data->pixbuf);
 					}
 					gtk_tree_path_next (data->path);
 					_g_free0 (data->file);
 				}
+				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_NULL);
 			}
-			gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_NULL);
 			g_signal_emit_by_name (data->self, "icons-filled");
 		}
 		{

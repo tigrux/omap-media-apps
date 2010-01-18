@@ -16,6 +16,7 @@ class ImageViewWindow: ApplicationWindow
     current_folder: string
     open_button: ToolButton
     play_button: ToolButton
+    is_filling_icons: bool
 
     init
         iconlist_store = new_imagelist_store()
@@ -49,16 +50,11 @@ class ImageViewWindow: ApplicationWindow
         box.pack_start(scrolled_window, true, true, 0)
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
         
-        scrollbar: Scrollbar
         adjustment: Adjustment
 
-        scrollbar = scrolled_window.get_vscrollbar() as Scrollbar
-        scrollbar.set_update_policy(UpdateType.DISCONTINUOUS)
         adjustment = scrolled_window.get_vadjustment()
         adjustment.value_changed += on_scrolled
 
-        scrollbar = scrolled_window.get_hscrollbar() as Scrollbar
-        scrollbar.set_update_policy(UpdateType.DISCONTINUOUS)
         adjustment = scrolled_window.get_hadjustment()
         adjustment.value_changed += on_scrolled
         
@@ -172,29 +168,34 @@ class ImageViewWindow: ApplicationWindow
 
     def on_iconlist_files_added()
         if cancellable != null
-            fill_visible_icons(cancellable)
+            Idle.add(fill_visible_icons)
 
     def on_scrolled()
         if cancellable == null
             cancellable = new Cancellable()
-            fill_visible_icons(cancellable)
+            fill_visible_icons()
         else
-            Idle.add(retry_fill_visible_icons)
+            if is_filling_icons
+                cancellable.cancel()
+            Idle.add(retry_on_scrolled)
 
-    def retry_fill_visible_icons(): bool
+    def retry_on_scrolled(): bool
         if cancellable == null
             on_scrolled()
             return false
         return true
 
-    def fill_visible_icons(cancellable: Cancellable)
+    def fill_visible_icons(): bool
         start: TreePath
         end: TreePath
         icon_view.get_visible_range(out start, out end)
+        is_filling_icons = true
         iconlist_control.fill_icons(start, end, cancellable)
+        return false
 
     def on_iconlist_icons_filled()
         cancellable = null
+        is_filling_icons = false
 
     def new_imagelist_store(): ListStore
         var s = typeof(string)
