@@ -34,7 +34,7 @@ class IconListControl: MediaControl
     pixbuf_q: static Quark = Quark.from_string("pixbuf")
     pixbufs_loaded: static bool
 
-    iconlist_store: ListStore
+    prop iconlist_store: ListStore
     continuation: SourceFunc
     continuation_error: Error
 
@@ -42,19 +42,12 @@ class IconListControl: MediaControl
     event icons_filled()
 
     init
-        setup_model()
         eos_message += on_eos
         error_message += on_error
         element_message += on_element
 
-    def setup_model()
-        var s = typeof(string)
-        var p = typeof(Gdk.Pixbuf)
-        var b = typeof(bool)
-        var i = typeof(int)
-        iconlist_store = new ListStore(7, s, s, p, b, b, i, i)
-
-    construct() raises Error
+    construct(model: ListStore) raises Error
+        iconlist_store = model
         if not pixbufs_loaded
             setup_icons()
             pixbufs_loaded = true

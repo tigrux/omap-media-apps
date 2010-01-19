@@ -22,30 +22,26 @@ class ImageViewWindow: ApplicationWindow
     cancellable: Cancellable
 
     init
-        try
-            setup_elements()
-            setup_widgets()
-        except e: Error
-            error_dialog(e)
+        iconlist_store = new_imagelist_store()
+        setup_widgets()
 
     final
         if iconlist_control != null
             iconlist_control.files_added.disconnect(on_iconlist_files_added)
 
-    def setup_elements() raises Error
-        iconlist_control = new IconListControl()
-        image_control = new ImageControl()
-        iconlist_store = iconlist_control.iconlist_store
+    construct() raises Error
+        iconlist_control = new IconListControl(iconlist_store)
         iconlist_control.files_added += on_iconlist_files_added
         iconlist_control.icons_filled += on_iconlist_icons_filled
+        image_control = new ImageControl()
         image_control.eos_message += on_image_control_eos
+        video_area.set_control(image_control)
 
     def setup_widgets()
         set_title(TITLE)
         setup_toolbar()
         setup_notebook()
         video_area.realize()
-        video_area.set_control(image_control)
         main_box.show_all()
 
     def setup_notebook()
@@ -252,4 +248,12 @@ class ImageViewWindow: ApplicationWindow
     def on_iconlist_icons_filled()
         cancellable = null
         is_filling_icons = false
+
+    def new_imagelist_store(): ListStore
+        var s = typeof(string)
+        var p = typeof(Gdk.Pixbuf)
+        var b = typeof(bool)
+        var i = typeof(int)
+        var model = new ListStore(7, s, s, p, b, b, i, i)
+        return model
 

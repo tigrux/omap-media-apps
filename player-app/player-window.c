@@ -76,8 +76,6 @@ typedef struct _DebugDialog DebugDialog;
 typedef struct _DebugDialogClass DebugDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-typedef struct _MediaControlPrivate MediaControlPrivate;
-typedef struct _PlayListControlPrivate PlayListControlPrivate;
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
@@ -128,30 +126,6 @@ struct _PlayerWindowClass {
 	ApplicationWindowClass parent_class;
 };
 
-struct _MediaControl {
-	GObject parent_instance;
-	MediaControlPrivate * priv;
-	GstBus* bus;
-	GstBin* pipeline;
-};
-
-struct _MediaControlClass {
-	GObjectClass parent_class;
-};
-
-struct _PlayListControl {
-	MediaControl parent_instance;
-	PlayListControlPrivate * priv;
-	GtkListStore* playlist_store;
-	GtkTreePath* current_row;
-	gint number_of_rows;
-	GstElement* player;
-};
-
-struct _PlayListControlClass {
-	MediaControlClass parent_class;
-};
-
 typedef enum  {
 	APPLICATION_TAB_LIST,
 	APPLICATION_TAB_VIDEO
@@ -171,8 +145,8 @@ GType debug_dialog_get_type (void);
 enum  {
 	PLAYER_WINDOW_DUMMY_PROPERTY
 };
-PlayListControl* play_list_control_new (void);
-PlayListControl* play_list_control_construct (GType object_type);
+PlayListControl* play_list_control_new (GtkListStore* store);
+PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
 void player_window_on_playlist_control_eos (PlayerWindow* self, GstObject* src);
 static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self);
 void player_window_on_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug);
@@ -200,8 +174,8 @@ void player_window_on_next (PlayerWindow* self);
 static void _player_window_on_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_stop (PlayerWindow* self);
 static void _player_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void application_window_toolbar_add_expander (ApplicationWindow* self);
 GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self);
+void application_window_toolbar_add_expander (ApplicationWindow* self);
 void player_window_on_add (PlayerWindow* self);
 static void _player_window_on_add_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_remove (PlayerWindow* self);
@@ -243,6 +217,7 @@ void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
 gint play_list_control_get_icon_column (void);
 gint play_list_control_get_name_column (void);
+GtkListStore* player_window_new_playlist_store (PlayerWindow* self);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
 gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* iter);
@@ -273,11 +248,6 @@ static void player_window_finalize (GObject* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
 
 
 static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self) {
@@ -312,10 +282,8 @@ static void _player_window_on_playlist_control_moved_play_list_control_moved (Pl
 
 void player_window_setup_elements (PlayerWindow* self) {
 	PlayListControl* _tmp0_;
-	GtkListStore* _tmp1_;
 	g_return_if_fail (self != NULL);
-	self->playlist_control = (_tmp0_ = play_list_control_new (), _g_object_unref0 (self->playlist_control), _tmp0_);
-	self->playlist_store = (_tmp1_ = _g_object_ref0 (self->playlist_control->playlist_store), _g_object_unref0 (self->playlist_store), _tmp1_);
+	self->playlist_control = (_tmp0_ = play_list_control_new (self->playlist_store), _g_object_unref0 (self->playlist_control), _tmp0_);
 	g_signal_connect_object ((MediaControl*) self->playlist_control, "eos-message", (GCallback) _player_window_on_playlist_control_eos_media_control_eos_message, self, 0);
 	g_signal_connect_object ((MediaControl*) self->playlist_control, "error-message", (GCallback) _player_window_on_playlist_control_error_media_control_error_message, self, 0);
 	g_signal_connect_object (self->playlist_control, "playing", (GCallback) _player_window_on_playlist_control_playing_play_list_control_playing, self, 0);
@@ -403,7 +371,6 @@ void player_window_setup_toolbar (PlayerWindow* self) {
 	stop_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP));
 	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) stop_button);
 	g_signal_connect_object (stop_button, "clicked", (GCallback) _player_window_on_stop_gtk_tool_button_clicked, self, 0);
-	application_window_toolbar_add_expander ((ApplicationWindow*) self);
 	volume_button_item = g_object_ref_sink (gtk_tool_item_new ());
 	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) volume_button_item);
 	self->volume_button = (_tmp2_ = player_window_new_volume_button_with_mute (self), _g_object_unref0 (self->volume_button), _tmp2_);
@@ -504,6 +471,11 @@ void player_window_on_prev (PlayerWindow* self) {
 			player_window_on_play (self);
 		}
 	}
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -679,6 +651,18 @@ GtkTreeView* player_window_new_playlist_view (PlayerWindow* self) {
 	gtk_tree_view_insert_column_with_attributes (view, -1, "Song", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_name_column (), NULL, NULL);
 	_g_object_unref0 (_tmp1_);
 	result = view;
+	return result;
+}
+
+
+GtkListStore* player_window_new_playlist_store (PlayerWindow* self) {
+	GtkListStore* result;
+	GType s;
+	GtkListStore* model;
+	g_return_val_if_fail (self != NULL, NULL);
+	s = G_TYPE_STRING;
+	model = gtk_list_store_new (3, s, s, s, NULL);
+	result = model;
 	return result;
 }
 
@@ -1055,6 +1039,8 @@ static GObject * player_window_constructor (GType type, guint n_construct_proper
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = PLAYER_WINDOW (obj);
 	{
+		GtkListStore* _tmp0_;
+		self->playlist_store = (_tmp0_ = player_window_new_playlist_store (self), _g_object_unref0 (self->playlist_store), _tmp0_);
 		player_window_setup_elements (self);
 		player_window_setup_widgets (self);
 	}
