@@ -135,7 +135,6 @@ typedef enum  {
 
 static gpointer player_window_parent_class = NULL;
 
-#define UPDATE_INTERVAL ((guint) 200)
 #define TITLE "PlayerApp"
 GType application_window_get_type (void);
 GType player_window_get_type (void);
@@ -945,7 +944,7 @@ void player_window_add_update_scale_timeout (PlayerWindow* self) {
 	if (self->update_seeking_scale_id != 0) {
 		return;
 	}
-	timeout_id = g_timeout_add_full (G_PRIORITY_DEFAULT, UPDATE_INTERVAL, _player_window_update_scale_timeout_gsource_func, g_object_ref (self), g_object_unref);
+	timeout_id = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 500, _player_window_update_scale_timeout_gsource_func, g_object_ref (self), g_object_unref);
 	self->update_seeking_scale_id = timeout_id;
 }
 

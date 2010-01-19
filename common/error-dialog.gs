@@ -11,7 +11,6 @@ class DebugDialog: Dialog
 
     init
         set_title("Error")
-        set_default_size(3*DEFAULT_WIDTH/4, 3*DEFAULT_HEIGHT/4)
         add_button(STOCK_CLOSE, -1)
         set_modal(true)
         var content_area = get_content_area() as Box
@@ -24,6 +23,9 @@ class DebugDialog: Dialog
             closed()
 
     construct(parent: Window)
+        width, height: int
+        parent.get_size(out width, out height)
+        set_default_size(3*width/4, 3*height/4)
         set_transient_for(parent)
 
     def add_error_debug(error: Error, debug: string)

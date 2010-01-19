@@ -47,8 +47,6 @@ DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
 void debug_dialog_text_insert_new_line (DebugDialog* self, GtkTextIter* iter);
 void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const char* debug);
 GtkBox* debug_dialog_new_error_box (DebugDialog* self);
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 480
 static void _lambda1_ (DebugDialog* self);
 static void __lambda1__gtk_dialog_response (DebugDialog* _sender, gint response_id, gpointer self);
 static gboolean _lambda2_ (DebugDialog* self);
@@ -63,8 +61,12 @@ void error_dialog (GError* _error_);
 
 DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent) {
 	DebugDialog * self;
+	gint width = 0;
+	gint height = 0;
 	g_return_val_if_fail (parent != NULL, NULL);
 	self = g_object_newv (object_type, 0, NULL);
+	gtk_window_get_size (parent, &width, &height);
+	gtk_window_set_default_size ((GtkWindow*) self, (3 * width) / 4, (3 * height) / 4);
 	gtk_window_set_transient_for ((GtkWindow*) self, parent);
 	return self;
 }
@@ -174,7 +176,6 @@ static GObject * debug_dialog_constructor (GType type, guint n_construct_propert
 		GtkBox* content_area;
 		GtkBox* _tmp1_;
 		gtk_window_set_title ((GtkWindow*) self, "Error");
-		gtk_window_set_default_size ((GtkWindow*) self, (3 * DEFAULT_WIDTH) / 4, (3 * DEFAULT_HEIGHT) / 4);
 		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, -1);
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
 		content_area = _g_object_ref0 ((_tmp0_ = gtk_dialog_get_content_area ((GtkDialog*) self), GTK_IS_BOX (_tmp0_) ? ((GtkBox*) _tmp0_) : NULL));

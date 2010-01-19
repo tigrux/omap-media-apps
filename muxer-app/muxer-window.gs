@@ -5,13 +5,13 @@ uses Gtk
 
 const TITLE: string = "MuxerApp"
 
-enum MuxerComboCol
-    GROUP
-    PREVIEW
-    RECORD
-
 
 class MuxerWindow: ApplicationWindow
+
+    enum ComboCol
+        GROUP
+        PREVIEW
+        RECORD
 
     combo_box: ComboBox
     combo_model: ListStore
@@ -58,7 +58,7 @@ class MuxerWindow: ApplicationWindow
         
         var renderer = new CellRendererText()
         combo_box.pack_start(renderer, true)
-        combo_box.set_attributes(renderer, "text", MuxerComboCol.GROUP, null)
+        combo_box.set_attributes(renderer, "text", ComboCol.GROUP, null)
         combo_box.changed += on_combo_changed
 
         toolbar_add_expander()
@@ -145,9 +145,9 @@ class MuxerWindow: ApplicationWindow
                     continue
                 combo_model.insert_with_values( \
                     null, -1, \
-                    MuxerComboCol.GROUP, group, \
-                    MuxerComboCol.PREVIEW, preview, \
-                    MuxerComboCol.RECORD, record, \
+                    ComboCol.GROUP, group, \
+                    ComboCol.PREVIEW, preview, \
+                    ComboCol.RECORD, record, \
                     -1)
         except e: KeyFileError
             error_dialog(e)
@@ -157,8 +157,8 @@ class MuxerWindow: ApplicationWindow
         if not combo_box.get_active_iter(out iter)
             return false
         combo_model.get(iter, \
-            MuxerComboCol.PREVIEW, out preview, \
-            MuxerComboCol.RECORD, out record, \
+            ComboCol.PREVIEW, out preview, \
+            ComboCol.RECORD, out record, \
             -1)
         return true
 

@@ -3,7 +3,6 @@
 uses Gtk
 
 
-const UPDATE_INTERVAL: uint = 200
 const TITLE: string = "PlayerApp"
 
 
@@ -359,7 +358,7 @@ class PlayerWindow: ApplicationWindow
     def add_update_scale_timeout()
         if update_seeking_scale_id != 0
             return
-        var timeout_id = Timeout.add(UPDATE_INTERVAL, update_scale_timeout)
+        var timeout_id = Timeout.add(500, update_scale_timeout)
         update_seeking_scale_id = timeout_id
 
     def remove_update_scale_timeout()

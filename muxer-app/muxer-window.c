@@ -10,8 +10,6 @@
 #include <gst/gst.h>
 
 
-#define TYPE_MUXER_COMBO_COL (muxer_combo_col_get_type ())
-
 #define TYPE_APPLICATION_WINDOW (application_window_get_type ())
 #define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
 #define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
@@ -73,6 +71,8 @@ typedef struct _VideoAreaClass VideoAreaClass;
 
 typedef struct _DebugDialog DebugDialog;
 typedef struct _DebugDialogClass DebugDialogClass;
+
+#define MUXER_WINDOW_TYPE_COMBO_COL (muxer_window_combo_col_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
@@ -87,12 +87,6 @@ typedef struct _DebugDialogClass DebugDialogClass;
 typedef struct _MuxerConfigParser MuxerConfigParser;
 typedef struct _MuxerConfigParserClass MuxerConfigParserClass;
 #define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
-
-typedef enum  {
-	MUXER_COMBO_COL_GROUP,
-	MUXER_COMBO_COL_PREVIEW,
-	MUXER_COMBO_COL_RECORD
-} MuxerComboCol;
 
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
@@ -124,11 +118,16 @@ struct _MuxerWindowClass {
 	ApplicationWindowClass parent_class;
 };
 
+typedef enum  {
+	MUXER_WINDOW_COMBO_COL_GROUP,
+	MUXER_WINDOW_COMBO_COL_PREVIEW,
+	MUXER_WINDOW_COMBO_COL_RECORD
+} MuxerWindowComboCol;
+
 
 static gpointer muxer_window_parent_class = NULL;
 
 #define TITLE "MuxerApp"
-GType muxer_combo_col_get_type (void);
 GType application_window_get_type (void);
 GType muxer_window_get_type (void);
 GType media_control_get_type (void);
@@ -138,6 +137,7 @@ GType debug_dialog_get_type (void);
 enum  {
 	MUXER_WINDOW_DUMMY_PROPERTY
 };
+GType muxer_window_combo_col_get_type (void);
 void muxer_window_setup_toolbar (MuxerWindow* self);
 void muxer_window_setup_notebook (MuxerWindow* self);
 void muxer_window_setup_widgets (MuxerWindow* self);
@@ -188,13 +188,13 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 
 
-GType muxer_combo_col_get_type (void) {
-	static GType muxer_combo_col_type_id = 0;
-	if (G_UNLIKELY (muxer_combo_col_type_id == 0)) {
-		static const GEnumValue values[] = {{MUXER_COMBO_COL_GROUP, "MUXER_COMBO_COL_GROUP", "group"}, {MUXER_COMBO_COL_PREVIEW, "MUXER_COMBO_COL_PREVIEW", "preview"}, {MUXER_COMBO_COL_RECORD, "MUXER_COMBO_COL_RECORD", "record"}, {0, NULL, NULL}};
-		muxer_combo_col_type_id = g_enum_register_static ("MuxerComboCol", values);
+GType muxer_window_combo_col_get_type (void) {
+	static GType muxer_window_combo_col_type_id = 0;
+	if (G_UNLIKELY (muxer_window_combo_col_type_id == 0)) {
+		static const GEnumValue values[] = {{MUXER_WINDOW_COMBO_COL_GROUP, "MUXER_WINDOW_COMBO_COL_GROUP", "group"}, {MUXER_WINDOW_COMBO_COL_PREVIEW, "MUXER_WINDOW_COMBO_COL_PREVIEW", "preview"}, {MUXER_WINDOW_COMBO_COL_RECORD, "MUXER_WINDOW_COMBO_COL_RECORD", "record"}, {0, NULL, NULL}};
+		muxer_window_combo_col_type_id = g_enum_register_static ("MuxerWindowComboCol", values);
 	}
-	return muxer_combo_col_type_id;
+	return muxer_window_combo_col_type_id;
 }
 
 
@@ -260,7 +260,7 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 	gtk_container_add ((GtkContainer*) combo_item, (GtkWidget*) self->combo_box);
 	renderer = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ());
 	gtk_cell_layout_pack_start ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, TRUE);
-	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", MUXER_COMBO_COL_GROUP, NULL, NULL);
+	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", MUXER_WINDOW_COMBO_COL_GROUP, NULL, NULL);
 	g_signal_connect_object (self->combo_box, "changed", (GCallback) _muxer_window_on_combo_changed_gtk_combo_box_changed, self, 0);
 	application_window_toolbar_add_expander ((ApplicationWindow*) self);
 	self->record_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_RECORD)), _g_object_unref0 (self->record_button), _tmp3_);
@@ -548,7 +548,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 						_g_free0 (record);
 						continue;
 					}
-					gtk_list_store_insert_with_values (self->combo_model, NULL, -1, MUXER_COMBO_COL_GROUP, group, MUXER_COMBO_COL_PREVIEW, preview, MUXER_COMBO_COL_RECORD, record, -1, -1);
+					gtk_list_store_insert_with_values (self->combo_model, NULL, -1, MUXER_WINDOW_COMBO_COL_GROUP, group, MUXER_WINDOW_COMBO_COL_PREVIEW, preview, MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
 					_g_free0 (group);
 					_g_free0 (preview);
 					_g_free0 (record);
@@ -595,7 +595,7 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 		result = FALSE;
 		return result;
 	}
-	gtk_tree_model_get ((GtkTreeModel*) self->combo_model, &iter, MUXER_COMBO_COL_PREVIEW, preview, MUXER_COMBO_COL_RECORD, record, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->combo_model, &iter, MUXER_WINDOW_COMBO_COL_PREVIEW, preview, MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
 	result = TRUE;
 	return result;
 }

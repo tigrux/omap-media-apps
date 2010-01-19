@@ -2,6 +2,17 @@
 
 uses Gtk
 
+const APPLICATION_DEFAULT_STYLE: string = """
+style "custom"
+{
+    GtkRange::slider-width = 24
+    GtkComboBox::arrow-size = 18
+    GtkComboBox::appears-as-list = 1
+    font_name = "Sans 12"
+}
+
+widget_class "*" style "custom"
+"""
 
 enum ApplicationTab
     LIST
@@ -15,21 +26,21 @@ class ApplicationWindow: Window
     rc_parsed: static bool = rc_parse()
 
     def static rc_parse(): bool
-        rc_parse_string(DEFAULT_STYLE)
+        rc_parse_string(APPLICATION_DEFAULT_STYLE)
         return true
 
     init
         settings: Gtk.Settings = get_settings()
         settings.set("gtk-touchscreen-mode", true)
 
-        set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        set_default_size(800, 480)
         destroy += on_quit
 
         main_box = new VBox(false, 0)
         add(main_box)
 
         toolbar = new Toolbar()
-        toolbar.set_icon_size(ICON_SIZE)
+        toolbar.set_icon_size(IconSize.DND)
         main_box.pack_start(toolbar, false, false, 0)
         
         notebook = new Notebook()
