@@ -36,11 +36,15 @@ class PlayerWindow: ApplicationWindow
     debug_dialog: DebugDialog
 
     init
-        playlist_store = new_playlist_store()
-        setup_elements()
+        setup_model()
+        setup_controls()
         setup_widgets()
 
-    def setup_elements()
+    def setup_model()
+        var s = typeof(string)
+        playlist_store = new ListStore(3, s, s, s)
+
+    def setup_controls()
         playlist_control = new PlayListControl(playlist_store)
         playlist_control.eos_message += on_playlist_control_eos
         playlist_control.error_message += on_playlist_control_error
@@ -219,11 +223,6 @@ class PlayerWindow: ApplicationWindow
             "markup", playlist_control.get_name_column(), null)
 
         return view
-
-    def new_playlist_store(): ListStore
-        var s = typeof(string)
-        var model = new ListStore(3, s, s, s)
-        return model
 
     def get_and_select_iter(out iter: TreeIter): bool
         if not playlist_selection.get_selected(null, out iter)

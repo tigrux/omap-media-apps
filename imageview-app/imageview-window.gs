@@ -22,7 +22,7 @@ class ImageViewWindow: ApplicationWindow
     cancellable: Cancellable
 
     init
-        iconlist_store = new_imagelist_store()
+        setup_model()
         setup_widgets()
 
     final
@@ -30,6 +30,16 @@ class ImageViewWindow: ApplicationWindow
             iconlist_control.files_added.disconnect(on_iconlist_files_added)
 
     construct() raises Error
+        setup_controls()
+
+    def setup_model()
+        var s = typeof(string)
+        var p = typeof(Gdk.Pixbuf)
+        var b = typeof(bool)
+        var i = typeof(int)
+        iconlist_store = new ListStore(7, s, s, p, b, b, i, i)
+
+    def setup_controls() raises Error
         iconlist_control = new IconListControl(iconlist_store)
         iconlist_control.files_added += on_iconlist_files_added
         iconlist_control.icons_filled += on_iconlist_icons_filled
@@ -248,12 +258,4 @@ class ImageViewWindow: ApplicationWindow
     def on_iconlist_icons_filled()
         cancellable = null
         is_filling_icons = false
-
-    def new_imagelist_store(): ListStore
-        var s = typeof(string)
-        var p = typeof(Gdk.Pixbuf)
-        var b = typeof(bool)
-        var i = typeof(int)
-        var model = new ListStore(7, s, s, p, b, b, i, i)
-        return model
 
