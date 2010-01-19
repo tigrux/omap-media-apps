@@ -31,6 +31,8 @@ class ImageViewWindow: ApplicationWindow
         iconlist_control.files_added += on_iconlist_files_added
         iconlist_control.icons_filled += on_iconlist_icons_filled
         image_control = new ImageControl()
+        image_control.eos_message += def()
+            notebook.set_current_page(ApplicationTab.VIDEO)
         video_area.set_control(image_control)
 
     def setup_widgets()
@@ -53,13 +55,14 @@ class ImageViewWindow: ApplicationWindow
         adjustment: Adjustment
 
         adjustment = scrolled_window.get_vadjustment()
-        adjustment.value_changed += on_scrolled
+        adjustment.value_changed += do_fill_visible_icons
 
         adjustment = scrolled_window.get_hadjustment()
-        adjustment.value_changed += on_scrolled
+        adjustment.value_changed += do_fill_visible_icons
         
         icon_view = new IconView()
         scrolled_window.add(icon_view)
+        icon_view.size_request += do_fill_visible_icons
         icon_view.set_selection_mode(SelectionMode.BROWSE)
         icon_view.set_model(iconlist_store)
         icon_view.set_text_column(iconlist_control.get_text_column())
@@ -82,6 +85,7 @@ class ImageViewWindow: ApplicationWindow
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.set_state(Gst.State.PLAYING)
+            open_button.set_stock_id(STOCK_CLOSE)
 
     def new_video_box(): Box
         var box = new VBox(false, 0)
@@ -90,12 +94,7 @@ class ImageViewWindow: ApplicationWindow
         box.pack_start(scrolled_window, true, true, 0)
         video_area = new VideoArea()
         scrolled_window.add_with_viewport(video_area)
-        video_area.prepared += on_video_area_prepared
         return box
-
-    def on_video_area_prepared()
-        notebook.set_current_page(ApplicationTab.VIDEO)
-        open_button.set_stock_id(STOCK_CLOSE)
 
     def setup_toolbar()
         var chooser_item = new ToolItem()
@@ -126,7 +125,7 @@ class ImageViewWindow: ApplicationWindow
             if get_and_select_iter(out iter)
                 icon_view.item_activated(iconlist_store.get_path(iter))
         else
-            image_control.set_state(Gst.State.NULL)
+            image_control.set_state(Gst.State.READY)
             notebook.set_current_page(ApplicationTab.LIST)
             open_button.set_stock_id(STOCK_OPEN)
 
@@ -173,18 +172,18 @@ class ImageViewWindow: ApplicationWindow
         if cancellable != null
             Idle.add(fill_visible_icons)
 
-    def on_scrolled()
+    def do_fill_visible_icons()
         if cancellable == null
             cancellable = new Cancellable()
             fill_visible_icons()
         else
             if is_filling_icons
                 cancellable.cancel()
-            Idle.add(retry_on_scrolled)
+            Idle.add(retry_do_fill_visible_icons)
 
-    def retry_on_scrolled(): bool
+    def retry_do_fill_visible_icons(): bool
         if cancellable == null
-            on_scrolled()
+            do_fill_visible_icons()
             return false
         return true
 
