@@ -10,8 +10,9 @@ class MediaControl: GLib.Object
     event eos_message(src: Gst.Object)
     event error_message(src: Gst.Object, error: Error, debug: string)
     event element_message(src: Gst.Object, structure: Structure)
-    event segment_start_message(format: Format, position: int64)
-    event segment_done_message(format: Format, position: int64)
+    event segment_start_message(src: Gst.Object, format: Format, position: int64)
+    event segment_done_message(src: Gst.Object, format: Format, position: int64)
+    event tag_message(src: Gst.Object, tag_list: TagList)
     event state_changed_message(src: Gst.Object, \
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
@@ -47,10 +48,16 @@ class MediaControl: GLib.Object
                 format: Format
                 position: int64
                 message.parse_segment_start(out format, out position)
+                segment_start_message(message.src, format, position)
             when Gst.MessageType.SEGMENT_DONE
                 format: Format
                 position: int64
                 message.parse_segment_done(out format, out position)
+                segment_done_message(message.src, format, position)
+            when Gst.MessageType.TAG
+                tag_list: TagList
+                message.parse_tag(out tag_list)
+                tag_message(message.src, tag_list)
             default
                 pass
 

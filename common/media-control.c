@@ -23,6 +23,7 @@ typedef struct _MediaControlPrivate MediaControlPrivate;
 #define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _gst_tag_list_free0(var) ((var == NULL) ? NULL : (var = (gst_tag_list_free (var), NULL)))
 #define _gst_event_unref0(var) ((var == NULL) ? NULL : (var = (gst_event_unref (var), NULL)))
 
 struct _MediaControl {
@@ -59,7 +60,7 @@ static void media_control_finalize (GObject* obj);
 
 static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-static void g_cclosure_user_marshal_VOID__ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
@@ -161,6 +162,7 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_start (message, &format, &position);
+				g_signal_emit_by_name (self, "segment-start-message", message->src, format, position);
 			}
 			break;
 		}
@@ -170,6 +172,21 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_done (message, &format, &position);
+				g_signal_emit_by_name (self, "segment-done-message", message->src, format, position);
+			}
+			break;
+		}
+		case GST_MESSAGE_TAG:
+		{
+			{
+				GstTagList* tag_list;
+				GstTagList* _tmp6_;
+				GstTagList* _tmp5_ = NULL;
+				tag_list = NULL;
+				gst_message_parse_tag (message, &_tmp5_);
+				tag_list = (_tmp6_ = _tmp5_, _gst_tag_list_free0 (tag_list), _tmp6_);
+				g_signal_emit_by_name (self, "tag-message", message->src, tag_list);
+				_gst_tag_list_free0 (tag_list);
 			}
 			break;
 		}
@@ -258,8 +275,9 @@ static void media_control_class_init (MediaControlClass * klass) {
 	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
 	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
-	g_signal_new ("segment_start_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__ENUM_INT64, G_TYPE_NONE, 2, GST_TYPE_FORMAT, G_TYPE_INT64);
-	g_signal_new ("segment_done_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__ENUM_INT64, G_TYPE_NONE, 2, GST_TYPE_FORMAT, G_TYPE_INT64);
+	g_signal_new ("segment_start_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
+	g_signal_new ("segment_done_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
+	g_signal_new ("tag_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
 	g_signal_new ("state_changed_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM, G_TYPE_NONE, 4, GST_TYPE_OBJECT, GST_TYPE_STATE, GST_TYPE_STATE, GST_TYPE_STATE);
 }
 
@@ -326,13 +344,13 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GV
 }
 
 
-static void g_cclosure_user_marshal_VOID__ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__ENUM_INT64) (gpointer data1, gint arg_1, gint64 arg_2, gpointer data2);
-	register GMarshalFunc_VOID__ENUM_INT64 callback;
+static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_ENUM_INT64) (gpointer data1, gpointer arg_1, gint arg_2, gint64 arg_3, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_ENUM_INT64 callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 3);
+	g_return_if_fail (n_param_values == 4);
 	if (G_CCLOSURE_SWAP_DATA (closure)) {
 		data1 = closure->data;
 		data2 = param_values->data[0].v_pointer;
@@ -340,8 +358,8 @@ static void g_cclosure_user_marshal_VOID__ENUM_INT64 (GClosure * closure, GValue
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__ENUM_INT64) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_enum (param_values + 1), g_value_get_int64 (param_values + 2), data2);
+	callback = (GMarshalFunc_VOID__OBJECT_ENUM_INT64) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_enum (param_values + 2), g_value_get_int64 (param_values + 3), data2);
 }
 
 
