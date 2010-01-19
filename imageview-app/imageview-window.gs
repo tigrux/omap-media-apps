@@ -11,12 +11,15 @@ class ImageViewWindow: ApplicationWindow
     video_area: VideoArea
     iconlist_store: ListStore
     iconlist_control: IconListControl
-    image_control: ImageControl
-    cancellable: Cancellable
+    image_control: ImageControl    
     current_folder: string
-    open_button: ToolButton
-    play_button: ToolButton
+    image_button: ToolButton
+    slideshow_button: ToolButton
     is_filling_icons: bool
+
+    continuation: SourceFunc
+    timeout_id: uint
+    cancellable: Cancellable
 
     init
         iconlist_store = new_imagelist_store()
@@ -31,8 +34,7 @@ class ImageViewWindow: ApplicationWindow
         iconlist_control.files_added += on_iconlist_files_added
         iconlist_control.icons_filled += on_iconlist_icons_filled
         image_control = new ImageControl()
-        image_control.eos_message += def()
-            notebook.set_current_page(ApplicationTab.VIDEO)
+        image_control.eos_message += on_image_control_eos
         video_area.set_control(image_control)
 
     def setup_widgets()
@@ -85,7 +87,7 @@ class ImageViewWindow: ApplicationWindow
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.set_state(Gst.State.PLAYING)
-            open_button.set_stock_id(STOCK_CLOSE)
+            image_button.set_stock_id(STOCK_CLOSE)
 
     def new_video_box(): Box
         var box = new VBox(false, 0)
@@ -109,28 +111,76 @@ class ImageViewWindow: ApplicationWindow
 
         toolbar_add_expander()
 
-        open_button = new ToolButton.from_stock(STOCK_OPEN)
-        toolbar.add(open_button)
-        open_button.clicked += on_open
+        image_button = new ToolButton.from_stock(STOCK_ZOOM_100)
+        toolbar.add(image_button)
+        image_button.clicked += on_open_close
 
-        play_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
-        toolbar.add(play_button)
-        play_button.clicked += on_play
+        toolbar_add_expander()
+
+        slideshow_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(slideshow_button)
+        slideshow_button.clicked += on_slideshow
 
         toolbar_add_quit_button()
 
-    def on_open()
+    def on_open_close()
         if notebook.get_current_page() == ApplicationTab.LIST
-            iter: TreeIter
-            if get_and_select_iter(out iter)
-                icon_view.item_activated(iconlist_store.get_path(iter))
+            open()
         else
-            image_control.set_state(Gst.State.READY)
-            notebook.set_current_page(ApplicationTab.LIST)
-            open_button.set_stock_id(STOCK_OPEN)
+            close()
 
-    def on_play()
-        print "Start slideshow"
+    def open()
+        iter: TreeIter
+        if get_and_select_iter(out iter)
+            icon_view.item_activated(iconlist_store.get_path(iter))
+
+    def close()
+        notebook.set_current_page(ApplicationTab.LIST)
+        image_button.set_stock_id(STOCK_ZOOM_100)
+        slideshow_button.set_stock_id(STOCK_MEDIA_PLAY)
+
+    def on_slideshow()
+        iter: TreeIter
+        if not iconlist_store.get_iter_first(out iter)
+            return
+        if continuation == null
+            start_slideshow()
+        else
+            stop_slideshow()
+
+    def start_slideshow()
+        slideshow_button.set_stock_id(STOCK_MEDIA_STOP)
+        cancellable = new Cancellable()
+        slideshow(cancellable)
+
+    def stop_slideshow()
+        cancellable.cancel()
+        if timeout_id != 0
+            Source.remove(timeout_id)
+            Idle.add(continuation)
+
+    def on_image_control_eos()
+        image_control.set_state(Gst.State.READY)
+        notebook.set_current_page(ApplicationTab.VIDEO)
+        if continuation != null
+            timeout_id = Timeout.add_seconds(2, continuation)
+
+    def async slideshow(cancellable: Cancellable)
+        continuation = slideshow.callback
+        iter: TreeIter
+        if not get_and_select_iter(out iter) or cancellable.is_cancelled()
+            return
+        do
+            var path = iconlist_store.get_path(iter)
+            icon_view.select_path(path)
+            icon_view.item_activated(path)
+            yield
+            timeout_id = 0
+        while iconlist_store.iter_next(ref iter) and \
+              not cancellable.is_cancelled()
+        close()
+        continuation = null
+        cancellable = null
 
     def get_and_select_iter(out iter: TreeIter): bool
         path: TreePath

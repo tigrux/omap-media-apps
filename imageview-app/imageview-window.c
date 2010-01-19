@@ -5,9 +5,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
-#include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gio/gio.h>
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
@@ -76,10 +76,11 @@ typedef struct _ImageControlClass ImageControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define TYPE_APPLICATION_TAB (application_tab_get_type ())
-
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
+
+#define TYPE_APPLICATION_TAB (application_tab_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
+typedef struct _ImageViewWindowSlideshowData ImageViewWindowSlideshowData;
 
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
@@ -102,21 +103,20 @@ struct _ImageViewWindow {
 	GtkListStore* iconlist_store;
 	IconListControl* iconlist_control;
 	ImageControl* image_control;
-	GCancellable* cancellable;
 	char* current_folder;
-	GtkToolButton* open_button;
-	GtkToolButton* play_button;
+	GtkToolButton* image_button;
+	GtkToolButton* slideshow_button;
 	gboolean is_filling_icons;
+	GSourceFunc continuation;
+	gpointer continuation_target;
+	GDestroyNotify continuation_target_destroy_notify;
+	guint timeout_id;
+	GCancellable* cancellable;
 };
 
 struct _ImageViewWindowClass {
 	ApplicationWindowClass parent_class;
 };
-
-typedef enum  {
-	APPLICATION_TAB_LIST,
-	APPLICATION_TAB_VIDEO
-} ApplicationTab;
 
 typedef enum  {
 	ICON_LIST_CONTROL_COL_TEXT,
@@ -127,6 +127,26 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_WIDTH,
 	ICON_LIST_CONTROL_COL_HEIGHT
 } IconListControlCol;
+
+typedef enum  {
+	APPLICATION_TAB_LIST,
+	APPLICATION_TAB_VIDEO
+} ApplicationTab;
+
+struct _ImageViewWindowSlideshowData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	ImageViewWindow* self;
+	GCancellable* cancellable;
+	GSourceFunc _tmp0_;
+	GtkTreeIter iter;
+	gboolean _tmp1_;
+	gboolean _tmp2_;
+	gboolean _tmp3_;
+	GtkTreePath* path;
+	GSourceFunc _tmp4_;
+};
 
 
 static gpointer image_view_window_parent_class = NULL;
@@ -149,9 +169,8 @@ void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self);
 static void _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled (IconListControl* _sender, gpointer self);
 ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
-GType application_tab_get_type (void);
-static void _lambda2_ (ImageViewWindow* self);
-static void __lambda2__media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
+void image_view_window_on_image_control_eos (ImageViewWindow* self);
+static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
 void video_area_set_control (VideoArea* self, MediaControl* control);
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
@@ -178,12 +197,23 @@ VideoArea* video_area_construct (GType object_type);
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
 void application_window_toolbar_add_expander (ApplicationWindow* self);
-void image_view_window_on_open (ImageViewWindow* self);
-static void _image_view_window_on_open_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void image_view_window_on_play (ImageViewWindow* self);
-static void _image_view_window_on_play_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void image_view_window_on_open_close (ImageViewWindow* self);
+static void _image_view_window_on_open_close_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void image_view_window_on_slideshow (ImageViewWindow* self);
+static void _image_view_window_on_slideshow_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void application_window_toolbar_add_quit_button (ApplicationWindow* self);
+GType application_tab_get_type (void);
+void image_view_window_open (ImageViewWindow* self);
+void image_view_window_close (ImageViewWindow* self);
 gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter);
+void image_view_window_start_slideshow (ImageViewWindow* self);
+void image_view_window_stop_slideshow (ImageViewWindow* self);
+void image_view_window_slideshow (ImageViewWindow* self, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void image_view_window_slideshow_finish (ImageViewWindow* self, GAsyncResult* _res_);
+static void image_view_window_slideshow_data_free (gpointer _data);
+static void image_view_window_slideshow_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+static gboolean _image_view_window_slideshow_co_gsource_func (gpointer self);
+static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* data);
 void image_view_window_change_folder (ImageViewWindow* self);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
@@ -212,13 +242,8 @@ static void _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_
 }
 
 
-static void _lambda2_ (ImageViewWindow* self) {
-	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
-}
-
-
-static void __lambda2__media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self) {
-	_lambda2_ (self);
+static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self) {
+	image_view_window_on_image_control_eos (self);
 }
 
 
@@ -245,7 +270,7 @@ ImageViewWindow* image_view_window_construct (GType object_type, GError** error)
 		return NULL;
 	}
 	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
-	g_signal_connect_object ((MediaControl*) self->image_control, "eos-message", (GCallback) __lambda2__media_control_eos_message, self, 0);
+	g_signal_connect_object ((MediaControl*) self->image_control, "eos-message", (GCallback) _image_view_window_on_image_control_eos_media_control_eos_message, self, 0);
 	video_area_set_control (self->video_area, (MediaControl*) self->image_control);
 	return self;
 }
@@ -352,7 +377,7 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 		file = icon_list_control_iter_get_file (self->iconlist_control, &iter);
 		image_control_set_location (self->image_control, file);
 		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_PLAYING);
-		gtk_tool_button_set_stock_id (self->open_button, GTK_STOCK_CLOSE);
+		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_CLOSE);
 		_g_free0 (file);
 	}
 }
@@ -381,13 +406,13 @@ static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_curren
 }
 
 
-static void _image_view_window_on_open_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	image_view_window_on_open (self);
+static void _image_view_window_on_open_close_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	image_view_window_on_open_close (self);
 }
 
 
-static void _image_view_window_on_play_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	image_view_window_on_play (self);
+static void _image_view_window_on_slideshow_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	image_view_window_on_slideshow (self);
 }
 
 
@@ -405,37 +430,190 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
 	application_window_toolbar_add_expander ((ApplicationWindow*) self);
-	self->open_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_OPEN)), _g_object_unref0 (self->open_button), _tmp1_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->open_button);
-	g_signal_connect_object (self->open_button, "clicked", (GCallback) _image_view_window_on_open_gtk_tool_button_clicked, self, 0);
-	self->play_button = (_tmp2_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->play_button), _tmp2_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->play_button);
-	g_signal_connect_object (self->play_button, "clicked", (GCallback) _image_view_window_on_play_gtk_tool_button_clicked, self, 0);
+	self->image_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ZOOM_100)), _g_object_unref0 (self->image_button), _tmp1_);
+	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->image_button);
+	g_signal_connect_object (self->image_button, "clicked", (GCallback) _image_view_window_on_open_close_gtk_tool_button_clicked, self, 0);
+	application_window_toolbar_add_expander ((ApplicationWindow*) self);
+	self->slideshow_button = (_tmp2_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->slideshow_button), _tmp2_);
+	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->slideshow_button);
+	g_signal_connect_object (self->slideshow_button, "clicked", (GCallback) _image_view_window_on_slideshow_gtk_tool_button_clicked, self, 0);
 	application_window_toolbar_add_quit_button ((ApplicationWindow*) self);
 	_g_object_unref0 (chooser_item);
 }
 
 
-void image_view_window_on_open (ImageViewWindow* self) {
+void image_view_window_on_open_close (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (gtk_notebook_get_current_page (((ApplicationWindow*) self)->notebook) == APPLICATION_TAB_LIST) {
-		GtkTreeIter iter = {0};
-		if (image_view_window_get_and_select_iter (self, &iter)) {
-			GtkTreePath* _tmp0_;
-			gtk_icon_view_item_activated (self->icon_view, _tmp0_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, &iter));
-			_gtk_tree_path_free0 (_tmp0_);
-		}
+		image_view_window_open (self);
 	} else {
-		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
-		gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_LIST);
-		gtk_tool_button_set_stock_id (self->open_button, GTK_STOCK_OPEN);
+		image_view_window_close (self);
 	}
 }
 
 
-void image_view_window_on_play (ImageViewWindow* self) {
+void image_view_window_open (ImageViewWindow* self) {
+	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
-	g_print ("Start slideshow\n");
+	if (image_view_window_get_and_select_iter (self, &iter)) {
+		GtkTreePath* _tmp0_;
+		gtk_icon_view_item_activated (self->icon_view, _tmp0_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, &iter));
+		_gtk_tree_path_free0 (_tmp0_);
+	}
+}
+
+
+void image_view_window_close (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_LIST);
+	gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
+	gtk_tool_button_set_stock_id (self->slideshow_button, GTK_STOCK_MEDIA_PLAY);
+}
+
+
+void image_view_window_on_slideshow (ImageViewWindow* self) {
+	GtkTreeIter iter = {0};
+	g_return_if_fail (self != NULL);
+	if (!gtk_tree_model_get_iter_first ((GtkTreeModel*) self->iconlist_store, &iter)) {
+		return;
+	}
+	if (self->continuation == NULL) {
+		image_view_window_start_slideshow (self);
+	} else {
+		image_view_window_stop_slideshow (self);
+	}
+}
+
+
+void image_view_window_start_slideshow (ImageViewWindow* self) {
+	GCancellable* _tmp0_;
+	g_return_if_fail (self != NULL);
+	gtk_tool_button_set_stock_id (self->slideshow_button, GTK_STOCK_MEDIA_STOP);
+	self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
+	image_view_window_slideshow (self, self->cancellable, NULL, NULL);
+}
+
+
+void image_view_window_stop_slideshow (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	g_cancellable_cancel (self->cancellable);
+	if (self->timeout_id != 0) {
+		g_source_remove (self->timeout_id);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
+	}
+}
+
+
+void image_view_window_on_image_control_eos (ImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
+	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
+	if (self->continuation != NULL) {
+		self->timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->continuation, self->continuation_target, NULL);
+	}
+}
+
+
+static void image_view_window_slideshow_data_free (gpointer _data) {
+	ImageViewWindowSlideshowData* data;
+	data = _data;
+	_g_object_unref0 (data->cancellable);
+	g_slice_free (ImageViewWindowSlideshowData, data);
+}
+
+
+void image_view_window_slideshow (ImageViewWindow* self, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	ImageViewWindowSlideshowData* _data_;
+	_data_ = g_slice_new0 (ImageViewWindowSlideshowData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, image_view_window_slideshow);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, image_view_window_slideshow_data_free);
+	_data_->self = self;
+	_data_->cancellable = _g_object_ref0 (cancellable);
+	image_view_window_slideshow_co (_data_);
+}
+
+
+void image_view_window_slideshow_finish (ImageViewWindow* self, GAsyncResult* _res_) {
+	ImageViewWindowSlideshowData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+}
+
+
+static void image_view_window_slideshow_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	ImageViewWindowSlideshowData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	image_view_window_slideshow_co (data);
+}
+
+
+static gboolean _image_view_window_slideshow_co_gsource_func (gpointer self) {
+	return image_view_window_slideshow_co (self);
+}
+
+
+static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* data) {
+	switch (data->_state_) {
+		default:
+		g_assert_not_reached ();
+		case 0:
+		{
+			data->self->continuation = (data->_tmp0_ = _image_view_window_slideshow_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp0_);
+			if (!image_view_window_get_and_select_iter (data->self, &data->iter)) {
+				data->_tmp1_ = TRUE;
+			} else {
+				data->_tmp1_ = g_cancellable_is_cancelled (data->cancellable);
+			}
+			if (data->_tmp1_) {
+				{
+					if (data->_state_ == 0) {
+						g_simple_async_result_complete_in_idle (data->_async_result);
+					} else {
+						g_simple_async_result_complete (data->_async_result);
+					}
+					g_object_unref (data->_async_result);
+					return FALSE;
+				}
+			}
+			{
+				data->_tmp2_ = TRUE;
+				while (TRUE) {
+					if (!data->_tmp2_) {
+						if (gtk_tree_model_iter_next ((GtkTreeModel*) data->self->iconlist_store, &data->iter)) {
+							data->_tmp3_ = !g_cancellable_is_cancelled (data->cancellable);
+						} else {
+							data->_tmp3_ = FALSE;
+						}
+						if (!data->_tmp3_) {
+							break;
+						}
+					}
+					data->_tmp2_ = FALSE;
+					data->path = gtk_tree_model_get_path ((GtkTreeModel*) data->self->iconlist_store, &data->iter);
+					gtk_icon_view_select_path (data->self->icon_view, data->path);
+					gtk_icon_view_item_activated (data->self->icon_view, data->path);
+					data->_state_ = 1;
+					return FALSE;
+					case 1:
+					;
+					data->self->timeout_id = (guint) 0;
+					_gtk_tree_path_free0 (data->path);
+				}
+			}
+			image_view_window_close (data->self);
+			data->self->continuation = (data->_tmp4_ = NULL, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL, data->_tmp4_);
+			data->cancellable = NULL;
+		}
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
 }
 
 
@@ -660,10 +838,14 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->iconlist_store);
 	_g_object_unref0 (self->iconlist_control);
 	_g_object_unref0 (self->image_control);
-	_g_object_unref0 (self->cancellable);
 	_g_free0 (self->current_folder);
-	_g_object_unref0 (self->open_button);
-	_g_object_unref0 (self->play_button);
+	_g_object_unref0 (self->image_button);
+	_g_object_unref0 (self->slideshow_button);
+	(self->continuation_target_destroy_notify == NULL) ? NULL : self->continuation_target_destroy_notify (self->continuation_target);
+	self->continuation = NULL;
+	self->continuation_target = NULL;
+	self->continuation_target_destroy_notify = NULL;
+	_g_object_unref0 (self->cancellable);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);
 }
 

@@ -392,9 +392,9 @@ static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* d
 			data->dir = g_file_new_for_path (data->dirname);
 			{
 				g_file_enumerate_children_async (data->dir, IMAGE_FILE_ATTRIBUTES, G_FILE_QUERY_INFO_NONE, G_PRIORITY_DEFAULT, data->cancellable, icon_list_control_add_folder_ready, data);
-				data->_state_ = 1;
+				data->_state_ = 2;
 				return FALSE;
-				case 1:
+				case 2:
 				data->file_etor = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					goto __catch1_g_error;
@@ -405,9 +405,9 @@ static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* d
 						break;
 					}
 					g_file_enumerator_next_files_async (data->file_etor, 5, G_PRIORITY_DEFAULT, data->cancellable, icon_list_control_add_folder_ready, data);
-					data->_state_ = 2;
+					data->_state_ = 3;
 					return FALSE;
-					case 2:
+					case 3:
 					data->next_files = g_file_enumerator_next_files_finish (data->file_etor, data->_res_, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
 						_g_object_unref0 (data->file_etor);
@@ -567,9 +567,9 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp4_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
 						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_PLAYING);
-						data->_state_ = 3;
+						data->_state_ = 4;
 						return FALSE;
-						case 3:
+						case 4:
 						;
 						data->width = 0;
 						data->height = 0;
