@@ -39,6 +39,8 @@ struct _ApplicationWindowClass {
 };
 
 
+extern gboolean application_window_rc_parsed;
+gboolean application_window_rc_parsed = FALSE;
 static gpointer application_window_parent_class = NULL;
 
 GType application_tab_get_type (void);
@@ -46,6 +48,8 @@ GType application_window_get_type (void);
 enum  {
 	APPLICATION_WINDOW_DUMMY_PROPERTY
 };
+gboolean application_window_rc_parse (void);
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 24\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 void application_window_toolbar_add_expander (ApplicationWindow* self);
 void application_window_on_quit (ApplicationWindow* self);
 static void _application_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
@@ -71,6 +75,14 @@ GType application_tab_get_type (void) {
 		application_tab_type_id = g_enum_register_static ("ApplicationTab", values);
 	}
 	return application_tab_type_id;
+}
+
+
+gboolean application_window_rc_parse (void) {
+	gboolean result;
+	gtk_rc_parse_string (DEFAULT_STYLE);
+	result = TRUE;
+	return result;
 }
 
 
@@ -133,6 +145,11 @@ ApplicationWindow* application_window_new (void) {
 }
 
 
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
 static void _application_window_on_quit_gtk_object_destroy (ApplicationWindow* _sender, gpointer self) {
 	application_window_on_quit (self);
 }
@@ -146,9 +163,12 @@ static GObject * application_window_constructor (GType type, guint n_construct_p
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = APPLICATION_WINDOW (obj);
 	{
+		GtkSettings* settings;
 		GtkVBox* _tmp0_;
 		GtkToolbar* _tmp1_;
 		GtkNotebook* _tmp2_;
+		settings = _g_object_ref0 (gtk_widget_get_settings ((GtkWidget*) self));
+		g_object_set ((GObject*) settings, "gtk-touchscreen-mode", TRUE, NULL);
 		gtk_window_set_default_size ((GtkWindow*) self, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _application_window_on_quit_gtk_object_destroy, self, 0);
 		self->main_box = (_tmp0_ = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0)), _g_object_unref0 (self->main_box), _tmp0_);
@@ -159,6 +179,7 @@ static GObject * application_window_constructor (GType type, guint n_construct_p
 		self->notebook = (_tmp2_ = g_object_ref_sink ((GtkNotebook*) gtk_notebook_new ()), _g_object_unref0 (self->notebook), _tmp2_);
 		gtk_notebook_set_show_tabs (self->notebook, FALSE);
 		gtk_box_pack_start ((GtkBox*) self->main_box, (GtkWidget*) self->notebook, TRUE, TRUE, (guint) 0);
+		_g_object_unref0 (settings);
 	}
 	return obj;
 }
@@ -168,6 +189,7 @@ static void application_window_class_init (ApplicationWindowClass * klass) {
 	application_window_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->constructor = application_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = application_window_finalize;
+	application_window_rc_parsed = application_window_rc_parse ();
 }
 
 

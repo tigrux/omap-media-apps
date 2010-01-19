@@ -12,8 +12,16 @@ class ApplicationWindow: Window
     notebook: Notebook
     toolbar: Toolbar
     main_box: VBox
+    rc_parsed: static bool = rc_parse()
+
+    def static rc_parse(): bool
+        rc_parse_string(DEFAULT_STYLE)
+        return true
 
     init
+        settings: Gtk.Settings = get_settings()
+        settings.set("gtk-touchscreen-mode", true)
+
         set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
         destroy += on_quit
 
