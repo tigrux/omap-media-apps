@@ -12,7 +12,9 @@ class PlayerWindow: ApplicationWindow
     playlist_store: ListStore
     playlist_selection: TreeSelection
     playlist_control: PlayListControl
+
     play_pause_button: ToolButton
+    fullscreen_button: ToolButton
     add_button: ToolButton
     next_button: ToolButton
     remove_image: Gtk.Image
@@ -57,13 +59,15 @@ class PlayerWindow: ApplicationWindow
         set_title(TITLE)
         setup_toolbar()
         setup_notebook()
-        main_box.show_all()
         setup_seeking()
         video_area.realize()
+        main_box.show_all()
 
     def setup_notebook()
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
+        notebook.switch_page += def(page, num_page)
+            fullscreen_button.set_visible(num_page == ApplicationTab.VIDEO)
 
     def setup_toolbar()
         var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
@@ -82,10 +86,17 @@ class PlayerWindow: ApplicationWindow
         toolbar.add(stop_button)
         stop_button.clicked += on_stop
 
+        toolbar_add_expander()
+
         var volume_button_item = new ToolItem()
         toolbar.add(volume_button_item)
         volume_button = new_volume_button_with_mute()
         volume_button_item.add(volume_button)
+
+        fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
+        toolbar.add(fullscreen_button)
+        fullscreen_button.set_no_show_all(true)
+        fullscreen_button.clicked += toggle_fullscreen
 
         toolbar_add_expander()
 
@@ -103,6 +114,8 @@ class PlayerWindow: ApplicationWindow
         seeking_adjustment = new Adjustment(0, 0, 100, 0.1, 1, 1)
         seeking_scale = new HScale(seeking_adjustment)
         main_box.pack_start(seeking_scale, false, false, 0)
+
+        seeking_scale.set_no_show_all(true)
         seeking_scale.set_update_policy(UpdateType.DISCONTINUOUS)
         seeking_scale.button_press_event += on_seeking_scale_pressed
         seeking_scale.button_release_event += on_seeking_scale_released
@@ -202,7 +215,7 @@ class PlayerWindow: ApplicationWindow
         var box = new VBox(false, 0)
         video_area = new VideoArea()
         box.pack_start(video_area, true, true, 0)
-        video_area.activated += on_video_area_activated
+        video_area.activated += toggle_fullscreen
         video_area.prepared += def()
             notebook.set_current_page(ApplicationTab.VIDEO)
         video_area.set_control(playlist_control)
@@ -273,7 +286,7 @@ class PlayerWindow: ApplicationWindow
     def on_add()
         iter: TreeIter
         setup_chooser()
-        chooser.show_all()
+        chooser.show()
         chooser.run()
         get_and_select_iter(out iter)
 
@@ -364,7 +377,7 @@ class PlayerWindow: ApplicationWindow
             seeking_adjustment.set_value(stream_value)
         return true
 
-    def on_video_area_activated()
+    def toggle_fullscreen()
         if is_fullscreen
             toolbar.show()
             seeking_scale.show()
@@ -385,7 +398,7 @@ class PlayerWindow: ApplicationWindow
         toolbar.hide()
         debug_dialog = new DebugDialog(this)
         debug_dialog.closed += on_debug_dialog_closed
-        debug_dialog.show_all()
+        debug_dialog.show()
 
     def on_debug_dialog_closed()
         toolbar.show()

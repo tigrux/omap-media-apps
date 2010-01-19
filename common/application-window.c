@@ -179,6 +179,7 @@ static GObject * application_window_constructor (GType type, guint n_construct_p
 		self->notebook = (_tmp2_ = g_object_ref_sink ((GtkNotebook*) gtk_notebook_new ()), _g_object_unref0 (self->notebook), _tmp2_);
 		gtk_notebook_set_show_tabs (self->notebook, FALSE);
 		gtk_box_pack_start ((GtkBox*) self->main_box, (GtkWidget*) self->notebook, TRUE, TRUE, (guint) 0);
+		gtk_widget_show_all ((GtkWidget*) self->main_box);
 		_g_object_unref0 (settings);
 	}
 	return obj;
