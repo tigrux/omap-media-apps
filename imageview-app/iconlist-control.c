@@ -7,9 +7,9 @@
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gtk/gtk.h>
-#include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gio/gio.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -66,6 +66,7 @@ struct _IconListControl {
 	GstElement* imagedec;
 	GstPad* imagedec_src;
 	GdkPixbuf* missing_pixbuf;
+	GtkListStore* iconlist_store;
 	GSourceFunc continuation;
 	gpointer continuation_target;
 	GDestroyNotify continuation_target_destroy_notify;
@@ -74,10 +75,6 @@ struct _IconListControl {
 
 struct _IconListControlClass {
 	MediaControlClass parent_class;
-};
-
-struct _IconListControlPrivate {
-	GtkListStore* _iconlist_store;
 };
 
 typedef enum  {
@@ -145,17 +142,15 @@ static gpointer icon_list_control_parent_class = NULL;
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
 GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
-#define ICON_LIST_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_ICON_LIST_CONTROL, IconListControlPrivate))
 enum  {
-	ICON_LIST_CONTROL_DUMMY_PROPERTY,
-	ICON_LIST_CONTROL_ICONLIST_STORE
+	ICON_LIST_CONTROL_DUMMY_PROPERTY
 };
 GType icon_list_control_col_get_type (void);
-void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* value);
+void icon_list_control_setup_model (IconListControl* self);
 void icon_list_control_setup_icons (IconListControl* self, GError** error);
 void icon_list_control_setup_elements (IconListControl* self, GError** error);
-IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
-IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
+IconListControl* icon_list_control_new (GError** error);
+IconListControl* icon_list_control_construct (GType object_type, GError** error);
 void icon_list_control_setup_pipeline (IconListControl* self, GError** error);
 void media_control_set_pipeline (MediaControl* self, GstBin* bin);
 static void icon_list_control_add_folder_data_free (gpointer _data);
@@ -166,7 +161,6 @@ void error_dialog (GError* _error_);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* data);
-GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self);
 static void icon_list_control_fill_icons_data_free (gpointer _data);
 static void icon_list_control_fill_icons_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
@@ -190,8 +184,6 @@ static void _icon_list_control_on_error_media_control_error_message (IconListCon
 static void _icon_list_control_on_element_media_control_element_message (IconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
 static GObject * icon_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void icon_list_control_finalize (GObject* obj);
-static void icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void icon_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
@@ -207,13 +199,26 @@ GType icon_list_control_col_get_type (void) {
 }
 
 
-IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error) {
+void icon_list_control_setup_model (IconListControl* self) {
+	GType s;
+	GType p;
+	GType b;
+	GType i;
+	GtkListStore* _tmp0_;
+	g_return_if_fail (self != NULL);
+	s = G_TYPE_STRING;
+	p = GDK_TYPE_PIXBUF;
+	b = G_TYPE_BOOLEAN;
+	i = G_TYPE_INT;
+	self->iconlist_store = (_tmp0_ = gtk_list_store_new (7, s, s, p, b, b, i, i, NULL), _g_object_unref0 (self->iconlist_store), _tmp0_);
+}
+
+
+IconListControl* icon_list_control_construct (GType object_type, GError** error) {
 	GError * _inner_error_;
 	IconListControl * self;
-	g_return_val_if_fail (model != NULL, NULL);
 	_inner_error_ = NULL;
 	self = g_object_newv (object_type, 0, NULL);
-	icon_list_control_set_iconlist_store (self, model);
 	if (!icon_list_control_pixbufs_loaded) {
 		icon_list_control_setup_icons (self, &_inner_error_);
 		if (_inner_error_ != NULL) {
@@ -231,8 +236,8 @@ IconListControl* icon_list_control_construct (GType object_type, GtkListStore* m
 }
 
 
-IconListControl* icon_list_control_new (GtkListStore* model, GError** error) {
-	return icon_list_control_construct (TYPE_ICON_LIST_CONTROL, model, error);
+IconListControl* icon_list_control_new (GError** error) {
+	return icon_list_control_construct (TYPE_ICON_LIST_CONTROL, error);
 }
 
 
@@ -474,7 +479,7 @@ void icon_list_control_add_next_files (IconListControl* self, const char* dirnam
 					char* text;
 					file = g_build_filename (dirname, g_file_info_get_name (info), NULL);
 					text = g_strdup (g_file_info_get_display_name (info));
-					gtk_list_store_insert_with_values (self->priv->_iconlist_store, NULL, -1, ICON_LIST_CONTROL_COL_TEXT, text, ICON_LIST_CONTROL_COL_FILE, file, ICON_LIST_CONTROL_COL_PIXBUF, icon_list_control_loading_pixbuf, -1, -1);
+					gtk_list_store_insert_with_values (self->iconlist_store, NULL, -1, ICON_LIST_CONTROL_COL_TEXT, text, ICON_LIST_CONTROL_COL_FILE, file, ICON_LIST_CONTROL_COL_PIXBUF, icon_list_control_loading_pixbuf, -1, -1);
 					_g_free0 (file);
 					_g_free0 (text);
 				}
@@ -560,8 +565,8 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 					if (!(!data->_tmp2_)) {
 						break;
 					}
-					gtk_tree_model_get_iter ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, data->path);
-					gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_FILE, &data->file, ICON_LIST_CONTROL_COL_FILLED, &data->filled, -1, -1);
+					gtk_tree_model_get_iter ((GtkTreeModel*) data->self->iconlist_store, &data->iter, data->path);
+					gtk_tree_model_get ((GtkTreeModel*) data->self->iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_FILE, &data->file, ICON_LIST_CONTROL_COL_FILLED, &data->filled, -1, -1);
 					if (!data->filled) {
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
 						icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp4_);
@@ -585,7 +590,7 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						} else {
 							data->pixbuf = (data->_tmp8_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp8_);
 						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, ICON_LIST_CONTROL_COL_WIDTH, data->width, ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
+						gtk_list_store_set (data->self->iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, ICON_LIST_CONTROL_COL_WIDTH, data->width, ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
 						_g_object_unref0 (data->pixbuf);
 					}
 					gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
@@ -690,7 +695,7 @@ gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* it
 	gboolean result;
 	gboolean valid = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_VALID, &valid, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->iconlist_store, iter, ICON_LIST_CONTROL_COL_VALID, &valid, -1, -1);
 	result = valid;
 	return result;
 }
@@ -700,7 +705,7 @@ gboolean icon_list_control_iter_is_filled (IconListControl* self, GtkTreeIter* i
 	gboolean result;
 	gboolean filled = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_FILLED, &filled, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->iconlist_store, iter, ICON_LIST_CONTROL_COL_FILLED, &filled, -1, -1);
 	result = filled;
 	return result;
 }
@@ -711,7 +716,7 @@ char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter)
 	char* file;
 	g_return_val_if_fail (self != NULL, NULL);
 	file = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_FILE, &file, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->iconlist_store, iter, ICON_LIST_CONTROL_COL_FILE, &file, -1, -1);
 	result = file;
 	return result;
 }
@@ -719,22 +724,7 @@ char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter)
 
 void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height) {
 	g_return_if_fail (self != NULL);
-	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_WIDTH, width, ICON_LIST_CONTROL_COL_HEIGHT, height, -1, -1);
-}
-
-
-GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self) {
-	GtkListStore* result;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = self->priv->_iconlist_store;
-	return result;
-}
-
-
-void icon_list_control_set_iconlist_store (IconListControl* self, GtkListStore* value) {
-	g_return_if_fail (self != NULL);
-	self->priv->_iconlist_store = value;
-	g_object_notify ((GObject *) self, "iconlist-store");
+	gtk_tree_model_get ((GtkTreeModel*) self->iconlist_store, iter, ICON_LIST_CONTROL_COL_WIDTH, width, ICON_LIST_CONTROL_COL_HEIGHT, height, -1, -1);
 }
 
 
@@ -761,6 +751,7 @@ static GObject * icon_list_control_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = ICON_LIST_CONTROL (obj);
 	{
+		icon_list_control_setup_model (self);
 		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _icon_list_control_on_eos_media_control_eos_message, self, 0);
 		g_signal_connect_object ((MediaControl*) self, "error-message", (GCallback) _icon_list_control_on_error_media_control_error_message, self, 0);
 		g_signal_connect_object ((MediaControl*) self, "element-message", (GCallback) _icon_list_control_on_element_media_control_element_message, self, 0);
@@ -771,12 +762,8 @@ static GObject * icon_list_control_constructor (GType type, guint n_construct_pr
 
 static void icon_list_control_class_init (IconListControlClass * klass) {
 	icon_list_control_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (IconListControlPrivate));
-	G_OBJECT_CLASS (klass)->get_property = icon_list_control_get_property;
-	G_OBJECT_CLASS (klass)->set_property = icon_list_control_set_property;
 	G_OBJECT_CLASS (klass)->constructor = icon_list_control_constructor;
 	G_OBJECT_CLASS (klass)->finalize = icon_list_control_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), ICON_LIST_CONTROL_ICONLIST_STORE, g_param_spec_object ("iconlist-store", "iconlist-store", "iconlist-store", GTK_TYPE_LIST_STORE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_signal_new ("files_added", TYPE_ICON_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	g_signal_new ("icons_filled", TYPE_ICON_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	icon_list_control_pixbuf_q = g_quark_from_string ("pixbuf");
@@ -784,7 +771,6 @@ static void icon_list_control_class_init (IconListControlClass * klass) {
 
 
 static void icon_list_control_instance_init (IconListControl * self) {
-	self->priv = ICON_LIST_CONTROL_GET_PRIVATE (self);
 }
 
 
@@ -796,6 +782,7 @@ static void icon_list_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->imagedec);
 	_gst_object_unref0 (self->imagedec_src);
 	_g_object_unref0 (self->missing_pixbuf);
+	_g_object_unref0 (self->iconlist_store);
 	(self->continuation_target_destroy_notify == NULL) ? NULL : self->continuation_target_destroy_notify (self->continuation_target);
 	self->continuation = NULL;
 	self->continuation_target = NULL;
@@ -812,34 +799,6 @@ GType icon_list_control_get_type (void) {
 		icon_list_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "IconListControl", &g_define_type_info, 0);
 	}
 	return icon_list_control_type_id;
-}
-
-
-static void icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	IconListControl * self;
-	self = ICON_LIST_CONTROL (object);
-	switch (property_id) {
-		case ICON_LIST_CONTROL_ICONLIST_STORE:
-		g_value_set_object (value, icon_list_control_get_iconlist_store (self));
-		break;
-		default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-		break;
-	}
-}
-
-
-static void icon_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	IconListControl * self;
-	self = ICON_LIST_CONTROL (object);
-	switch (property_id) {
-		case ICON_LIST_CONTROL_ICONLIST_STORE:
-		icon_list_control_set_iconlist_store (self, g_value_get_object (value));
-		break;
-		default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-		break;
-	}
 }
 
 

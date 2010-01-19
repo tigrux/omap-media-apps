@@ -86,8 +86,9 @@ void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row)
 static void _play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
 void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row);
 static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self);
-PlayListControl* play_list_control_new (GtkListStore* store);
-PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
+void play_list_control_setup_model (PlayListControl* self);
+void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+void play_list_control_setup_elements (PlayListControl* self);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 GstState media_control_get_state (MediaControl* self);
 void play_list_control_set_location (PlayListControl* self, const char* value);
@@ -103,13 +104,14 @@ gint play_list_control_get_name_column (void);
 gint play_list_control_get_icon_column (void);
 char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
 char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
+PlayListControl* play_list_control_new (void);
+PlayListControl* play_list_control_construct (GType object_type);
 static inline double _dynamic_get_volume0 (GstElement* obj);
 double play_list_control_get_volume (PlayListControl* self);
 static inline void _dynamic_set_volume1 (GstElement* obj, double value);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
 static inline void _dynamic_set_uri2 (GstElement* obj, char* value);
-void media_control_set_pipeline (MediaControl* self, GstBin* bin);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
 static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -129,11 +131,6 @@ GType play_list_control_col_get_type (void) {
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
 static void _play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self) {
 	play_list_control_on_row_inserted (self, path);
 }
@@ -144,20 +141,27 @@ static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkLis
 }
 
 
-PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store) {
-	PlayListControl * self;
+void play_list_control_setup_model (PlayListControl* self) {
+	GType s;
 	GtkListStore* _tmp0_;
-	g_return_val_if_fail (store != NULL, NULL);
-	self = g_object_newv (object_type, 0, NULL);
-	self->playlist_store = (_tmp0_ = _g_object_ref0 (store), _g_object_unref0 (self->playlist_store), _tmp0_);
+	g_return_if_fail (self != NULL);
+	s = G_TYPE_STRING;
+	self->playlist_store = (_tmp0_ = gtk_list_store_new (3, s, s, s, NULL), _g_object_unref0 (self->playlist_store), _tmp0_);
 	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-inserted", (GCallback) _play_list_control_on_row_inserted_gtk_tree_model_row_inserted, self, 0);
 	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-deleted", (GCallback) _play_list_control_on_row_deleted_gtk_tree_model_row_deleted, self, 0);
-	return self;
 }
 
 
-PlayListControl* play_list_control_new (GtkListStore* store) {
-	return play_list_control_construct (TYPE_PLAY_LIST_CONTROL, store);
+void play_list_control_setup_elements (PlayListControl* self) {
+	GstElement* _tmp0_;
+	GstElement* _tmp2_;
+	g_return_if_fail (self != NULL);
+	self->player = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), _gst_object_unref0 (self->player), _tmp0_);
+	if (self->player == NULL) {
+		GstElement* _tmp1_;
+		self->player = (_tmp1_ = gst_element_factory_make ("playbin", "player"), _gst_object_unref0 (self->player), _tmp1_);
+	}
+	media_control_set_pipeline ((MediaControl*) self, (_tmp2_ = self->player, GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL));
 }
 
 
@@ -364,6 +368,18 @@ char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter)
 }
 
 
+PlayListControl* play_list_control_construct (GType object_type) {
+	PlayListControl * self;
+	self = g_object_newv (object_type, 0, NULL);
+	return self;
+}
+
+
+PlayListControl* play_list_control_new (void) {
+	return play_list_control_construct (TYPE_PLAY_LIST_CONTROL);
+}
+
+
 static inline double _dynamic_get_volume0 (GstElement* obj) {
 	double result;
 	g_object_get (obj, "volume", &result, NULL);
@@ -421,14 +437,8 @@ static GObject * play_list_control_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = PLAY_LIST_CONTROL (obj);
 	{
-		GstElement* _tmp0_;
-		GstElement* _tmp2_;
-		self->player = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), _gst_object_unref0 (self->player), _tmp0_);
-		if (self->player == NULL) {
-			GstElement* _tmp1_;
-			self->player = (_tmp1_ = gst_element_factory_make ("playbin", "player"), _gst_object_unref0 (self->player), _tmp1_);
-		}
-		media_control_set_pipeline ((MediaControl*) self, (_tmp2_ = self->player, GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL));
+		play_list_control_setup_model (self);
+		play_list_control_setup_elements (self);
 	}
 	return obj;
 }

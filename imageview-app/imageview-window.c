@@ -75,12 +75,15 @@ typedef struct _ImageControl ImageControl;
 typedef struct _ImageControlClass ImageControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+typedef struct _MediaControlPrivate MediaControlPrivate;
+typedef struct _IconListControlPrivate IconListControlPrivate;
 
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
 
 #define TYPE_APPLICATION_TAB (application_tab_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 typedef struct _ImageViewWindowSlideshowData ImageViewWindowSlideshowData;
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 struct _ApplicationWindow {
 	GtkWindow parent_instance;
@@ -116,6 +119,36 @@ struct _ImageViewWindow {
 
 struct _ImageViewWindowClass {
 	ApplicationWindowClass parent_class;
+};
+
+struct _MediaControl {
+	GObject parent_instance;
+	MediaControlPrivate * priv;
+	GstBus* bus;
+	GstBin* pipeline;
+};
+
+struct _MediaControlClass {
+	GObjectClass parent_class;
+};
+
+struct _IconListControl {
+	MediaControl parent_instance;
+	IconListControlPrivate * priv;
+	GstElement* filesrc;
+	GstElement* imagesink;
+	GstElement* imagedec;
+	GstPad* imagedec_src;
+	GdkPixbuf* missing_pixbuf;
+	GtkListStore* iconlist_store;
+	GSourceFunc continuation;
+	gpointer continuation_target;
+	GDestroyNotify continuation_target_destroy_notify;
+	GError* continuation_error;
+};
+
+struct _IconListControlClass {
+	MediaControlClass parent_class;
 };
 
 typedef enum  {
@@ -161,21 +194,20 @@ GType image_control_get_type (void);
 enum  {
 	IMAGE_VIEW_WINDOW_DUMMY_PROPERTY
 };
-IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
-IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
+IconListControl* icon_list_control_new (GError** error);
+IconListControl* icon_list_control_construct (GType object_type, GError** error);
+ImageControl* image_control_new (GError** error);
+ImageControl* image_control_construct (GType object_type, GError** error);
 void image_view_window_on_iconlist_files_added (ImageViewWindow* self);
 static void _image_view_window_on_iconlist_files_added_icon_list_control_files_added (IconListControl* _sender, gpointer self);
 void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self);
 static void _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled (IconListControl* _sender, gpointer self);
-ImageControl* image_control_new (GError** error);
-ImageControl* image_control_construct (GType object_type, GError** error);
 void image_view_window_on_image_control_eos (ImageViewWindow* self);
 static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
-void video_area_set_control (VideoArea* self, MediaControl* control);
-ImageViewWindow* image_view_window_new (GError** error);
-ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
+void image_view_window_setup_elements (ImageViewWindow* self, GError** error);
 void image_view_window_setup_toolbar (ImageViewWindow* self);
 void image_view_window_setup_notebook (ImageViewWindow* self);
+void video_area_set_control (VideoArea* self, MediaControl* control);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
@@ -225,11 +257,18 @@ gboolean image_view_window_retry_do_fill_visible_icons (ImageViewWindow* self);
 static gboolean _image_view_window_retry_do_fill_visible_icons_gsource_func (gpointer self);
 void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
-GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self);
+ImageViewWindow* image_view_window_new (void);
+ImageViewWindow* image_view_window_construct (GType object_type);
+void error_dialog (GError* _error_);
 static GObject * image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void image_view_window_finalize (GObject* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
 
 
 static void _image_view_window_on_iconlist_files_added_icon_list_control_files_added (IconListControl* _sender, gpointer self) {
@@ -247,37 +286,31 @@ static void _image_view_window_on_image_control_eos_media_control_eos_message (I
 }
 
 
-ImageViewWindow* image_view_window_construct (GType object_type, GError** error) {
+void image_view_window_setup_elements (ImageViewWindow* self, GError** error) {
 	GError * _inner_error_;
-	ImageViewWindow * self;
 	IconListControl* _tmp0_;
 	IconListControl* _tmp1_;
 	ImageControl* _tmp2_;
 	ImageControl* _tmp3_;
+	GtkListStore* _tmp4_;
+	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	self = g_object_newv (object_type, 0, NULL);
-	_tmp0_ = icon_list_control_new (self->iconlist_store, &_inner_error_);
+	_tmp0_ = icon_list_control_new (&_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
-		return NULL;
+		return;
 	}
 	self->iconlist_control = (_tmp1_ = _tmp0_, _g_object_unref0 (self->iconlist_control), _tmp1_);
-	g_signal_connect_object (self->iconlist_control, "files-added", (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self, 0);
-	g_signal_connect_object (self->iconlist_control, "icons-filled", (GCallback) _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled, self, 0);
 	_tmp2_ = image_control_new (&_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
-		return NULL;
+		return;
 	}
 	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
+	self->iconlist_store = (_tmp4_ = _g_object_ref0 (self->iconlist_control->iconlist_store), _g_object_unref0 (self->iconlist_store), _tmp4_);
+	g_signal_connect_object (self->iconlist_control, "files-added", (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self, 0);
+	g_signal_connect_object (self->iconlist_control, "icons-filled", (GCallback) _image_view_window_on_iconlist_icons_filled_icon_list_control_icons_filled, self, 0);
 	g_signal_connect_object ((MediaControl*) self->image_control, "eos-message", (GCallback) _image_view_window_on_image_control_eos_media_control_eos_message, self, 0);
-	video_area_set_control (self->video_area, (MediaControl*) self->image_control);
-	return self;
-}
-
-
-ImageViewWindow* image_view_window_new (GError** error) {
-	return image_view_window_construct (TYPE_IMAGE_VIEW_WINDOW, error);
 }
 
 
@@ -287,6 +320,7 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 	image_view_window_setup_toolbar (self);
 	image_view_window_setup_notebook (self);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
+	video_area_set_control (self->video_area, (MediaControl*) self->image_control);
 	gtk_widget_show_all ((GtkWidget*) ((ApplicationWindow*) self)->main_box);
 }
 
@@ -303,11 +337,6 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -778,21 +807,15 @@ void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self) {
 }
 
 
-GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self) {
-	GtkListStore* result;
-	GType s;
-	GType p;
-	GType b;
-	GType i;
-	GtkListStore* model;
-	g_return_val_if_fail (self != NULL, NULL);
-	s = G_TYPE_STRING;
-	p = GDK_TYPE_PIXBUF;
-	b = G_TYPE_BOOLEAN;
-	i = G_TYPE_INT;
-	model = gtk_list_store_new (7, s, s, p, b, b, i, i, NULL);
-	result = model;
-	return result;
+ImageViewWindow* image_view_window_construct (GType object_type) {
+	ImageViewWindow * self;
+	self = g_object_newv (object_type, 0, NULL);
+	return self;
+}
+
+
+ImageViewWindow* image_view_window_new (void) {
+	return image_view_window_construct (TYPE_IMAGE_VIEW_WINDOW);
 }
 
 
@@ -800,13 +823,36 @@ static GObject * image_view_window_constructor (GType type, guint n_construct_pr
 	GObject * obj;
 	GObjectClass * parent_class;
 	ImageViewWindow * self;
+	GError * _inner_error_;
 	parent_class = G_OBJECT_CLASS (image_view_window_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = IMAGE_VIEW_WINDOW (obj);
+	_inner_error_ = NULL;
 	{
-		GtkListStore* _tmp0_;
-		self->iconlist_store = (_tmp0_ = image_view_window_new_imagelist_store (self), _g_object_unref0 (self->iconlist_store), _tmp0_);
-		image_view_window_setup_widgets (self);
+		{
+			image_view_window_setup_elements (self, &_inner_error_);
+			if (_inner_error_ != NULL) {
+				goto __catch0_g_error;
+				goto __finally0;
+			}
+			image_view_window_setup_widgets (self);
+		}
+		goto __finally0;
+		__catch0_g_error:
+		{
+			GError * e;
+			e = _inner_error_;
+			_inner_error_ = NULL;
+			{
+				error_dialog (e);
+				_g_error_free0 (e);
+			}
+		}
+		__finally0:
+		if (_inner_error_ != NULL) {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+		}
 	}
 	return obj;
 }
@@ -828,8 +874,8 @@ static void image_view_window_finalize (GObject* obj) {
 	self = IMAGE_VIEW_WINDOW (obj);
 	{
 		if (self->iconlist_control != NULL) {
-			guint _tmp1_;
-			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("files-added", TYPE_ICON_LIST_CONTROL, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self);
+			guint _tmp0_;
+			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("files-added", TYPE_ICON_LIST_CONTROL, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _image_view_window_on_iconlist_files_added_icon_list_control_files_added, self);
 		}
 	}
 	_g_object_unref0 (self->chooser_button);

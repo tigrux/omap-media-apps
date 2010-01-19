@@ -35,15 +35,20 @@ class PlayListControl: MediaControl
     event moved(iter: TreeIter)
 
     init
+        setup_model()
+        setup_elements()
+    
+    def setup_model()
+        var s = typeof(string)
+        playlist_store = new ListStore(3, s, s, s)
+        playlist_store.row_inserted += on_row_inserted
+        playlist_store.row_deleted += on_row_deleted
+
+    def setup_elements()
         player = ElementFactory.make("playbin2", "player")
         if player == null
             player = ElementFactory.make("playbin", "player")
         set_pipeline(player as Gst.Bin)
-
-    construct(store: ListStore)
-        playlist_store = store
-        playlist_store.row_inserted += on_row_inserted
-        playlist_store.row_deleted += on_row_deleted
 
     def play(): bool
         iter: TreeIter

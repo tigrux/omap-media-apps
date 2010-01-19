@@ -36,12 +36,12 @@ class PlayerWindow: ApplicationWindow
     debug_dialog: DebugDialog
 
     init
-        playlist_store = new_playlist_store()
         setup_elements()
         setup_widgets()
 
     def setup_elements()
-        playlist_control = new PlayListControl(playlist_store)
+        playlist_control = new PlayListControl()
+        playlist_store = playlist_control.playlist_store
         playlist_control.eos_message += on_playlist_control_eos
         playlist_control.error_message += on_playlist_control_error
         playlist_control.playing += on_playlist_control_playing
@@ -77,6 +77,8 @@ class PlayerWindow: ApplicationWindow
         var stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
         stop_button.clicked += on_stop
+
+        toolbar_add_expander()
 
         var volume_button_item = new ToolItem()
         toolbar.add(volume_button_item)
@@ -219,11 +221,6 @@ class PlayerWindow: ApplicationWindow
             "markup", playlist_control.get_name_column(), null)
 
         return view
-
-    def new_playlist_store(): ListStore
-        var s = typeof(string)
-        var model = new ListStore(3, s, s, s)
-        return model
 
     def get_and_select_iter(out iter: TreeIter): bool
         if not playlist_selection.get_selected(null, out iter)

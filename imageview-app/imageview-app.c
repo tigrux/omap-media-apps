@@ -30,52 +30,25 @@ typedef struct _ApplicationWindowClass ApplicationWindowClass;
 typedef struct _ImageViewWindow ImageViewWindow;
 typedef struct _ImageViewWindowClass ImageViewWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 
 
-ImageViewWindow* image_view_window_new (GError** error);
-ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
+ImageViewWindow* image_view_window_new (void);
+ImageViewWindow* image_view_window_construct (GType object_type);
 GType application_window_get_type (void);
 GType image_view_window_get_type (void);
-void error_dialog (GError* _error_);
 void _main (char** args, int args_length1);
 
 
 
 void _main (char** args, int args_length1) {
-	GError * _inner_error_;
-	_inner_error_ = NULL;
+	ImageViewWindow* window;
 	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
-	{
-		ImageViewWindow* window;
-		window = g_object_ref_sink (image_view_window_new (&_inner_error_));
-		if (_inner_error_ != NULL) {
-			goto __catch0_g_error;
-			goto __finally0;
-		}
-		gtk_widget_show ((GtkWidget*) window);
-		gtk_main ();
-		_g_object_unref0 (window);
-	}
-	goto __finally0;
-	__catch0_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			error_dialog (e);
-			_g_error_free0 (e);
-		}
-	}
-	__finally0:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
+	window = g_object_ref_sink (image_view_window_new ());
+	gtk_widget_show ((GtkWidget*) window);
+	gtk_main ();
+	_g_object_unref0 (window);
 }
 
 
