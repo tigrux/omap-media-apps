@@ -5,7 +5,7 @@ uses Gtk
 
 
 const ICON_PIPELINE_DESC: string = \
-"""filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !
+"""filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! videoscale !
 video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"""
 
 
@@ -20,9 +20,13 @@ class IconListControl: MediaControl
         PIXBUF
         VALID
         FILLED
+        WIDTH
+        HEIGHT
 
     filesrc: dynamic Element
     imagesink: dynamic Element
+    imagedec: dynamic Element
+    imagedec_src: Pad
 
     missing_pixbuf: Gdk.Pixbuf
     loading_pixbuf: static Gdk.Pixbuf
@@ -71,10 +75,15 @@ class IconListControl: MediaControl
         icon_pipeline.set_name("icon_pipeline")
         if (filesrc = icon_pipeline.get_by_name("filesrc")) == null
             raise new CoreError.FAILED( \
-                        "No element named filesrc in the icon pipeline")
+                        "No element named filesrc in the icon_pipeline")
         if (imagesink = icon_pipeline.get_by_name("imagesink")) == null
             raise new CoreError.FAILED( \
-                        "No element named imagesink in the icon pipeline")
+                        "No element named imagesink in the icon_pipeline")
+        if (imagedec = icon_pipeline.get_by_name("imagedec")) == null
+            raise new CoreError.FAILED( \
+                        "No element named imagedec in the icon_pipeline")
+        imagedec_src = imagedec.get_static_pad("src")
+
         set_pipeline(icon_pipeline)
 
     def async add_folder(dirname: string, cancellable: Cancellable)
@@ -125,22 +134,33 @@ class IconListControl: MediaControl
                     filesrc.location = file
                     pipeline.set_state(State.PLAYING)
                     yield
-                    pipeline.set_state(State.READY)
+                    width: int = 0
+                    height: int = 0
                     pixbuf: Gdk.Pixbuf
                     valid: bool
                     valid = (continuation_error == null and last_pixbuf != null)
                     if valid
                         pixbuf = (owned)last_pixbuf
+                        get_playing_image_size(out width, out height)
                     else
                         pixbuf = missing_pixbuf
+                    
                     iconlist_store.set(iter, \
                         Col.PIXBUF, pixbuf, \
                         Col.VALID, valid, \
                         Col.FILLED, true, \
+                        Col.WIDTH, width, \
+                        Col.HEIGHT, height, \
                         -1)
+                pipeline.set_state(State.READY)
                 path.next()
             pipeline.set_state(State.NULL)
         icons_filled()
+
+    def get_playing_image_size(out width: int, out height: int)
+        var st = imagedec_src.get_negotiated_caps().get_structure(0)
+        st.get_int("width", out width)
+        st.get_int("height", out height)
 
     def on_element(src: Gst.Object, structure: Structure)
         if src == imagesink and structure.name == pixbuf_q
@@ -173,4 +193,10 @@ class IconListControl: MediaControl
         file: string
         iconlist_store.get(iter, Col.FILE, out file, -1)
         return file
+
+    def iter_get_size(iter: TreeIter, out width: int, out height: int)
+        iconlist_store.get(iter, \
+            Col.WIDTH, out width, \
+            Col.HEIGHT, out height, \
+            -1)
 

@@ -118,7 +118,9 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_FILE,
 	ICON_LIST_CONTROL_COL_PIXBUF,
 	ICON_LIST_CONTROL_COL_VALID,
-	ICON_LIST_CONTROL_COL_FILLED
+	ICON_LIST_CONTROL_COL_FILLED,
+	ICON_LIST_CONTROL_COL_WIDTH,
+	ICON_LIST_CONTROL_COL_HEIGHT
 } IconListControlCol;
 
 typedef enum  {
@@ -163,6 +165,7 @@ IconListControlCol icon_list_control_get_pixbuf_column (void);
 void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* path);
 static void _image_view_window_on_icon_activated_gtk_icon_view_item_activated (GtkIconView* _sender, GtkTreePath* path, gpointer self);
 gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* iter);
+void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void image_control_set_location (ImageControl* self, const char* value);
 GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
@@ -323,7 +326,11 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 	g_return_if_fail (path != NULL);
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
 	if (icon_list_control_iter_is_valid (self->iconlist_control, &iter)) {
+		gint width = 0;
+		gint height = 0;
 		char* file;
+		icon_list_control_iter_get_size (self->iconlist_control, &iter, &width, &height);
+		gtk_widget_set_size_request ((GtkWidget*) self->video_area, width, height);
 		file = icon_list_control_iter_get_file (self->iconlist_control, &iter);
 		image_control_set_location (self->image_control, file);
 		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_PLAYING);
@@ -592,12 +599,14 @@ GtkListStore* image_view_window_new_imagelist_store (ImageViewWindow* self) {
 	GType s;
 	GType p;
 	GType b;
+	GType i;
 	GtkListStore* model;
 	g_return_val_if_fail (self != NULL, NULL);
 	s = G_TYPE_STRING;
 	p = GDK_TYPE_PIXBUF;
 	b = G_TYPE_BOOLEAN;
-	model = gtk_list_store_new (5, s, s, p, b, b, NULL);
+	i = G_TYPE_INT;
+	model = gtk_list_store_new (7, s, s, p, b, b, i, i, NULL);
 	result = model;
 	return result;
 }

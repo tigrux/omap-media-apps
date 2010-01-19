@@ -44,6 +44,8 @@ typedef struct _IconListControlPrivate IconListControlPrivate;
 typedef struct _IconListControlAddFolderData IconListControlAddFolderData;
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 typedef struct _IconListControlFillIconsData IconListControlFillIconsData;
+#define _gst_caps_unref0(var) ((var == NULL) ? NULL : (var = (gst_caps_unref (var), NULL)))
+#define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
 
 struct _MediaControl {
 	GObject parent_instance;
@@ -61,6 +63,8 @@ struct _IconListControl {
 	IconListControlPrivate * priv;
 	GstElement* filesrc;
 	GstElement* imagesink;
+	GstElement* imagedec;
+	GstPad* imagedec_src;
 	GdkPixbuf* missing_pixbuf;
 	GSourceFunc continuation;
 	gpointer continuation_target;
@@ -81,7 +85,9 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_FILE,
 	ICON_LIST_CONTROL_COL_PIXBUF,
 	ICON_LIST_CONTROL_COL_VALID,
-	ICON_LIST_CONTROL_COL_FILLED
+	ICON_LIST_CONTROL_COL_FILLED,
+	ICON_LIST_CONTROL_COL_WIDTH,
+	ICON_LIST_CONTROL_COL_HEIGHT
 } IconListControlCol;
 
 struct _IconListControlAddFolderData {
@@ -114,6 +120,8 @@ struct _IconListControlFillIconsData {
 	gboolean filled;
 	GError* _tmp3_;
 	GdkPixbuf* _tmp4_;
+	gint width;
+	gint height;
 	GdkPixbuf* pixbuf;
 	gboolean valid;
 	gboolean _tmp5_;
@@ -133,7 +141,7 @@ extern gboolean icon_list_control_pixbufs_loaded;
 gboolean icon_list_control_pixbufs_loaded = FALSE;
 static gpointer icon_list_control_parent_class = NULL;
 
-#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
+#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
 GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
@@ -165,6 +173,7 @@ void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, Gtk
 void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean _icon_list_control_fill_icons_co_gsource_func (gpointer self);
 static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
+void icon_list_control_get_playing_image_size (IconListControl* self, gint* width, gint* height);
 static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* data);
 static inline GdkPixbuf* _dynamic_get_last_pixbuf1 (GstElement* obj);
 void icon_list_control_on_element (IconListControl* self, GstObject* src, const GstStructure* structure);
@@ -175,6 +184,7 @@ IconListControlCol icon_list_control_get_pixbuf_column (void);
 gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* iter);
 gboolean icon_list_control_iter_is_filled (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
+void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
 static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, GstObject* src, gpointer self);
 static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 static void _icon_list_control_on_element_media_control_element_message (IconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
@@ -190,7 +200,7 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 GType icon_list_control_col_get_type (void) {
 	static GType icon_list_control_col_type_id = 0;
 	if (G_UNLIKELY (icon_list_control_col_type_id == 0)) {
-		static const GEnumValue values[] = {{ICON_LIST_CONTROL_COL_TEXT, "ICON_LIST_CONTROL_COL_TEXT", "text"}, {ICON_LIST_CONTROL_COL_FILE, "ICON_LIST_CONTROL_COL_FILE", "file"}, {ICON_LIST_CONTROL_COL_PIXBUF, "ICON_LIST_CONTROL_COL_PIXBUF", "pixbuf"}, {ICON_LIST_CONTROL_COL_VALID, "ICON_LIST_CONTROL_COL_VALID", "valid"}, {ICON_LIST_CONTROL_COL_FILLED, "ICON_LIST_CONTROL_COL_FILLED", "filled"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{ICON_LIST_CONTROL_COL_TEXT, "ICON_LIST_CONTROL_COL_TEXT", "text"}, {ICON_LIST_CONTROL_COL_FILE, "ICON_LIST_CONTROL_COL_FILE", "file"}, {ICON_LIST_CONTROL_COL_PIXBUF, "ICON_LIST_CONTROL_COL_PIXBUF", "pixbuf"}, {ICON_LIST_CONTROL_COL_VALID, "ICON_LIST_CONTROL_COL_VALID", "valid"}, {ICON_LIST_CONTROL_COL_FILLED, "ICON_LIST_CONTROL_COL_FILLED", "filled"}, {ICON_LIST_CONTROL_COL_WIDTH, "ICON_LIST_CONTROL_COL_WIDTH", "width"}, {ICON_LIST_CONTROL_COL_HEIGHT, "ICON_LIST_CONTROL_COL_HEIGHT", "height"}, {0, NULL, NULL}};
 		icon_list_control_col_type_id = g_enum_register_static ("IconListControlCol", values);
 	}
 	return icon_list_control_col_type_id;
@@ -291,6 +301,8 @@ void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
 	GstPipeline* icon_pipeline;
 	GstElement* _tmp2_;
 	GstElement* _tmp3_;
+	GstElement* _tmp4_;
+	GstPad* _tmp5_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	_tmp0_ = gst_parse_launch (ICON_PIPELINE_DESC, &_inner_error_);
@@ -301,7 +313,7 @@ void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
 	icon_pipeline = (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL);
 	gst_object_set_name ((GstObject*) icon_pipeline, "icon_pipeline");
 	if ((self->filesrc = (_tmp2_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp2_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the icon pipeline");
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the icon_pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (icon_pipeline);
@@ -309,13 +321,22 @@ void icon_list_control_setup_pipeline (IconListControl* self, GError** error) {
 		}
 	}
 	if ((self->imagesink = (_tmp3_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp3_)) == NULL) {
-		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the icon pipeline");
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the icon_pipeline");
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (icon_pipeline);
 			return;
 		}
 	}
+	if ((self->imagedec = (_tmp4_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "imagedec"), _gst_object_unref0 (self->imagedec), _tmp4_)) == NULL) {
+		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagedec in the icon_pipeline");
+		if (_inner_error_ != NULL) {
+			g_propagate_error (error, _inner_error_);
+			_gst_object_unref0 (icon_pipeline);
+			return;
+		}
+	}
+	self->imagedec_src = (_tmp5_ = gst_element_get_static_pad (self->imagedec, "src"), _gst_object_unref0 (self->imagedec_src), _tmp5_);
 	media_control_set_pipeline ((MediaControl*) self, (GstBin*) icon_pipeline);
 	_gst_object_unref0 (icon_pipeline);
 }
@@ -550,7 +571,8 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						return FALSE;
 						case 3:
 						;
-						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
+						data->width = 0;
+						data->height = 0;
 						if (data->self->continuation_error == NULL) {
 							data->_tmp5_ = icon_list_control_last_pixbuf != NULL;
 						} else {
@@ -559,12 +581,14 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						data->valid = data->_tmp5_;
 						if (data->valid) {
 							data->pixbuf = (data->_tmp7_ = (data->_tmp6_ = icon_list_control_last_pixbuf, icon_list_control_last_pixbuf = NULL, data->_tmp6_), _g_object_unref0 (data->pixbuf), data->_tmp7_);
+							icon_list_control_get_playing_image_size (data->self, &data->width, &data->height);
 						} else {
 							data->pixbuf = (data->_tmp8_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp8_);
 						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, -1, -1);
+						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, ICON_LIST_CONTROL_COL_WIDTH, data->width, ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
 						_g_object_unref0 (data->pixbuf);
 					}
+					gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
 					gtk_tree_path_next (data->path);
 					_g_free0 (data->file);
 				}
@@ -582,6 +606,23 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 			return FALSE;
 		}
 	}
+}
+
+
+static gpointer _gst_structure_copy0 (gpointer self) {
+	return self ? gst_structure_copy (self) : NULL;
+}
+
+
+void icon_list_control_get_playing_image_size (IconListControl* self, gint* width, gint* height) {
+	GstCaps* _tmp0_;
+	GstStructure* _tmp1_;
+	GstStructure* st;
+	g_return_if_fail (self != NULL);
+	st = (_tmp1_ = _gst_structure_copy0 (gst_caps_get_structure (_tmp0_ = gst_pad_get_negotiated_caps (self->imagedec_src), (guint) 0)), _gst_caps_unref0 (_tmp0_), _tmp1_);
+	gst_structure_get_int (st, "width", width);
+	gst_structure_get_int (st, "height", height);
+	_gst_structure_free0 (st);
 }
 
 
@@ -676,6 +717,12 @@ char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter)
 }
 
 
+void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height) {
+	g_return_if_fail (self != NULL);
+	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_WIDTH, width, ICON_LIST_CONTROL_COL_HEIGHT, height, -1, -1);
+}
+
+
 GtkListStore* icon_list_control_get_iconlist_store (IconListControl* self) {
 	GtkListStore* result;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -746,6 +793,8 @@ static void icon_list_control_finalize (GObject* obj) {
 	self = ICON_LIST_CONTROL (obj);
 	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->imagesink);
+	_gst_object_unref0 (self->imagedec);
+	_gst_object_unref0 (self->imagedec_src);
 	_g_object_unref0 (self->missing_pixbuf);
 	(self->continuation_target_destroy_notify == NULL) ? NULL : self->continuation_target_destroy_notify (self->continuation_target);
 	self->continuation = NULL;

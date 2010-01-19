@@ -76,6 +76,9 @@ class ImageViewWindow: ApplicationWindow
         iter: TreeIter
         iconlist_store.get_iter(out iter, path)
         if iconlist_control.iter_is_valid(iter)
+            width, height: int
+            iconlist_control.iter_get_size(iter, out width, out height)
+            video_area.set_size_request(width, height)
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.set_state(Gst.State.PLAYING)
@@ -201,6 +204,7 @@ class ImageViewWindow: ApplicationWindow
         var s = typeof(string)
         var p = typeof(Gdk.Pixbuf)
         var b = typeof(bool)
-        var model = new ListStore(5, s, s, p, b, b)
+        var i = typeof(int)
+        var model = new ListStore(7, s, s, p, b, b, i, i)
         return model
 
