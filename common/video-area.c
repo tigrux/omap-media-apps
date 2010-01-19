@@ -58,7 +58,7 @@ enum  {
 static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean value);
 void video_area_set_sink (VideoArea* self, GstXOverlay* sink);
 static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
-static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* event);
+static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e);
 GType media_control_get_type (void);
 GstBus* media_control_get_bus (MediaControl* self);
 void video_area_on_bus_sync_message (VideoArea* self, GstMessage* message);
@@ -105,7 +105,7 @@ static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventBut
 }
 
 
-static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* event) {
+static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e) {
 	VideoArea * self;
 	gboolean result;
 	self = (VideoArea*) base;
@@ -114,6 +114,7 @@ static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e
 		result = FALSE;
 		return result;
 	}
+	gdk_draw_rectangle ((GdkDrawable*) (*e).window, gtk_widget_get_style ((GtkWidget*) self)->black_gc, TRUE, (*e).area.x, (*e).area.y, (*e).area.width, (*e).area.height);
 	result = TRUE;
 	return result;
 }

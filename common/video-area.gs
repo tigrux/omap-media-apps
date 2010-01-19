@@ -34,10 +34,13 @@ class VideoArea: DrawingArea
             activated()
         return true
 
-    def override expose_event(event: Gdk.EventExpose): bool
+    def override expose_event(e: Gdk.EventExpose): bool
         if imagesink != null
             imagesink.expose()
             return false
+        Gdk.draw_rectangle( \
+            e.window, get_style().black_gc, true, \
+            e.area.x, e.area.y, e.area.width, e.area.height)
         return true
 
     def set_control(control: MediaControl)
