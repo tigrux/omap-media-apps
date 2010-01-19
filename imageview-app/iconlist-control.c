@@ -133,7 +133,7 @@ extern gboolean icon_list_control_pixbufs_loaded;
 gboolean icon_list_control_pixbufs_loaded = FALSE;
 static gpointer icon_list_control_parent_class = NULL;
 
-#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsin name=imagesink"
+#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
 GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
