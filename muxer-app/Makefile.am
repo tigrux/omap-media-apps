@@ -1,3 +1,5 @@
+include $(top_srcdir)/common/common.am
+
 AM_CPPFLAGS = \
 	$(PROGRAM_CFLAGS) \
 	-include $(CONFIG_HEADER)
@@ -12,16 +14,10 @@ omap4_muxer_app_VALASOURCES = \
 	muxer-control.gs \
 	muxer-window.gs
 	
-common_VALASOURCES = \
-	$(top_srcdir)/common/video-area.gs \
-	$(top_srcdir)/common/error-dialog.gs \
-	$(top_srcdir)/common/media-window.gs \
-	$(top_srcdir)/common/media-control.gs
-
 omap4_muxer_app_SOURCES = \
-	$(omap4_muxer_app_VALASOURCES:.gs=.c) $(common_VALASOURCES:.gs=.c)
+	$(omap4_muxer_app_VALASOURCES:.gs=.c) $(COMMON_SOURCES)
 
-vala.stamp: $(omap4_muxer_app_VALASOURCES) $(common_VALASOURCES)
+vala.stamp: $(omap4_muxer_app_VALASOURCES) $(COMMON_VALASOURCES)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 

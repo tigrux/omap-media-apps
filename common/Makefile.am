@@ -1,20 +1,14 @@
 all: vala.stamp
 
-VALASOURCES = \
-	video-area.gs \
-	error-dialog.gs \
-	media-window.gs \
-	media-control.gs
+include common.am
 
-SOURCES = \
-	$(VALASOURCES:.gs=.c)
-
-vala.stamp: $(VALASOURCES)
+vala.stamp: $(COMMON_VALASOURCES)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 
 EXTRA_DIST = \
-	$(VALASOURCES) \
+	$(common_VALASOURCES) \
+	common.am \
 	vala.stamp
 
 DISTCLEANFILES =
