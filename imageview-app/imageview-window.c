@@ -331,8 +331,10 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 static void _lambda2_ (void* page, guint num_page, ImageViewWindow* self) {
 	if (num_page == MEDIA_WINDOW_TAB_VIDEO) {
 		gtk_tool_button_set_stock_id (self->slideshow_fullscreen_button, GTK_STOCK_FULLSCREEN);
+		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_CLOSE);
 	} else {
 		gtk_tool_button_set_stock_id (self->slideshow_fullscreen_button, GTK_STOCK_MEDIA_PLAY);
+		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
 	}
 }
 
@@ -429,7 +431,6 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 		file = icon_list_control_iter_get_file (self->iconlist_control, &iter);
 		image_control_set_location (self->image_control, file);
 		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_PLAYING);
-		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_CLOSE);
 		_g_free0 (file);
 	}
 }
@@ -524,8 +525,6 @@ void image_view_window_open (ImageViewWindow* self) {
 void image_view_window_close (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
-	gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
-	gtk_tool_button_set_stock_id (self->slideshow_fullscreen_button, GTK_STOCK_MEDIA_PLAY);
 	if (self->slideshow_continuation != NULL) {
 		image_view_window_stop_slideshow (self);
 	}
@@ -551,7 +550,6 @@ void image_view_window_on_slideshow_fullscreen (ImageViewWindow* self) {
 void image_view_window_start_slideshow (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
-	gtk_tool_button_set_stock_id (self->slideshow_fullscreen_button, GTK_STOCK_MEDIA_STOP);
 	self->slideshow_cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->slideshow_cancellable), _tmp0_);
 	image_view_window_slideshow (self, NULL, NULL);
 }

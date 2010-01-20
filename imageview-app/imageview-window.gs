@@ -63,8 +63,10 @@ class ImageViewWindow: MediaWindow
         notebook.switch_page += def(page, num_page)
             if num_page == Tab.VIDEO
                 slideshow_fullscreen_button.set_stock_id(STOCK_FULLSCREEN)
+                image_button.set_stock_id(STOCK_CLOSE)        
             else
                 slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_PLAY)
+                image_button.set_stock_id(STOCK_ZOOM_100)
 
     def new_iconlist_box(): Box
         var box = new VBox(false, 0)
@@ -105,7 +107,6 @@ class ImageViewWindow: MediaWindow
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.state = Gst.State.PLAYING
-            image_button.set_stock_id(STOCK_CLOSE)
 
     def new_video_box(): Box
         var box = new VBox(false, 0)
@@ -155,8 +156,6 @@ class ImageViewWindow: MediaWindow
 
     def close()
         notebook.set_current_page(Tab.LIST)
-        image_button.set_stock_id(STOCK_ZOOM_100)
-        slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_PLAY)
         if slideshow_continuation != null
             stop_slideshow()
 
@@ -171,7 +170,6 @@ class ImageViewWindow: MediaWindow
 
 
     def start_slideshow()
-        slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_STOP)
         slideshow_cancellable = new Cancellable()
         slideshow()
 
