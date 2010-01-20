@@ -15,8 +15,7 @@ class ImageViewWindow: MediaWindow
     image_control: ImageControl
     current_folder: string
     image_button: ToolButton
-    slideshow_button: ToolButton
-
+    slideshow_fullscreen_button: ToolButton
     slideshow_timeout: uint
     slideshow_continuation: SourceFunc
     slideshow_cancellable: Cancellable
@@ -62,7 +61,10 @@ class ImageViewWindow: MediaWindow
         notebook.append_page(new_iconlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
         notebook.switch_page += def(page, num_page)
-            fullscreen_button.set_visible(num_page == Tab.VIDEO)
+            if num_page == Tab.VIDEO
+                slideshow_fullscreen_button.set_stock_id(STOCK_FULLSCREEN)
+            else
+                slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_PLAY)
 
     def new_iconlist_box(): Box
         var box = new VBox(false, 0)
@@ -134,12 +136,10 @@ class ImageViewWindow: MediaWindow
 
         toolbar_add_expander()
 
-        slideshow_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
-        toolbar.add(slideshow_button)
-        slideshow_button.clicked += on_slideshow
+        slideshow_fullscreen_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(slideshow_fullscreen_button)
+        slideshow_fullscreen_button.clicked += on_slideshow_fullscreen
 
-        toolbar_add_expander()
-        toolbar_add_fullscreen_button()
         toolbar_add_quit_button()
 
     def on_open_close()
@@ -156,19 +156,22 @@ class ImageViewWindow: MediaWindow
     def close()
         notebook.set_current_page(Tab.LIST)
         image_button.set_stock_id(STOCK_ZOOM_100)
-        slideshow_button.set_stock_id(STOCK_MEDIA_PLAY)
+        slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_PLAY)
+        if slideshow_continuation != null
+            stop_slideshow()
 
-    def on_slideshow()
+    def on_slideshow_fullscreen()
         iter: TreeIter
         if not iconlist_store.get_iter_first(out iter)
             return
-        if slideshow_continuation == null
+        if notebook.get_current_page() == Tab.VIDEO
+            toggle_fullscreen()
+        else if slideshow_continuation == null
             start_slideshow()
-        else
-            stop_slideshow()
+
 
     def start_slideshow()
-        slideshow_button.set_stock_id(STOCK_MEDIA_STOP)
+        slideshow_fullscreen_button.set_stock_id(STOCK_MEDIA_STOP)
         slideshow_cancellable = new Cancellable()
         slideshow()
 
@@ -182,7 +185,7 @@ class ImageViewWindow: MediaWindow
         image_control.state = Gst.State.READY
         notebook.set_current_page(Tab.VIDEO)
         if slideshow_continuation != null
-            slideshow_timeout = Timeout.add_seconds(1, slideshow_continuation)
+            slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 
     def async slideshow()
         iter: TreeIter
