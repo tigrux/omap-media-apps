@@ -20,6 +20,7 @@ typedef struct _ApplicationWindow ApplicationWindow;
 typedef struct _ApplicationWindowClass ApplicationWindowClass;
 typedef struct _ApplicationWindowPrivate ApplicationWindowPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 
 typedef enum  {
 	APPLICATION_TAB_LIST,
@@ -54,6 +55,7 @@ void application_window_toolbar_add_expander (ApplicationWindow* self);
 void application_window_on_quit (ApplicationWindow* self);
 static void _application_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void application_window_toolbar_add_quit_button (ApplicationWindow* self);
+void application_window_set_fullscreen (ApplicationWindow* self, gboolean value);
 gboolean application_window_quit (ApplicationWindow* self);
 static gboolean _application_window_quit_gsource_func (gpointer self);
 ApplicationWindow* application_window_new (void);
@@ -107,6 +109,31 @@ void application_window_toolbar_add_expander (ApplicationWindow* self) {
 	gtk_separator_tool_item_set_draw (expander_item, FALSE);
 	gtk_container_add ((GtkContainer*) self->toolbar, (GtkWidget*) expander_item);
 	_g_object_unref0 (expander_item);
+}
+
+
+void application_window_set_fullscreen (ApplicationWindow* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	{
+		GList* child_collection;
+		GList* child_it;
+		child_collection = gtk_container_get_children ((GtkContainer*) self->main_box);
+		for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+			GtkWidget* child;
+			child = (GtkWidget*) child_it->data;
+			{
+				if (child != GTK_WIDGET (self->notebook)) {
+					gtk_widget_set_visible (child, !value);
+				}
+			}
+		}
+		_g_list_free0 (child_collection);
+	}
+	if (value) {
+		gtk_window_fullscreen ((GtkWindow*) self);
+	} else {
+		gtk_window_unfullscreen ((GtkWindow*) self);
+	}
 }
 
 

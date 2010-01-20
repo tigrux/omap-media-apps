@@ -238,6 +238,7 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
 gint64 media_control_get_position (MediaControl* self);
 gint64 media_control_get_duration (MediaControl* self);
+void application_window_set_fullscreen (ApplicationWindow* self, gboolean value);
 DebugDialog* debug_dialog_new (GtkWindow* parent);
 DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
 void player_window_on_debug_dialog_closed (PlayerWindow* self);
@@ -983,17 +984,11 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self) {
 void player_window_toggle_fullscreen (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->is_fullscreen) {
-		gtk_widget_show ((GtkWidget*) ((ApplicationWindow*) self)->toolbar);
-		gtk_widget_show ((GtkWidget*) self->seeking_scale);
-		gtk_window_unfullscreen ((GtkWindow*) self);
-		gtk_window_activate_default ((GtkWindow*) self);
 		self->is_fullscreen = FALSE;
+		application_window_set_fullscreen ((ApplicationWindow*) self, FALSE);
 	} else {
-		gtk_widget_hide ((GtkWidget*) ((ApplicationWindow*) self)->toolbar);
-		gtk_widget_hide ((GtkWidget*) self->seeking_scale);
-		gtk_window_fullscreen ((GtkWindow*) self);
 		self->is_fullscreen = TRUE;
-		gtk_widget_grab_focus ((GtkWidget*) ((ApplicationWindow*) self)->toolbar);
+		application_window_set_fullscreen ((ApplicationWindow*) self, TRUE);
 	}
 }
 

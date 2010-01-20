@@ -378,17 +378,11 @@ class PlayerWindow: ApplicationWindow
 
     def toggle_fullscreen()
         if is_fullscreen
-            toolbar.show()
-            seeking_scale.show()
-            unfullscreen()
-            activate_default()
             is_fullscreen = false
+            set_fullscreen(false)
         else
-            toolbar.hide()
-            seeking_scale.hide()
-            fullscreen()
             is_fullscreen = true
-            toolbar.grab_focus()
+            set_fullscreen(true)
 
     def setup_debug_dialog()
         if debug_dialog != null

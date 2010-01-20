@@ -61,6 +61,15 @@ class ApplicationWindow: Window
         expander_item.set_draw(false)
         toolbar.add(expander_item)
 
+    def set_fullscreen(value: bool)
+        for child in main_box.get_children()
+            if child != notebook
+                child.set_visible(not value)
+        if value
+            fullscreen()
+        else
+            unfullscreen()
+
     def on_quit()
         Idle.add(quit)
 
