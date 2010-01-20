@@ -88,6 +88,7 @@ struct _MediaWindow {
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
+	gboolean is_fullscreen;
 };
 
 struct _MediaWindowClass {
@@ -539,6 +540,7 @@ void image_view_window_stop_slideshow (ImageViewWindow* self) {
 void image_view_window_on_image_control_eos (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
+	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
 	if (self->slideshow_continuation != NULL) {
 		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 1, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}

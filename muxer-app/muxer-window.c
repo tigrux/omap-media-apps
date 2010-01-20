@@ -94,6 +94,7 @@ struct _MediaWindow {
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
+	gboolean is_fullscreen;
 };
 
 struct _MediaWindowClass {

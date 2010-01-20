@@ -32,7 +32,6 @@ class PlayerWindow: MediaWindow
     stream_position: int64
     stream_duration: int64
     should_resume_playback: bool
-    is_fullscreen: bool
 
     debug_dialog: DebugDialog
 
@@ -375,14 +374,6 @@ class PlayerWindow: MediaWindow
             var stream_value = stream_position * 100.0 / stream_duration
             seeking_adjustment.set_value(stream_value)
         return true
-
-    def toggle_fullscreen()
-        if is_fullscreen
-            is_fullscreen = false
-            set_fullscreen(false)
-        else
-            is_fullscreen = true
-            set_fullscreen(true)
 
     def setup_debug_dialog()
         if debug_dialog != null

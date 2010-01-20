@@ -28,6 +28,7 @@ struct _MediaWindow {
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
+	gboolean is_fullscreen;
 };
 
 struct _MediaWindowClass {
@@ -56,6 +57,7 @@ void media_window_on_quit (MediaWindow* self);
 static void _media_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void media_window_toolbar_add_quit_button (MediaWindow* self);
 void media_window_set_fullscreen (MediaWindow* self, gboolean value);
+void media_window_toggle_fullscreen (MediaWindow* self);
 gboolean media_window_quit (MediaWindow* self);
 static gboolean _media_window_quit_gsource_func (gpointer self);
 MediaWindow* media_window_new (void);
@@ -109,6 +111,13 @@ void media_window_toolbar_add_expander (MediaWindow* self) {
 	gtk_separator_tool_item_set_draw (expander_item, FALSE);
 	gtk_container_add ((GtkContainer*) self->toolbar, (GtkWidget*) expander_item);
 	_g_object_unref0 (expander_item);
+}
+
+
+void media_window_toggle_fullscreen (MediaWindow* self) {
+	g_return_if_fail (self != NULL);
+	self->is_fullscreen = !self->is_fullscreen;
+	media_window_set_fullscreen (self, self->is_fullscreen);
 }
 
 

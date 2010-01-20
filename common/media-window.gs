@@ -20,6 +20,7 @@ class MediaWindow: Window
     toolbar: Toolbar
     main_box: VBox
     rc_parsed: static bool = rc_parse()
+    is_fullscreen: bool
 
     enum Tab
         LIST
@@ -60,6 +61,10 @@ class MediaWindow: Window
         expander_item.set_expand(true)
         expander_item.set_draw(false)
         toolbar.add(expander_item)
+
+    def toggle_fullscreen()
+        is_fullscreen = not is_fullscreen
+        set_fullscreen(is_fullscreen)
 
     def set_fullscreen(value: bool)
         for child in main_box.get_children()
