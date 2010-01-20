@@ -29,7 +29,6 @@ typedef struct _MediaControlPrivate MediaControlPrivate;
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
-	GstBus* bus;
 };
 
 struct _MediaControlClass {
@@ -47,20 +46,22 @@ GType media_control_get_type (void);
 #define MEDIA_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_MEDIA_CONTROL, MediaControlPrivate))
 enum  {
 	MEDIA_CONTROL_DUMMY_PROPERTY,
-	MEDIA_CONTROL_PIPELINE
+	MEDIA_CONTROL_PIPELINE,
+	MEDIA_CONTROL_STATE,
+	MEDIA_CONTROL_POSITION,
+	MEDIA_CONTROL_DURATION
 };
-GstBus* media_control_get_bus (MediaControl* self);
 void media_control_on_bus_message (MediaControl* self, GstMessage* message);
-GstBin* media_control_get_pipeline (MediaControl* self);
-void media_control_seek (MediaControl* self, gint64 location);
-GstState media_control_get_state (MediaControl* self);
-GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
-gint64 media_control_get_position (MediaControl* self);
-gint64 media_control_get_duration (MediaControl* self);
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);
+GstBin* media_control_get_pipeline (MediaControl* self);
 static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
 void media_control_set_pipeline (MediaControl* self, GstBin* value);
+GstState media_control_get_state (MediaControl* self);
+void media_control_set_state (MediaControl* self, GstState value);
+gint64 media_control_get_position (MediaControl* self);
+void media_control_set_position (MediaControl* self, gint64 value);
+gint64 media_control_get_duration (MediaControl* self);
 static void media_control_finalize (GObject* obj);
 static void media_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void media_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
@@ -70,19 +71,6 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * clos
 static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-
-static gpointer _gst_object_ref0 (gpointer self) {
-	return self ? gst_object_ref (self) : NULL;
-}
-
-
-GstBus* media_control_get_bus (MediaControl* self) {
-	GstBus* result;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = _gst_object_ref0 (self->bus);
-	return result;
-}
-
 
 static gpointer _gst_structure_copy0 (gpointer self) {
 	return self ? gst_structure_copy (self) : NULL;
@@ -188,62 +176,6 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 }
 
 
-static gpointer _gst_event_ref0 (gpointer self) {
-	return self ? gst_event_ref (self) : NULL;
-}
-
-
-void media_control_seek (MediaControl* self, gint64 location) {
-	GstEvent* seek_event;
-	g_return_if_fail (self != NULL);
-	seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, location, GST_SEEK_TYPE_NONE, (gint64) 0);
-	gst_element_send_event ((GstElement*) media_control_get_pipeline (self), _gst_event_ref0 (seek_event));
-	_gst_event_unref0 (seek_event);
-}
-
-
-GstState media_control_get_state (MediaControl* self) {
-	GstState result;
-	GstState state = 0;
-	g_return_val_if_fail (self != NULL, 0);
-	gst_element_get_state ((GstElement*) media_control_get_pipeline (self), &state, NULL, (GstClockTime) (GST_MSECOND * 50));
-	result = state;
-	return result;
-}
-
-
-GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state) {
-	GstStateChangeReturn result;
-	g_return_val_if_fail (self != NULL, 0);
-	result = gst_element_set_state ((GstElement*) media_control_get_pipeline (self), state);
-	return result;
-}
-
-
-gint64 media_control_get_position (MediaControl* self) {
-	gint64 result;
-	GstFormat format;
-	gint64 position = 0LL;
-	g_return_val_if_fail (self != NULL, 0LL);
-	format = GST_FORMAT_TIME;
-	gst_element_query_position ((GstElement*) media_control_get_pipeline (self), &format, &position);
-	result = position;
-	return result;
-}
-
-
-gint64 media_control_get_duration (MediaControl* self) {
-	gint64 result;
-	GstFormat format;
-	gint64 duration = 0LL;
-	g_return_val_if_fail (self != NULL, 0LL);
-	format = GST_FORMAT_TIME;
-	gst_element_query_duration ((GstElement*) media_control_get_pipeline (self), &format, &duration);
-	result = duration;
-	return result;
-}
-
-
 MediaControl* media_control_construct (GType object_type) {
 	MediaControl * self;
 	self = (MediaControl*) g_object_new (object_type, NULL);
@@ -269,19 +201,81 @@ static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstM
 }
 
 
+static gpointer _gst_object_ref0 (gpointer self) {
+	return self ? gst_object_ref (self) : NULL;
+}
+
+
 void media_control_set_pipeline (MediaControl* self, GstBin* value) {
 	GstBin* _tmp1_;
-	GstBus* _tmp2_;
+	GstBus* bus;
 	g_return_if_fail (self != NULL);
-	if (self->bus != NULL) {
+	if (self->priv->_pipeline != NULL) {
 		guint _tmp0_;
-		g_signal_handlers_disconnect_matched (self->bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
+		g_signal_handlers_disconnect_matched (((GstElement*) self->priv->_pipeline)->bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
 	}
 	self->priv->_pipeline = (_tmp1_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_pipeline), _tmp1_);
-	self->bus = (_tmp2_ = gst_element_get_bus ((GstElement*) media_control_get_pipeline (self)), _gst_object_unref0 (self->bus), _tmp2_);
-	gst_bus_add_signal_watch (self->bus);
-	g_signal_connect_object (self->bus, "message", (GCallback) _media_control_on_bus_message_gst_bus_message, self, 0);
+	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
+	gst_bus_add_signal_watch (bus);
+	g_signal_connect_object (bus, "message", (GCallback) _media_control_on_bus_message_gst_bus_message, self, 0);
+	_gst_object_unref0 (bus);
 	g_object_notify ((GObject *) self, "pipeline");
+}
+
+
+GstState media_control_get_state (MediaControl* self) {
+	GstState result;
+	GstState state = 0;
+	g_return_val_if_fail (self != NULL, 0);
+	gst_element_get_state ((GstElement*) media_control_get_pipeline (self), &state, NULL, (GstClockTime) (GST_MSECOND * 50));
+	result = state;
+	return result;
+}
+
+
+void media_control_set_state (MediaControl* self, GstState value) {
+	g_return_if_fail (self != NULL);
+	gst_element_set_state ((GstElement*) media_control_get_pipeline (self), value);
+	g_object_notify ((GObject *) self, "state");
+}
+
+
+gint64 media_control_get_position (MediaControl* self) {
+	gint64 result;
+	GstFormat format;
+	gint64 position = 0LL;
+	g_return_val_if_fail (self != NULL, 0LL);
+	format = GST_FORMAT_TIME;
+	gst_element_query_position ((GstElement*) media_control_get_pipeline (self), &format, &position);
+	result = position;
+	return result;
+}
+
+
+static gpointer _gst_event_ref0 (gpointer self) {
+	return self ? gst_event_ref (self) : NULL;
+}
+
+
+void media_control_set_position (MediaControl* self, gint64 value) {
+	GstEvent* seek_event;
+	g_return_if_fail (self != NULL);
+	seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, value, GST_SEEK_TYPE_NONE, (gint64) 0);
+	gst_element_send_event ((GstElement*) media_control_get_pipeline (self), _gst_event_ref0 (seek_event));
+	_gst_event_unref0 (seek_event);
+	g_object_notify ((GObject *) self, "position");
+}
+
+
+gint64 media_control_get_duration (MediaControl* self) {
+	gint64 result;
+	GstFormat format;
+	gint64 duration = 0LL;
+	g_return_val_if_fail (self != NULL, 0LL);
+	format = GST_FORMAT_TIME;
+	gst_element_query_duration ((GstElement*) media_control_get_pipeline (self), &format, &duration);
+	result = duration;
+	return result;
 }
 
 
@@ -292,6 +286,9 @@ static void media_control_class_init (MediaControlClass * klass) {
 	G_OBJECT_CLASS (klass)->set_property = media_control_set_property;
 	G_OBJECT_CLASS (klass)->finalize = media_control_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_PIPELINE, g_param_spec_object ("pipeline", "pipeline", "pipeline", GST_TYPE_BIN, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_STATE, g_param_spec_enum ("state", "state", "state", GST_TYPE_STATE, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_POSITION, g_param_spec_int64 ("position", "position", "position", G_MININT64, G_MAXINT64, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_DURATION, g_param_spec_int64 ("duration", "duration", "duration", G_MININT64, G_MAXINT64, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
 	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
@@ -310,7 +307,6 @@ static void media_control_instance_init (MediaControl * self) {
 static void media_control_finalize (GObject* obj) {
 	MediaControl * self;
 	self = MEDIA_CONTROL (obj);
-	_gst_object_unref0 (self->bus);
 	_gst_object_unref0 (self->priv->_pipeline);
 	G_OBJECT_CLASS (media_control_parent_class)->finalize (obj);
 }
@@ -333,6 +329,15 @@ static void media_control_get_property (GObject * object, guint property_id, GVa
 		case MEDIA_CONTROL_PIPELINE:
 		g_value_set_object (value, media_control_get_pipeline (self));
 		break;
+		case MEDIA_CONTROL_STATE:
+		g_value_set_enum (value, media_control_get_state (self));
+		break;
+		case MEDIA_CONTROL_POSITION:
+		g_value_set_int64 (value, media_control_get_position (self));
+		break;
+		case MEDIA_CONTROL_DURATION:
+		g_value_set_int64 (value, media_control_get_duration (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -346,6 +351,12 @@ static void media_control_set_property (GObject * object, guint property_id, con
 	switch (property_id) {
 		case MEDIA_CONTROL_PIPELINE:
 		media_control_set_pipeline (self, g_value_get_object (value));
+		break;
+		case MEDIA_CONTROL_STATE:
+		media_control_set_state (self, g_value_get_enum (value));
+		break;
+		case MEDIA_CONTROL_POSITION:
+		media_control_set_position (self, g_value_get_int64 (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

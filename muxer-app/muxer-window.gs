@@ -90,7 +90,7 @@ class MuxerWindow: MediaWindow
             print "Could not get the pipelines"
             return
         muxer_control = new MuxerControl(preview, record)
-        muxer_control.enable_buffer_probe(probe_button.get_active())
+        muxer_control.buffer_probe_enabled = probe_button.get_active()
         muxer_control.error_message += on_control_error
         try
             muxer_control.load()

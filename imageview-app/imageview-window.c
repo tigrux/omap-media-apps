@@ -202,7 +202,7 @@ gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* it
 void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void image_control_set_location (ImageControl* self, const char* value);
-GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
+void media_control_set_state (MediaControl* self, GstState value);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 void media_window_toggle_fullscreen (MediaWindow* self);

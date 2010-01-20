@@ -35,7 +35,6 @@ typedef struct _ImageControlPrivate ImageControlPrivate;
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
-	GstBus* bus;
 };
 
 struct _MediaControlClass {

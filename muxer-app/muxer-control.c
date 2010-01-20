@@ -4,9 +4,9 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/gst.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -37,7 +37,6 @@ typedef struct _MuxerControlPrivate MuxerControlPrivate;
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
-	GstBus* bus;
 };
 
 struct _MediaControlClass {
@@ -76,7 +75,6 @@ GType muxer_control_get_type (void);
 enum  {
 	MUXER_CONTROL_DUMMY_PROPERTY
 };
-void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled);
 MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
 void muxer_control_load_preview_bin (MuxerControl* self, GError** error);
@@ -101,12 +99,6 @@ static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _send
 static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void muxer_control_finalize (GObject* obj);
 
-
-
-void muxer_control_enable_buffer_probe (MuxerControl* self, gboolean enabled) {
-	g_return_if_fail (self != NULL);
-	self->buffer_probe_enabled = enabled;
-}
 
 
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record) {

@@ -60,7 +60,7 @@ void video_area_set_sink (VideoArea* self, GstXOverlay* sink);
 static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
 static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e);
 GType media_control_get_type (void);
-GstBus* media_control_get_bus (MediaControl* self);
+GstBin* media_control_get_pipeline (MediaControl* self);
 void video_area_on_bus_sync_message (VideoArea* self, GstMessage* message);
 static void _video_area_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
 void video_area_set_control (VideoArea* self, MediaControl* control);
@@ -129,7 +129,7 @@ void video_area_set_control (VideoArea* self, MediaControl* control) {
 	GstBus* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (control != NULL);
-	self->bus = (_tmp0_ = media_control_get_bus (control), _gst_object_unref0 (self->bus), _tmp0_);
+	self->bus = (_tmp0_ = _gst_object_ref0 (((GstElement*) media_control_get_pipeline (control))->bus), _gst_object_unref0 (self->bus), _tmp0_);
 	gst_bus_enable_sync_message_emission (self->bus);
 	g_signal_connect_object (self->bus, "sync-message", (GCallback) _video_area_on_bus_sync_message_gst_bus_sync_message, self, 0);
 }

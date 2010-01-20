@@ -102,7 +102,7 @@ class ImageViewWindow: MediaWindow
             video_area.set_size_request(width, height)
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
-            image_control.set_state(Gst.State.PLAYING)
+            image_control.state = Gst.State.PLAYING
             image_button.set_stock_id(STOCK_CLOSE)
 
     def new_video_box(): Box
@@ -179,7 +179,7 @@ class ImageViewWindow: MediaWindow
             Idle.add(slideshow_continuation)
 
     def on_image_control_eos()
-        image_control.set_state(Gst.State.READY)
+        image_control.state = Gst.State.READY
         notebook.set_current_page(Tab.VIDEO)
         if slideshow_continuation != null
             slideshow_timeout = Timeout.add_seconds(1, slideshow_continuation)

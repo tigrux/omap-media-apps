@@ -44,7 +44,7 @@ class VideoArea: DrawingArea
         return true
 
     def set_control(control: MediaControl)
-        bus = control.get_bus()
+        bus = control.pipeline.bus
         bus.enable_sync_message_emission()
         bus.sync_message += on_bus_sync_message
 

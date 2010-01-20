@@ -45,12 +45,12 @@ class PlayerWindow: MediaWindow
 
     def setup_controls()
         playlist_control = new PlayListControl(playlist_store)
-        playlist_control.eos_message += on_playlist_control_eos
-        playlist_control.error_message += on_playlist_control_error
-        playlist_control.playing += on_playlist_control_playing
-        playlist_control.paused += on_playlist_control_paused
-        playlist_control.stopped += on_playlist_control_stopped
-        playlist_control.moved += on_playlist_control_moved
+        playlist_control.eos_message += playlist_control_eos
+        playlist_control.error_message += playlist_control_error
+        playlist_control.playing += playlist_control_playing
+        playlist_control.paused += playlist_control_paused
+        playlist_control.stopped += playlist_control_stopped
+        playlist_control.moved += playlist_control_moved
 
     def setup_widgets()
         set_title(TITLE)
@@ -73,15 +73,15 @@ class PlayerWindow: MediaWindow
 
         play_pause_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
         toolbar.add(play_pause_button)
-        play_pause_button.clicked += on_play_pause
+        play_pause_button.clicked += play_pause
 
         next_button = new ToolButton.from_stock(STOCK_MEDIA_NEXT)
         toolbar.add(next_button)
-        next_button.clicked += on_next
+        next_button.clicked += next
 
         var stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
-        stop_button.clicked += on_stop
+        stop_button.clicked += stop
 
         toolbar_add_expander()
 
@@ -91,7 +91,7 @@ class PlayerWindow: MediaWindow
         volume_button_item.add(volume_button)
 
         toolbar_add_fullscreen_button()
-        
+
         toolbar_add_expander()
 
         add_button = new ToolButton.from_stock(STOCK_ADD)
@@ -116,22 +116,22 @@ class PlayerWindow: MediaWindow
         seeking_scale.format_value += on_scale_format_value
 
     def is_playing(): bool
-        return playlist_control.get_state() == Gst.State.PLAYING
+        return playlist_control.state == Gst.State.PLAYING
 
-    def on_play()
+    def play()
         playlist_control.play()
 
-    def on_pause()
+    def pause()
         playlist_control.pause()
 
-    def on_stop()
+    def stop()
         playlist_control.stop()
 
-    def on_next()
+    def next()
         var was_playing = is_playing()
         if playlist_control.next()
             if was_playing
-                on_play()
+                play()
         else
             iter: TreeIter
             if playlist_store.get_iter_first(out iter)
@@ -141,7 +141,7 @@ class PlayerWindow: MediaWindow
         var was_playing = is_playing()
         if playlist_control.prev()
             if was_playing
-                on_play()
+                play()
 
     def on_mute_clicked()
         var volume = volume_button.get_adjustment()
@@ -240,32 +240,32 @@ class PlayerWindow: MediaWindow
         playlist_control.move_to(path)
         return true
 
-    def on_play_pause()
+    def play_pause()
         iter: TreeIter
-        case playlist_control.get_state()
+        case playlist_control.state
             when Gst.State.PLAYING
-                on_pause()
+                pause()
             when Gst.State.PAUSED
-                on_play()
+                play()
             when Gst.State.NULL
                 if not get_and_select_iter(out iter)
                     return
                 var row = playlist_store.get_path(iter)
                 playlist_control.move_to(row)
                 notebook.set_current_page(Tab.LIST)
-                on_play()
+                play()
 
-    def on_playlist_control_playing(iter: TreeIter)
+    def playlist_control_playing(iter: TreeIter)
         set_title(playlist_control.iter_get_name(iter))
         play_pause_button.set_stock_id(STOCK_MEDIA_PAUSE)
         add_update_scale_timeout()
         seeking_scale.show()
 
-    def on_playlist_control_paused(iter: TreeIter)
+    def playlist_control_paused(iter: TreeIter)
         play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
         remove_update_scale_timeout()
 
-    def on_playlist_control_stopped(iter: TreeIter)
+    def playlist_control_stopped(iter: TreeIter)
         set_title(TITLE)
         var page = notebook.get_current_page()
         if page != Tab.LIST
@@ -274,7 +274,7 @@ class PlayerWindow: MediaWindow
         remove_update_scale_timeout()
         seeking_scale.hide()
 
-    def on_playlist_control_moved(iter: TreeIter)
+    def playlist_control_moved(iter: TreeIter)
         playlist_selection.select_iter(iter)
 
     def on_add()
@@ -315,13 +315,13 @@ class PlayerWindow: MediaWindow
             playlist_store.remove(iter)
 
     def on_row_activated(row: TreePath)
-        on_stop()
+        stop()
         if playlist_control.move_to(row)
-            on_play()
+            play()
 
     def on_seeking_scale_pressed(): bool
         if is_playing()
-            on_pause()
+            pause()
             should_resume_playback = true
         else
             should_resume_playback = false
@@ -330,9 +330,9 @@ class PlayerWindow: MediaWindow
     def on_seeking_scale_released(): bool
         real_value: int64
         real_value = (int64)(seeking_scale.get_value() * stream_duration/100)
-        playlist_control.seek(real_value)
+        playlist_control.position = real_value
         if should_resume_playback
-            on_play()
+            play()
         return false
 
     def on_scale_format_value(scale_value: double): string
@@ -363,8 +363,8 @@ class PlayerWindow: MediaWindow
         update_seeking_scale_id = 0
 
     def update_scale_timeout(): bool
-        stream_position = playlist_control.get_position()
-        stream_duration = playlist_control.get_duration()
+        stream_position = playlist_control.position
+        stream_duration = playlist_control.duration
 
         if stream_position >= 0 and stream_duration > 0
             var stream_value = stream_position * 100.0 / stream_duration
@@ -382,13 +382,13 @@ class PlayerWindow: MediaWindow
 
     def on_debug_dialog_closed()
         toolbar.show()
-        on_stop()
+        stop()
         debug_dialog = null
 
-    def on_playlist_control_eos(src: Gst.Object)
+    def playlist_control_eos(src: Gst.Object)
         next_button.activate()
 
-    def on_playlist_control_error(src: Gst.Object, error: Error, debug: string)
+    def playlist_control_error(src: Gst.Object, error: Error, debug: string)
         setup_debug_dialog()
         debug_dialog.add_error_debug(error, debug)
 

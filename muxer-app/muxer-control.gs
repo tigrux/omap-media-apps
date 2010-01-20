@@ -10,9 +10,6 @@ class MuxerControl: MediaControl
     previewing: bool
     buffer_probe_enabled: bool
 
-    def enable_buffer_probe(enabled: bool)
-        buffer_probe_enabled = enabled
-
     overlay: Element
     tee: Element
     audiosrc: Element

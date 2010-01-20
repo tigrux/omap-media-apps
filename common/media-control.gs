@@ -4,7 +4,6 @@ uses Gst
 
 
 class MediaControl: GLib.Object
-    bus: Bus
     _pipeline: Bin
 
     event eos_message(src: Gst.Object)
@@ -18,17 +17,14 @@ class MediaControl: GLib.Object
 
     prop pipeline: Bin
         set
-            if bus != null
-                bus.message.disconnect(on_bus_message)
+            if _pipeline != null
+                _pipeline.bus.message.disconnect(on_bus_message)
             _pipeline = value
-            bus = pipeline.get_bus()
+            var bus = _pipeline.bus
             bus.add_signal_watch()
             bus.message += on_bus_message
         get
             return _pipeline
-
-    def get_bus(): Bus
-        return bus
 
     def on_bus_message(message: Message)
         case message.type
@@ -64,31 +60,32 @@ class MediaControl: GLib.Object
             default
                 pass
 
-    def seek(location: int64)
-        var seek_event = new Event.seek( \
-            1.0, Format.TIME, \
-            SeekFlags.FLUSH | SeekFlags.ACCURATE, \
-            Gst.SeekType.SET, location, \
-            Gst.SeekType.NONE, 0)
-        pipeline.send_event(seek_event)
+    prop state: Gst.State
+        get
+            state: State
+            pipeline.get_state(out state, null, (ClockTime)(MSECOND*50))
+            return state
+        set
+            pipeline.set_state(value)
 
-    def get_state(): Gst.State
-        state: State
-        pipeline.get_state(out state, null, (ClockTime)(MSECOND*50))
-        return state
+    prop position: int64
+        get
+            var format = Format.TIME
+            position: int64
+            pipeline.query_position(ref format, out position)
+            return position
+        set
+            var seek_event = new Event.seek( \
+                1.0, Format.TIME, \
+                SeekFlags.FLUSH | SeekFlags.ACCURATE, \
+                Gst.SeekType.SET, value, \
+                Gst.SeekType.NONE, 0)
+            pipeline.send_event(seek_event)
 
-    def set_state(state: Gst.State): StateChangeReturn
-        return pipeline.set_state(state)
-
-    def get_position(): int64
-        var format = Format.TIME
-        position: int64
-        pipeline.query_position(ref format, out position)
-        return position
-
-    def get_duration(): int64
-        var format = Format.TIME
-        duration: int64
-        pipeline.query_duration(ref format, out duration)
-        return duration
+    prop duration: int64
+        get
+            var format = Format.TIME
+            duration: int64
+            pipeline.query_duration(ref format, out duration)
+            return duration
 

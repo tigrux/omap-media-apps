@@ -4,8 +4,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gst/gst.h>
 #include <gtk/gtk.h>
+#include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -43,7 +43,6 @@ typedef struct _PlayListControlPrivate PlayListControlPrivate;
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
-	GstBus* bus;
 };
 
 struct _MediaControlClass {
@@ -90,7 +89,7 @@ PlayListControl* play_list_control_construct (GType object_type, GtkListStore* s
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 GstState media_control_get_state (MediaControl* self);
 void play_list_control_set_location (PlayListControl* self, const char* value);
-GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
+GstBin* media_control_get_pipeline (MediaControl* self);
 gboolean play_list_control_play (PlayListControl* self);
 gboolean play_list_control_pause (PlayListControl* self);
 gboolean play_list_control_stop (PlayListControl* self);
@@ -164,7 +163,6 @@ gboolean play_list_control_play (PlayListControl* self) {
 	gboolean result;
 	GtkTreeIter iter = {0};
 	char* filename;
-	GstState state;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (!play_list_control_get_iter (self, &iter)) {
 		result = FALSE;
@@ -172,11 +170,10 @@ gboolean play_list_control_play (PlayListControl* self) {
 	}
 	filename = NULL;
 	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_FILE, &filename, -1, -1);
-	state = media_control_get_state ((MediaControl*) self);
-	if (state == GST_STATE_NULL) {
+	if (media_control_get_state ((MediaControl*) self) == GST_STATE_NULL) {
 		play_list_control_set_location (self, filename);
 	}
-	if (media_control_set_state ((MediaControl*) self, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
 		gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
 		g_signal_emit_by_name (self, "playing", &iter);
 		result = TRUE;
@@ -192,7 +189,7 @@ gboolean play_list_control_play (PlayListControl* self) {
 gboolean play_list_control_pause (PlayListControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (media_control_set_state ((MediaControl*) self, GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
 		if (play_list_control_get_iter (self, &iter)) {
 			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PAUSE, -1, -1);
@@ -209,7 +206,7 @@ gboolean play_list_control_pause (PlayListControl* self) {
 gboolean play_list_control_stop (PlayListControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (media_control_set_state ((MediaControl*) self, GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
 		if (play_list_control_get_iter (self, &iter)) {
 			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, NULL, -1, -1);

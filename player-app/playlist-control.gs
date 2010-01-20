@@ -53,18 +53,17 @@ class PlayListControl: MediaControl
         filename: string
         playlist_store.get(iter, Col.FILE, out filename, -1)
 
-        var state = get_state()
         if state == State.NULL
             location = filename
 
-        if set_state(State.PLAYING) != StateChangeReturn.FAILURE
+        if pipeline.set_state(State.PLAYING) != StateChangeReturn.FAILURE
             playlist_store.set(iter, Col.ICON, STOCK_MEDIA_PLAY, -1)
             playing(iter)
             return true
         return false
 
     def pause(): bool
-        if set_state(State.PAUSED) != StateChangeReturn.FAILURE
+        if pipeline.set_state(State.PAUSED) != StateChangeReturn.FAILURE
             iter: TreeIter
             if get_iter(out iter)
                 playlist_store.set(iter, \
@@ -74,7 +73,7 @@ class PlayListControl: MediaControl
         return false
 
     def stop(): bool
-        if set_state(State.NULL) != StateChangeReturn.FAILURE
+        if pipeline.set_state(State.NULL) != StateChangeReturn.FAILURE
             iter: TreeIter
             if get_iter(out iter)
                 playlist_store.set(iter, Col.ICON, null, -1)

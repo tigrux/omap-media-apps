@@ -148,18 +148,18 @@ enum  {
 void player_window_setup_model (PlayerWindow* self);
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
-void player_window_on_playlist_control_eos (PlayerWindow* self, GstObject* src);
-static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self);
-void player_window_on_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug);
-static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
-void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter);
-static void _player_window_on_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
-void player_window_on_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter);
-static void _player_window_on_playlist_control_paused_play_list_control_paused (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
-void player_window_on_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* iter);
-static void _player_window_on_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
-void player_window_on_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
-static void _player_window_on_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
+void player_window_playlist_control_eos (PlayerWindow* self, GstObject* src);
+static void _player_window_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self);
+void player_window_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug);
+static void _player_window_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+void player_window_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter);
+static void _player_window_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
+void player_window_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter);
+static void _player_window_playlist_control_paused_play_list_control_paused (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
+void player_window_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* iter);
+static void _player_window_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
+void player_window_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
+static void _player_window_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_setup_controls (PlayerWindow* self);
 void player_window_setup_toolbar (PlayerWindow* self);
 void player_window_setup_notebook (PlayerWindow* self);
@@ -172,12 +172,12 @@ static void _lambda5_ (void* page, guint num_page, PlayerWindow* self);
 static void __lambda5__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void player_window_on_prev (PlayerWindow* self);
 static void _player_window_on_prev_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void player_window_on_play_pause (PlayerWindow* self);
-static void _player_window_on_play_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void player_window_on_next (PlayerWindow* self);
-static void _player_window_on_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void player_window_on_stop (PlayerWindow* self);
-static void _player_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void player_window_play_pause (PlayerWindow* self);
+static void _player_window_play_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void player_window_next (PlayerWindow* self);
+static void _player_window_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void player_window_stop (PlayerWindow* self);
+static void _player_window_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void media_window_toolbar_add_expander (MediaWindow* self);
 GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self);
 void media_window_toolbar_add_fullscreen_button (MediaWindow* self);
@@ -195,9 +195,9 @@ static char* _player_window_on_scale_format_value_gtk_scale_format_value (GtkSca
 GstState media_control_get_state (MediaControl* self);
 gboolean player_window_is_playing (PlayerWindow* self);
 gboolean play_list_control_play (PlayListControl* self);
-void player_window_on_play (PlayerWindow* self);
+void player_window_play (PlayerWindow* self);
 gboolean play_list_control_pause (PlayListControl* self);
-void player_window_on_pause (PlayerWindow* self);
+void player_window_pause (PlayerWindow* self);
 gboolean play_list_control_stop (PlayListControl* self);
 gboolean play_list_control_next (PlayListControl* self);
 gboolean play_list_control_prev (PlayListControl* self);
@@ -233,7 +233,7 @@ static void _player_window_on_chooser_response_gtk_dialog_response (GtkFileChoos
 void play_list_control_add_file (PlayListControl* self, const char* file);
 void player_window_on_remove_files (PlayerWindow* self);
 static void _g_list_free_gtk_tree_path_free (GList* self);
-void media_control_seek (MediaControl* self, gint64 location);
+void media_control_set_position (MediaControl* self, gint64 value);
 gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
 gint64 media_control_get_position (MediaControl* self);
@@ -262,33 +262,33 @@ void player_window_setup_model (PlayerWindow* self) {
 }
 
 
-static void _player_window_on_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self) {
-	player_window_on_playlist_control_eos (self, src);
+static void _player_window_playlist_control_eos_media_control_eos_message (PlayListControl* _sender, GstObject* src, gpointer self) {
+	player_window_playlist_control_eos (self, src);
 }
 
 
-static void _player_window_on_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
-	player_window_on_playlist_control_error (self, src, _error_, debug);
+static void _player_window_playlist_control_error_media_control_error_message (PlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	player_window_playlist_control_error (self, src, _error_, debug);
 }
 
 
-static void _player_window_on_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
-	player_window_on_playlist_control_playing (self, iter);
+static void _player_window_playlist_control_playing_play_list_control_playing (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
+	player_window_playlist_control_playing (self, iter);
 }
 
 
-static void _player_window_on_playlist_control_paused_play_list_control_paused (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
-	player_window_on_playlist_control_paused (self, iter);
+static void _player_window_playlist_control_paused_play_list_control_paused (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
+	player_window_playlist_control_paused (self, iter);
 }
 
 
-static void _player_window_on_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
-	player_window_on_playlist_control_stopped (self, iter);
+static void _player_window_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
+	player_window_playlist_control_stopped (self, iter);
 }
 
 
-static void _player_window_on_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
-	player_window_on_playlist_control_moved (self, iter);
+static void _player_window_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self) {
+	player_window_playlist_control_moved (self, iter);
 }
 
 
@@ -296,12 +296,12 @@ void player_window_setup_controls (PlayerWindow* self) {
 	PlayListControl* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->playlist_control = (_tmp0_ = play_list_control_new (self->playlist_store), _g_object_unref0 (self->playlist_control), _tmp0_);
-	g_signal_connect_object ((MediaControl*) self->playlist_control, "eos-message", (GCallback) _player_window_on_playlist_control_eos_media_control_eos_message, self, 0);
-	g_signal_connect_object ((MediaControl*) self->playlist_control, "error-message", (GCallback) _player_window_on_playlist_control_error_media_control_error_message, self, 0);
-	g_signal_connect_object (self->playlist_control, "playing", (GCallback) _player_window_on_playlist_control_playing_play_list_control_playing, self, 0);
-	g_signal_connect_object (self->playlist_control, "paused", (GCallback) _player_window_on_playlist_control_paused_play_list_control_paused, self, 0);
-	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _player_window_on_playlist_control_stopped_play_list_control_stopped, self, 0);
-	g_signal_connect_object (self->playlist_control, "moved", (GCallback) _player_window_on_playlist_control_moved_play_list_control_moved, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "eos-message", (GCallback) _player_window_playlist_control_eos_media_control_eos_message, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "error-message", (GCallback) _player_window_playlist_control_error_media_control_error_message, self, 0);
+	g_signal_connect_object (self->playlist_control, "playing", (GCallback) _player_window_playlist_control_playing_play_list_control_playing, self, 0);
+	g_signal_connect_object (self->playlist_control, "paused", (GCallback) _player_window_playlist_control_paused_play_list_control_paused, self, 0);
+	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _player_window_playlist_control_stopped_play_list_control_stopped, self, 0);
+	g_signal_connect_object (self->playlist_control, "moved", (GCallback) _player_window_playlist_control_moved_play_list_control_moved, self, 0);
 }
 
 
@@ -347,18 +347,18 @@ static void _player_window_on_prev_gtk_tool_button_clicked (GtkToolButton* _send
 }
 
 
-static void _player_window_on_play_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	player_window_on_play_pause (self);
+static void _player_window_play_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	player_window_play_pause (self);
 }
 
 
-static void _player_window_on_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	player_window_on_next (self);
+static void _player_window_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	player_window_next (self);
 }
 
 
-static void _player_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	player_window_on_stop (self);
+static void _player_window_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	player_window_stop (self);
 }
 
 
@@ -387,13 +387,13 @@ void player_window_setup_toolbar (PlayerWindow* self) {
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) prev_button);
 	self->play_pause_button = (_tmp0_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->play_pause_button), _tmp0_);
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->play_pause_button);
-	g_signal_connect_object (self->play_pause_button, "clicked", (GCallback) _player_window_on_play_pause_gtk_tool_button_clicked, self, 0);
+	g_signal_connect_object (self->play_pause_button, "clicked", (GCallback) _player_window_play_pause_gtk_tool_button_clicked, self, 0);
 	self->next_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_NEXT)), _g_object_unref0 (self->next_button), _tmp1_);
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->next_button);
-	g_signal_connect_object (self->next_button, "clicked", (GCallback) _player_window_on_next_gtk_tool_button_clicked, self, 0);
+	g_signal_connect_object (self->next_button, "clicked", (GCallback) _player_window_next_gtk_tool_button_clicked, self, 0);
 	stop_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP));
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) stop_button);
-	g_signal_connect_object (stop_button, "clicked", (GCallback) _player_window_on_stop_gtk_tool_button_clicked, self, 0);
+	g_signal_connect_object (stop_button, "clicked", (GCallback) _player_window_stop_gtk_tool_button_clicked, self, 0);
 	media_window_toolbar_add_expander ((MediaWindow*) self);
 	volume_button_item = g_object_ref_sink (gtk_tool_item_new ());
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) volume_button_item);
@@ -453,31 +453,31 @@ gboolean player_window_is_playing (PlayerWindow* self) {
 }
 
 
-void player_window_on_play (PlayerWindow* self) {
+void player_window_play (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	play_list_control_play (self->playlist_control);
 }
 
 
-void player_window_on_pause (PlayerWindow* self) {
+void player_window_pause (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	play_list_control_pause (self->playlist_control);
 }
 
 
-void player_window_on_stop (PlayerWindow* self) {
+void player_window_stop (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	play_list_control_stop (self->playlist_control);
 }
 
 
-void player_window_on_next (PlayerWindow* self) {
+void player_window_next (PlayerWindow* self) {
 	gboolean was_playing;
 	g_return_if_fail (self != NULL);
 	was_playing = player_window_is_playing (self);
 	if (play_list_control_next (self->playlist_control)) {
 		if (was_playing) {
-			player_window_on_play (self);
+			player_window_play (self);
 		}
 	} else {
 		GtkTreeIter iter = {0};
@@ -494,7 +494,7 @@ void player_window_on_prev (PlayerWindow* self) {
 	was_playing = player_window_is_playing (self);
 	if (play_list_control_prev (self->playlist_control)) {
 		if (was_playing) {
-			player_window_on_play (self);
+			player_window_play (self);
 		}
 	}
 }
@@ -701,21 +701,21 @@ gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* ite
 }
 
 
-void player_window_on_play_pause (PlayerWindow* self) {
+void player_window_play_pause (PlayerWindow* self) {
 	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
 	switch (media_control_get_state ((MediaControl*) self->playlist_control)) {
 		case GST_STATE_PLAYING:
 		{
 			{
-				player_window_on_pause (self);
+				player_window_pause (self);
 			}
 			break;
 		}
 		case GST_STATE_PAUSED:
 		{
 			{
-				player_window_on_play (self);
+				player_window_play (self);
 			}
 			break;
 		}
@@ -729,7 +729,7 @@ void player_window_on_play_pause (PlayerWindow* self) {
 				row = gtk_tree_model_get_path ((GtkTreeModel*) self->playlist_store, &iter);
 				play_list_control_move_to (self->playlist_control, row);
 				gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
-				player_window_on_play (self);
+				player_window_play (self);
 				_gtk_tree_path_free0 (row);
 			}
 			break;
@@ -738,7 +738,7 @@ void player_window_on_play_pause (PlayerWindow* self) {
 }
 
 
-void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter) {
+void player_window_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, _tmp0_ = play_list_control_iter_get_name (self->playlist_control, iter));
@@ -749,14 +749,14 @@ void player_window_on_playlist_control_playing (PlayerWindow* self, GtkTreeIter*
 }
 
 
-void player_window_on_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter) {
+void player_window_playlist_control_paused (PlayerWindow* self, GtkTreeIter* iter) {
 	g_return_if_fail (self != NULL);
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PLAY);
 	player_window_remove_update_scale_timeout (self);
 }
 
 
-void player_window_on_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* iter) {
+void player_window_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* iter) {
 	gint page;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
@@ -770,7 +770,7 @@ void player_window_on_playlist_control_stopped (PlayerWindow* self, GtkTreeIter*
 }
 
 
-void player_window_on_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter) {
+void player_window_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter) {
 	g_return_if_fail (self != NULL);
 	gtk_tree_selection_select_iter (self->playlist_selection, iter);
 }
@@ -868,9 +868,9 @@ void player_window_on_remove_files (PlayerWindow* self) {
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (row != NULL);
-	player_window_on_stop (self);
+	player_window_stop (self);
 	if (play_list_control_move_to (self->playlist_control, row)) {
-		player_window_on_play (self);
+		player_window_play (self);
 	}
 }
 
@@ -879,7 +879,7 @@ gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (player_window_is_playing (self)) {
-		player_window_on_pause (self);
+		player_window_pause (self);
 		self->should_resume_playback = TRUE;
 	} else {
 		self->should_resume_playback = FALSE;
@@ -894,9 +894,9 @@ gboolean player_window_on_seeking_scale_released (PlayerWindow* self) {
 	gint64 real_value = 0LL;
 	g_return_val_if_fail (self != NULL, FALSE);
 	real_value = (gint64) ((gtk_range_get_value ((GtkRange*) self->seeking_scale) * self->stream_duration) / 100);
-	media_control_seek ((MediaControl*) self->playlist_control, real_value);
+	media_control_set_position ((MediaControl*) self->playlist_control, real_value);
 	if (self->should_resume_playback) {
-		player_window_on_play (self);
+		player_window_play (self);
 	}
 	result = FALSE;
 	return result;
@@ -994,19 +994,19 @@ void player_window_on_debug_dialog_closed (PlayerWindow* self) {
 	DebugDialog* _tmp0_;
 	g_return_if_fail (self != NULL);
 	gtk_widget_show ((GtkWidget*) ((MediaWindow*) self)->toolbar);
-	player_window_on_stop (self);
+	player_window_stop (self);
 	self->debug_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->debug_dialog), _tmp0_);
 }
 
 
-void player_window_on_playlist_control_eos (PlayerWindow* self, GstObject* src) {
+void player_window_playlist_control_eos (PlayerWindow* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	gtk_widget_activate ((GtkWidget*) self->next_button);
 }
 
 
-void player_window_on_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug) {
+void player_window_playlist_control_error (PlayerWindow* self, GstObject* src, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
