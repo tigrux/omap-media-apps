@@ -88,7 +88,6 @@ struct _MediaWindow {
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 	gboolean is_fullscreen;
-	GtkToolButton* fullscreen_button;
 };
 
 struct _MediaWindowClass {
@@ -105,6 +104,7 @@ struct _PlayerWindow {
 	GtkToolButton* play_pause_button;
 	GtkToolButton* add_button;
 	GtkToolButton* next_button;
+	GtkToolButton* fullscreen_button;
 	GtkImage* remove_image;
 	VideoArea* video_area;
 	GtkScale* seeking_scale;
@@ -180,7 +180,8 @@ void player_window_stop (PlayerWindow* self);
 static void _player_window_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void media_window_toolbar_add_expander (MediaWindow* self);
 GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self);
-void media_window_toolbar_add_fullscreen_button (MediaWindow* self);
+void media_window_toggle_fullscreen (MediaWindow* self);
+static void _media_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_add (PlayerWindow* self);
 static void _player_window_on_add_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_remove (PlayerWindow* self);
@@ -212,7 +213,6 @@ double play_list_control_get_volume (PlayListControl* self);
 GtkTreeView* player_window_new_playlist_view (PlayerWindow* self);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
-void media_window_toggle_fullscreen (MediaWindow* self);
 static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _sender, gpointer self);
 static void _lambda4_ (PlayerWindow* self);
 static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self);
@@ -317,7 +317,7 @@ void player_window_setup_widgets (PlayerWindow* self) {
 
 
 static void _lambda5_ (void* page, guint num_page, PlayerWindow* self) {
-	gtk_widget_set_visible ((GtkWidget*) ((MediaWindow*) self)->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
+	gtk_widget_set_visible ((GtkWidget*) self->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
 }
 
 
@@ -362,6 +362,11 @@ static void _player_window_stop_gtk_tool_button_clicked (GtkToolButton* _sender,
 }
 
 
+static void _media_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	media_window_toggle_fullscreen (self);
+}
+
+
 static void _player_window_on_add_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
 	player_window_on_add (self);
 }
@@ -380,6 +385,7 @@ void player_window_setup_toolbar (PlayerWindow* self) {
 	GtkToolItem* volume_button_item;
 	GtkVolumeButton* _tmp2_;
 	GtkToolButton* _tmp3_;
+	GtkToolButton* _tmp4_;
 	GtkToolButton* remove_button;
 	g_return_if_fail (self != NULL);
 	prev_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PREVIOUS));
@@ -399,9 +405,12 @@ void player_window_setup_toolbar (PlayerWindow* self) {
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) volume_button_item);
 	self->volume_button = (_tmp2_ = player_window_new_volume_button_with_mute (self), _g_object_unref0 (self->volume_button), _tmp2_);
 	gtk_container_add ((GtkContainer*) volume_button_item, (GtkWidget*) self->volume_button);
-	media_window_toolbar_add_fullscreen_button ((MediaWindow*) self);
+	self->fullscreen_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_FULLSCREEN)), _g_object_unref0 (self->fullscreen_button), _tmp3_);
+	gtk_widget_set_no_show_all ((GtkWidget*) self->fullscreen_button, TRUE);
+	g_signal_connect_object (self->fullscreen_button, "clicked", (GCallback) _media_window_toggle_fullscreen_gtk_tool_button_clicked, (MediaWindow*) self, 0);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->fullscreen_button);
 	media_window_toolbar_add_expander ((MediaWindow*) self);
-	self->add_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ADD)), _g_object_unref0 (self->add_button), _tmp3_);
+	self->add_button = (_tmp4_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ADD)), _g_object_unref0 (self->add_button), _tmp4_);
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->add_button);
 	g_signal_connect_object (self->add_button, "clicked", (GCallback) _player_window_on_add_gtk_tool_button_clicked, self, 0);
 	remove_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_REMOVE));
@@ -1064,6 +1073,7 @@ static void player_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->play_pause_button);
 	_g_object_unref0 (self->add_button);
 	_g_object_unref0 (self->next_button);
+	_g_object_unref0 (self->fullscreen_button);
 	_g_object_unref0 (self->remove_image);
 	_g_object_unref0 (self->video_area);
 	_g_object_unref0 (self->seeking_scale);

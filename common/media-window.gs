@@ -22,7 +22,6 @@ class MediaWindow: Window
     main_box: VBox
     rc_parsed: static bool = rc_parse()
     is_fullscreen: bool
-    fullscreen_button: ToolButton
 
     enum Tab
         LIST
@@ -63,12 +62,6 @@ class MediaWindow: Window
         expander_item.set_expand(true)
         expander_item.set_draw(false)
         toolbar.add(expander_item)
-
-    def toolbar_add_fullscreen_button()
-        fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
-        fullscreen_button.set_no_show_all(true)
-        fullscreen_button.clicked += toggle_fullscreen
-        toolbar.add(fullscreen_button)
 
     def toggle_fullscreen()
         is_fullscreen = not is_fullscreen

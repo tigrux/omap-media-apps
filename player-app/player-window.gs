@@ -15,6 +15,7 @@ class PlayerWindow: MediaWindow
     play_pause_button: ToolButton
     add_button: ToolButton
     next_button: ToolButton
+    fullscreen_button: ToolButton
     remove_image: Gtk.Image
     video_area: VideoArea
     seeking_scale: Scale
@@ -90,7 +91,10 @@ class PlayerWindow: MediaWindow
         volume_button = new_volume_button_with_mute()
         volume_button_item.add(volume_button)
 
-        toolbar_add_fullscreen_button()
+        fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
+        fullscreen_button.set_no_show_all(true)
+        fullscreen_button.clicked += toggle_fullscreen
+        toolbar.add(fullscreen_button)
 
         toolbar_add_expander()
 
