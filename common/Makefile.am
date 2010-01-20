@@ -7,7 +7,7 @@ vala.stamp: $(COMMON_VALASOURCES)
 	touch $@
 
 EXTRA_DIST = \
-	$(common_VALASOURCES) \
+	$(COMMON_VALASOURCES) \
 	common.am \
 	vala.stamp
 
