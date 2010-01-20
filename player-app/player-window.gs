@@ -13,7 +13,6 @@ class PlayerWindow: MediaWindow
     playlist_control: PlayListControl
 
     play_pause_button: ToolButton
-    fullscreen_button: ToolButton
     add_button: ToolButton
     next_button: ToolButton
     remove_image: Gtk.Image
@@ -91,11 +90,8 @@ class PlayerWindow: MediaWindow
         volume_button = new_volume_button_with_mute()
         volume_button_item.add(volume_button)
 
-        fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
-        toolbar.add(fullscreen_button)
-        fullscreen_button.set_no_show_all(true)
-        fullscreen_button.clicked += toggle_fullscreen
-
+        toolbar_add_fullscreen_button()
+        
         toolbar_add_expander()
 
         add_button = new ToolButton.from_stock(STOCK_ADD)

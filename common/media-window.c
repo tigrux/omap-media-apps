@@ -29,6 +29,7 @@ struct _MediaWindow {
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 	gboolean is_fullscreen;
+	GtkToolButton* fullscreen_button;
 };
 
 struct _MediaWindowClass {
@@ -45,7 +46,7 @@ extern gboolean media_window_rc_parsed;
 gboolean media_window_rc_parsed = FALSE;
 static gpointer media_window_parent_class = NULL;
 
-#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 24\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
+#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 24\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    GtkToolbar::space-size = 0\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 GType media_window_get_type (void);
 enum  {
 	MEDIA_WINDOW_DUMMY_PROPERTY
@@ -56,8 +57,10 @@ void media_window_toolbar_add_expander (MediaWindow* self);
 void media_window_on_quit (MediaWindow* self);
 static void _media_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void media_window_toolbar_add_quit_button (MediaWindow* self);
-void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 void media_window_toggle_fullscreen (MediaWindow* self);
+static void _media_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void media_window_toolbar_add_fullscreen_button (MediaWindow* self);
+void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 gboolean media_window_quit (MediaWindow* self);
 static gboolean _media_window_quit_gsource_func (gpointer self);
 MediaWindow* media_window_new (void);
@@ -111,6 +114,21 @@ void media_window_toolbar_add_expander (MediaWindow* self) {
 	gtk_separator_tool_item_set_draw (expander_item, FALSE);
 	gtk_container_add ((GtkContainer*) self->toolbar, (GtkWidget*) expander_item);
 	_g_object_unref0 (expander_item);
+}
+
+
+static void _media_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	media_window_toggle_fullscreen (self);
+}
+
+
+void media_window_toolbar_add_fullscreen_button (MediaWindow* self) {
+	GtkToolButton* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->fullscreen_button = (_tmp0_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_FULLSCREEN)), _g_object_unref0 (self->fullscreen_button), _tmp0_);
+	gtk_widget_set_no_show_all ((GtkWidget*) self->fullscreen_button, TRUE);
+	g_signal_connect_object (self->fullscreen_button, "clicked", (GCallback) _media_window_toggle_fullscreen_gtk_tool_button_clicked, self, 0);
+	gtk_container_add ((GtkContainer*) self->toolbar, (GtkWidget*) self->fullscreen_button);
 }
 
 
@@ -237,6 +255,7 @@ static void media_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->notebook);
 	_g_object_unref0 (self->toolbar);
 	_g_object_unref0 (self->main_box);
+	_g_object_unref0 (self->fullscreen_button);
 	G_OBJECT_CLASS (media_window_parent_class)->finalize (obj);
 }
 

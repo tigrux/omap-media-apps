@@ -76,9 +76,9 @@ typedef struct _ImageControlClass ImageControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
-
 #define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
+
+#define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 typedef struct _ImageViewWindowSlideshowData ImageViewWindowSlideshowData;
 
@@ -89,6 +89,7 @@ struct _MediaWindow {
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 	gboolean is_fullscreen;
+	GtkToolButton* fullscreen_button;
 };
 
 struct _MediaWindowClass {
@@ -124,6 +125,11 @@ struct _ImageViewWindowClass {
 };
 
 typedef enum  {
+	MEDIA_WINDOW_TAB_LIST,
+	MEDIA_WINDOW_TAB_VIDEO
+} MediaWindowTab;
+
+typedef enum  {
 	ICON_LIST_CONTROL_COL_TEXT,
 	ICON_LIST_CONTROL_COL_FILE,
 	ICON_LIST_CONTROL_COL_PIXBUF,
@@ -132,11 +138,6 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_WIDTH,
 	ICON_LIST_CONTROL_COL_HEIGHT
 } IconListControlCol;
-
-typedef enum  {
-	MEDIA_WINDOW_TAB_LIST,
-	MEDIA_WINDOW_TAB_VIDEO
-} MediaWindowTab;
 
 struct _ImageViewWindowSlideshowData {
 	int _state_;
@@ -186,6 +187,9 @@ void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
+GType media_window_tab_get_type (void);
+static void _lambda2_ (void* page, guint num_page, ImageViewWindow* self);
+static void __lambda2__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void image_view_window_do_fill_visible_icons (ImageViewWindow* self);
 static void _image_view_window_do_fill_visible_icons_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 static void _image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self);
@@ -201,6 +205,8 @@ void image_control_set_location (ImageControl* self, const char* value);
 GstStateChangeReturn media_control_set_state (MediaControl* self, GstState state);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
+void media_window_toggle_fullscreen (MediaWindow* self);
+static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _sender, gpointer self);
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
 void media_window_toolbar_add_expander (MediaWindow* self);
@@ -208,8 +214,8 @@ void image_view_window_on_open_close (ImageViewWindow* self);
 static void _image_view_window_on_open_close_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void image_view_window_on_slideshow (ImageViewWindow* self);
 static void _image_view_window_on_slideshow_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void media_window_toolbar_add_fullscreen_button (MediaWindow* self);
 void media_window_toolbar_add_quit_button (MediaWindow* self);
-GType media_window_tab_get_type (void);
 void image_view_window_open (ImageViewWindow* self);
 void image_view_window_close (ImageViewWindow* self);
 gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter);
@@ -324,6 +330,16 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 }
 
 
+static void _lambda2_ (void* page, guint num_page, ImageViewWindow* self) {
+	gtk_widget_set_visible ((GtkWidget*) ((MediaWindow*) self)->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
+}
+
+
+static void __lambda2__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
+	_lambda2_ (page, page_num, self);
+}
+
+
 void image_view_window_setup_notebook (ImageViewWindow* self) {
 	GtkLabel* _tmp1_;
 	GtkBox* _tmp0_;
@@ -336,6 +352,7 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda2__gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -416,6 +433,11 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 }
 
 
+static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _sender, gpointer self) {
+	media_window_toggle_fullscreen (self);
+}
+
+
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
@@ -427,6 +449,7 @@ GtkBox* image_view_window_new_video_box (ImageViewWindow* self) {
 	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
+	g_signal_connect_object (self->video_area, "activated", (GCallback) _media_window_toggle_fullscreen_video_area_activated, (MediaWindow*) self, 0);
 	gtk_scrolled_window_add_with_viewport (scrolled_window, (GtkWidget*) self->video_area);
 	result = (GtkBox*) box;
 	_g_object_unref0 (scrolled_window);
@@ -470,6 +493,8 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	self->slideshow_button = (_tmp2_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->slideshow_button), _tmp2_);
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->slideshow_button);
 	g_signal_connect_object (self->slideshow_button, "clicked", (GCallback) _image_view_window_on_slideshow_gtk_tool_button_clicked, self, 0);
+	media_window_toolbar_add_expander ((MediaWindow*) self);
+	media_window_toolbar_add_fullscreen_button ((MediaWindow*) self);
 	media_window_toolbar_add_quit_button ((MediaWindow*) self);
 	_g_object_unref0 (chooser_item);
 }

@@ -61,6 +61,8 @@ class ImageViewWindow: MediaWindow
     def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
+        notebook.switch_page += def(page, num_page)
+            fullscreen_button.set_visible(num_page == Tab.VIDEO)
 
     def new_iconlist_box(): Box
         var box = new VBox(false, 0)
@@ -109,6 +111,7 @@ class ImageViewWindow: MediaWindow
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
         box.pack_start(scrolled_window, true, true, 0)
         video_area = new VideoArea()
+        video_area.activated += toggle_fullscreen
         scrolled_window.add_with_viewport(video_area)
         return box
 
@@ -135,6 +138,8 @@ class ImageViewWindow: MediaWindow
         toolbar.add(slideshow_button)
         slideshow_button.clicked += on_slideshow
 
+        toolbar_add_expander()
+        toolbar_add_fullscreen_button()
         toolbar_add_quit_button()
 
     def on_open_close()
