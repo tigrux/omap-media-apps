@@ -539,9 +539,8 @@ void image_view_window_stop_slideshow (ImageViewWindow* self) {
 void image_view_window_on_image_control_eos (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
-	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
 	if (self->slideshow_continuation != NULL) {
-		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
+		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 1, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}
 }
 
@@ -620,7 +619,12 @@ static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* da
 					}
 					data->_tmp2_ = FALSE;
 					data->path = gtk_tree_model_get_path ((GtkTreeModel*) data->self->iconlist_store, &data->iter);
+					if (!icon_list_control_iter_is_valid (data->self->iconlist_control, &data->iter)) {
+						_gtk_tree_path_free0 (data->path);
+						continue;
+					}
 					gtk_icon_view_select_path (data->self->icon_view, data->path);
+					gtk_icon_view_scroll_to_path (data->self->icon_view, data->path, TRUE, 0.5f, 0.5f);
 					gtk_icon_view_item_activated (data->self->icon_view, data->path);
 					data->_state_ = 1;
 					return FALSE;
@@ -706,12 +710,10 @@ void image_view_window_change_folder (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->fill_icons_cancellable == NULL) {
 		GCancellable* _tmp0_;
-		g_print ("proceed\n");
 		gtk_list_store_clear (self->iconlist_store);
 		self->fill_icons_cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
 		icon_list_control_add_folder (self->iconlist_control, self->current_folder, self->fill_icons_cancellable, NULL, NULL);
 	} else {
-		g_print ("sorry\n");
 		g_cancellable_cancel (self->fill_icons_cancellable);
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_change_folder_gsource_func, g_object_ref (self), g_object_unref);
 	}

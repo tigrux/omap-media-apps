@@ -177,7 +177,7 @@ class ImageViewWindow: MediaWindow
         image_control.set_state(Gst.State.READY)
         notebook.set_current_page(Tab.VIDEO)
         if slideshow_continuation != null
-            slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
+            slideshow_timeout = Timeout.add_seconds(1, slideshow_continuation)
 
     def async slideshow()
         iter: TreeIter
@@ -187,7 +187,10 @@ class ImageViewWindow: MediaWindow
         slideshow_continuation = slideshow.callback
         do
             var path = iconlist_store.get_path(iter)
+            if not iconlist_control.iter_is_valid(iter)
+                continue
             icon_view.select_path(path)
+            icon_view.scroll_to_path(path, true, 0.5f, 0.5f)
             icon_view.item_activated(path)
             yield
             slideshow_timeout = 0
@@ -220,12 +223,10 @@ class ImageViewWindow: MediaWindow
 
     def change_folder()
         if fill_icons_cancellable == null
-            print "proceed"
             iconlist_store.clear()
             fill_icons_cancellable = new Cancellable()
             iconlist_control.add_folder(current_folder, fill_icons_cancellable)
         else
-            print "sorry"
             fill_icons_cancellable.cancel()
             Idle.add(retry_change_folder)
 
