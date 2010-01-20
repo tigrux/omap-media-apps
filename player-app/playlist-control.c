@@ -44,7 +44,6 @@ struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
 	GstBus* bus;
-	GstBin* pipeline;
 };
 
 struct _MediaControlClass {
@@ -57,7 +56,7 @@ struct _PlayListControl {
 	GtkListStore* playlist_store;
 	GtkTreePath* current_row;
 	gint number_of_rows;
-	GstElement* player;
+	GstBin* player;
 };
 
 struct _PlayListControlClass {
@@ -103,13 +102,13 @@ gint play_list_control_get_name_column (void);
 gint play_list_control_get_icon_column (void);
 char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
 char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
-static inline double _dynamic_get_volume0 (GstElement* obj);
+static inline double _dynamic_get_volume0 (GstBin* obj);
 double play_list_control_get_volume (PlayListControl* self);
-static inline void _dynamic_set_volume1 (GstElement* obj, double value);
+static inline void _dynamic_set_volume1 (GstBin* obj, double value);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
-static inline void _dynamic_set_uri2 (GstElement* obj, char* value);
-void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+static inline void _dynamic_set_uri2 (GstBin* obj, char* value);
+void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
 static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -364,7 +363,7 @@ char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter)
 }
 
 
-static inline double _dynamic_get_volume0 (GstElement* obj) {
+static inline double _dynamic_get_volume0 (GstBin* obj) {
 	double result;
 	g_object_get (obj, "volume", &result, NULL);
 	return result;
@@ -379,7 +378,7 @@ double play_list_control_get_volume (PlayListControl* self) {
 }
 
 
-static inline void _dynamic_set_volume1 (GstElement* obj, double value) {
+static inline void _dynamic_set_volume1 (GstBin* obj, double value) {
 	g_object_set (obj, "volume", value, NULL);
 }
 
@@ -399,7 +398,7 @@ guint play_list_control_get_n_rows (PlayListControl* self) {
 }
 
 
-static inline void _dynamic_set_uri2 (GstElement* obj, char* value) {
+static inline void _dynamic_set_uri2 (GstBin* obj, char* value) {
 	g_object_set (obj, "uri", value, NULL);
 }
 
@@ -421,14 +420,15 @@ static GObject * play_list_control_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = PLAY_LIST_CONTROL (obj);
 	{
+		GstBin* _tmp1_;
 		GstElement* _tmp0_;
-		GstElement* _tmp2_;
-		self->player = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), _gst_object_unref0 (self->player), _tmp0_);
+		self->player = (_tmp1_ = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), GST_IS_BIN (_tmp0_) ? ((GstBin*) _tmp0_) : NULL), _gst_object_unref0 (self->player), _tmp1_);
 		if (self->player == NULL) {
-			GstElement* _tmp1_;
-			self->player = (_tmp1_ = gst_element_factory_make ("playbin", "player"), _gst_object_unref0 (self->player), _tmp1_);
+			GstBin* _tmp3_;
+			GstElement* _tmp2_;
+			self->player = (_tmp3_ = (_tmp2_ = gst_element_factory_make ("playbin", "player"), GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL), _gst_object_unref0 (self->player), _tmp3_);
 		}
-		media_control_set_pipeline ((MediaControl*) self, (_tmp2_ = self->player, GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL));
+		media_control_set_pipeline ((MediaControl*) self, self->player);
 	}
 	return obj;
 }

@@ -226,11 +226,11 @@ class PlayerWindow: ApplicationWindow
         view.set_headers_visible(false)
         view.row_activated += on_row_activated
 
-        view.insert_column_with_attributes(\
+        view.insert_column_with_attributes( \
             -1, "Icon", new CellRendererPixbuf(), \
             "stock-id", playlist_control.get_icon_column(), null)
 
-        view.insert_column_with_attributes(\
+        view.insert_column_with_attributes( \
             -1, "Song", new CellRendererText(), \
             "markup", playlist_control.get_name_column(), null)
 

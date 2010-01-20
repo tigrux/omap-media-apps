@@ -42,9 +42,9 @@ class ApplicationWindow: Window
         toolbar = new Toolbar()
         toolbar.set_icon_size(IconSize.DND)
         main_box.pack_start(toolbar, false, false, 0)
-        
+
         notebook = new Notebook()
-        notebook.set_show_tabs(false)        
+        notebook.set_show_tabs(false)
         main_box.pack_start(notebook, true, true, 0)
         main_box.show_all()
 

@@ -16,8 +16,8 @@ class MuxerControl: MediaControl
     overlay: Element
     tee: Element
     audiosrc: Element
-    preview_pipeline: Gst.Bin
-    record_pipeline: Gst.Bin
+    preview_bin: Gst.Bin
+    record_bin: Gst.Bin
     queue: Element
 
     adjust_ts_video: ClockTime
@@ -37,7 +37,7 @@ class MuxerControl: MediaControl
         shutdown()
 
     def load() raises Error
-        load_preview_pipeline()
+        load_preview_bin()
 
     def is_previewing(): bool
         return previewing
@@ -46,20 +46,20 @@ class MuxerControl: MediaControl
         return recording
 
     def start_preview()
-        if preview_pipeline.set_state(State.PLAYING) != StateChangeReturn.FAILURE
+        if preview_bin.set_state(State.PLAYING) != StateChangeReturn.FAILURE
             previewing = true
 
     def stop_preview()
-        preview_pipeline.set_state(State.NULL)
+        preview_bin.set_state(State.NULL)
         previewing = false
 
     def start_record() raises Error
         if buffer_probe_enabled
-            preview_pipeline.set_state(State.PAUSED)
+            preview_bin.set_state(State.PAUSED)
         else
-            preview_pipeline.set_state(State.NULL)
-        load_record_pipeline()
-        preview_pipeline.add(record_pipeline)
+            preview_bin.set_state(State.NULL)
+        load_record_bin()
+        preview_bin.add(record_bin)
         tee.link(queue)
         var tee_src1_pad = tee.get_static_pad("src1")
         if buffer_probe_enabled
@@ -69,7 +69,7 @@ class MuxerControl: MediaControl
             audio_probe_id = audio_src_pad.add_buffer_probe(audio_buffer_probe)
         if overlay != null
             overlay.set("silent", false)
-        if preview_pipeline.set_state(State.PLAYING) != StateChangeReturn.FAILURE
+        if preview_bin.set_state(State.PLAYING) != StateChangeReturn.FAILURE
             recording = true
 
     def stop_record()
@@ -79,32 +79,32 @@ class MuxerControl: MediaControl
         if overlay != null
             overlay.set("silent", true)
         self.tee.unlink(self.queue)
-        preview_pipeline.remove(record_pipeline)
-        record_pipeline.set_bus(preview_pipeline.get_bus())
+        preview_bin.remove(record_bin)
+        record_bin.set_bus(preview_bin.get_bus())
         queue.send_event(new Event.eos())
         if audiosrc != null
             audiosrc.send_event(new Event.eos())
         tee.set_state(State.PLAYING)
 
-    def load_preview_pipeline() raises Error
-        preview_pipeline = parse_launch(preview_desc) as Gst.Bin
-        preview_pipeline.set_name("preview_pipeline")
-        set_pipeline(preview_pipeline)
-        overlay = preview_pipeline.get_by_name("overlay")
-        if (tee = preview_pipeline.get_by_name("tee")) == null
+    def load_preview_bin() raises Error
+        preview_bin = parse_launch(preview_desc) as Gst.Bin
+        preview_bin.set_name("preview_bin")
+        pipeline = preview_bin
+        overlay = preview_bin.get_by_name("overlay")
+        if (tee = preview_bin.get_by_name("tee")) == null
             raise new CoreError.FAILED( \
                         "No element named tee in the preview pipeline")
 
-    def load_record_pipeline() raises Error
-        record_pipeline = parse_launch(record_desc) as Gst.Bin
-        record_pipeline.set_name("record_pipeline")
-        if (queue = record_pipeline.get_by_name("queue")) == null
+    def load_record_bin() raises Error
+        record_bin = parse_launch(record_desc) as Gst.Bin
+        record_bin.set_name("record_bin")
+        if (queue = record_bin.get_by_name("queue")) == null
             raise new CoreError.FAILED( \
                         "No element named queue in the record pipeline")
-        audiosrc = record_pipeline.get_by_name("audiosrc")
+        audiosrc = record_bin.get_by_name("audiosrc")
 
     def on_eos(src: Gst.Object)
-        record_pipeline.set_state(State.NULL)
+        record_bin.set_state(State.NULL)
         recording = false
 
     def on_error(src: Gst.Object, e: Error, debug: string)

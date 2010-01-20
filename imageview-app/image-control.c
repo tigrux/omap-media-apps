@@ -36,7 +36,6 @@ struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
 	GstBus* bus;
-	GstBin* pipeline;
 };
 
 struct _MediaControlClass {
@@ -68,9 +67,10 @@ MediaControl* media_control_construct (GType object_type);
 void image_control_setup_pipeline (ImageControl* self, GError** error);
 ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
-void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static inline void _dynamic_set_location2 (GstElement* obj, const char* value);
 void image_control_set_location (ImageControl* self, const char* value);
+GstBin* media_control_get_pipeline (MediaControl* self);
 static void image_control_finalize (GObject* obj);
 static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
@@ -151,8 +151,8 @@ static void image_control_finalize (GObject* obj) {
 	ImageControl * self;
 	self = IMAGE_CONTROL (obj);
 	{
-		if (((MediaControl*) self)->pipeline != NULL) {
-			gst_element_set_state ((GstElement*) ((MediaControl*) self)->pipeline, GST_STATE_NULL);
+		if (media_control_get_pipeline ((MediaControl*) self) != NULL) {
+			gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_NULL);
 		}
 	}
 	_gst_object_unref0 (self->filesrc);

@@ -51,7 +51,6 @@ struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
 	GstBus* bus;
-	GstBin* pipeline;
 };
 
 struct _MediaControlClass {
@@ -157,7 +156,7 @@ void icon_list_control_setup_elements (IconListControl* self, GError** error);
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
 void icon_list_control_setup_pipeline (IconListControl* self, GError** error);
-void media_control_set_pipeline (MediaControl* self, GstBin* bin);
+void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static void icon_list_control_add_folder_data_free (gpointer _data);
 static void icon_list_control_add_folder_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static void _g_list_free_g_object_unref (GList* self);
@@ -172,6 +171,7 @@ static void icon_list_control_fill_icons_ready (GObject* source_object, GAsyncRe
 void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean _icon_list_control_fill_icons_co_gsource_func (gpointer self);
+GstBin* media_control_get_pipeline (MediaControl* self);
 static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
 void icon_list_control_get_playing_image_size (IconListControl* self, gint* width, gint* height);
 static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* data);
@@ -550,7 +550,7 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 			}
 			if (data->_tmp0_) {
 				data->self->continuation = (data->_tmp1_ = _icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
-				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
+				gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_READY);
 				while (TRUE) {
 					if (gtk_tree_path_compare (data->path, data->end) > 0) {
 						data->_tmp2_ = TRUE;
@@ -566,7 +566,7 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
 						icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp4_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
-						gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_PLAYING);
+						gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_PLAYING);
 						data->_state_ = 4;
 						return FALSE;
 						case 4:
@@ -588,11 +588,11 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, ICON_LIST_CONTROL_COL_WIDTH, data->width, ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
 						_g_object_unref0 (data->pixbuf);
 					}
-					gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_READY);
+					gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_READY);
 					gtk_tree_path_next (data->path);
 					_g_free0 (data->file);
 				}
-				gst_element_set_state ((GstElement*) ((MediaControl*) data->self)->pipeline, GST_STATE_NULL);
+				gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_NULL);
 			}
 			g_signal_emit_by_name (data->self, "icons-filled");
 		}
@@ -791,6 +791,11 @@ static void icon_list_control_instance_init (IconListControl * self) {
 static void icon_list_control_finalize (GObject* obj) {
 	IconListControl * self;
 	self = ICON_LIST_CONTROL (obj);
+	{
+		if (media_control_get_pipeline ((MediaControl*) self) != NULL) {
+			gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_NULL);
+		}
+	}
 	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->imagesink);
 	_gst_object_unref0 (self->imagedec);

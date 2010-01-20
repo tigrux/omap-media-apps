@@ -26,7 +26,7 @@ class MuxerWindow: ApplicationWindow
 
     init
         setup_widgets()
-    
+
     def setup_widgets()
         set_title(TITLE)
         setup_toolbar()
@@ -55,7 +55,7 @@ class MuxerWindow: ApplicationWindow
         combo_model = new ListStore(3, s, s, s)
         combo_box = new ComboBox.with_model(combo_model)
         combo_item.add(combo_box)
-        
+
         var renderer = new CellRendererText()
         combo_box.pack_start(renderer, true)
         combo_box.set_attributes(renderer, "text", ComboCol.GROUP, null)

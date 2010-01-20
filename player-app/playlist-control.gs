@@ -13,7 +13,7 @@ class PlayListControl: MediaControl
     playlist_store: ListStore
     current_row: TreePath
     number_of_rows: int
-    player: dynamic Element
+    player: dynamic Gst.Bin
 
     prop volume: double
         get
@@ -35,10 +35,10 @@ class PlayListControl: MediaControl
     event moved(iter: TreeIter)
 
     init
-        player = ElementFactory.make("playbin2", "player")
+        player = ElementFactory.make("playbin2", "player") as Gst.Bin
         if player == null
-            player = ElementFactory.make("playbin", "player")
-        set_pipeline(player as Gst.Bin)
+            player = ElementFactory.make("playbin", "player") as Gst.Bin
+        pipeline = player
 
     construct(store: ListStore)
         playlist_store = store

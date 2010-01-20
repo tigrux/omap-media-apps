@@ -5,24 +5,27 @@ uses Gst
 
 class MediaControl: GLib.Object
     bus: Bus
-    pipeline: Bin
+    _pipeline: Bin
 
     event eos_message(src: Gst.Object)
     event error_message(src: Gst.Object, error: Error, debug: string)
     event element_message(src: Gst.Object, structure: Structure)
-    event segment_start_message(src: Gst.Object, format: Format, position: int64)
-    event segment_done_message(src: Gst.Object, format: Format, position: int64)
+    event segment_start_message(src: Gst.Object, format: Format, pos: int64)
+    event segment_done_message(src: Gst.Object, format: Format, pos: int64)
     event tag_message(src: Gst.Object, tag_list: TagList)
     event state_changed_message(src: Gst.Object, \
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
-    def set_pipeline(bin: Bin)
-        if bus != null
-            bus.message.disconnect(on_bus_message)
-        pipeline = bin
-        bus = pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.message += on_bus_message
+    prop pipeline: Bin
+        set
+            if bus != null
+                bus.message.disconnect(on_bus_message)
+            _pipeline = value
+            bus = pipeline.get_bus()
+            bus.add_signal_watch()
+            bus.message += on_bus_message
+        get
+            return _pipeline
 
     def get_bus(): Bus
         return bus

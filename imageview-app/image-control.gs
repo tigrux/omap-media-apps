@@ -27,5 +27,5 @@ class ImageControl: MediaControl
         if (filesrc = image_pipeline.get_by_name("filesrc")) == null
             raise new CoreError.FAILED( \
                         "No element named filesrc in the image pipeline")
-        set_pipeline(image_pipeline)
+        pipeline = image_pipeline
 

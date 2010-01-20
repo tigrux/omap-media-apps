@@ -2,6 +2,7 @@
 
 uses Gtk
 
+
 const TITLE: string = "ImageViewApp"
 
 
@@ -11,15 +12,18 @@ class ImageViewWindow: ApplicationWindow
     video_area: VideoArea
     iconlist_store: ListStore
     iconlist_control: IconListControl
-    image_control: ImageControl    
+    image_control: ImageControl
     current_folder: string
     image_button: ToolButton
     slideshow_button: ToolButton
-    is_filling_icons: bool
 
-    continuation: SourceFunc
-    timeout_id: uint
-    cancellable: Cancellable
+    slideshow_timeout: uint
+    slideshow_continuation: SourceFunc
+    slideshow_cancellable: Cancellable
+
+    is_filling_icons: bool
+    fill_icons_continuation: SourceFunc
+    fill_icons_cancellable: Cancellable
 
     init
         setup_model()
@@ -63,7 +67,7 @@ class ImageViewWindow: ApplicationWindow
         var scrolled_window = new ScrolledWindow(null, null)
         box.pack_start(scrolled_window, true, true, 0)
         scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
-        
+
         adjustment: Adjustment
 
         adjustment = scrolled_window.get_vadjustment()
@@ -71,7 +75,7 @@ class ImageViewWindow: ApplicationWindow
 
         adjustment = scrolled_window.get_hadjustment()
         adjustment.value_changed += do_fill_visible_icons
-        
+
         icon_view = new IconView()
         scrolled_window.add(icon_view)
         icon_view.size_request += do_fill_visible_icons
@@ -84,7 +88,7 @@ class ImageViewWindow: ApplicationWindow
         icon_view.set_spacing(0)
         icon_view.set_margin(0)
         icon_view.item_activated += on_icon_activated
-        
+
         return box
 
     def on_icon_activated(path: TreePath)
@@ -153,44 +157,45 @@ class ImageViewWindow: ApplicationWindow
         iter: TreeIter
         if not iconlist_store.get_iter_first(out iter)
             return
-        if continuation == null
+        if slideshow_continuation == null
             start_slideshow()
         else
             stop_slideshow()
 
     def start_slideshow()
         slideshow_button.set_stock_id(STOCK_MEDIA_STOP)
-        cancellable = new Cancellable()
-        slideshow(cancellable)
+        slideshow_cancellable = new Cancellable()
+        slideshow()
 
     def stop_slideshow()
-        cancellable.cancel()
-        if timeout_id != 0
-            Source.remove(timeout_id)
-            Idle.add(continuation)
+        slideshow_cancellable.cancel()
+        if slideshow_timeout != 0
+            Source.remove(slideshow_timeout)
+            Idle.add(slideshow_continuation)
 
     def on_image_control_eos()
         image_control.set_state(Gst.State.READY)
         notebook.set_current_page(ApplicationTab.VIDEO)
-        if continuation != null
-            timeout_id = Timeout.add_seconds(2, continuation)
+        if slideshow_continuation != null
+            slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 
-    def async slideshow(cancellable: Cancellable)
-        continuation = slideshow.callback
+    def async slideshow()
         iter: TreeIter
-        if not get_and_select_iter(out iter) or cancellable.is_cancelled()
+        if not get_and_select_iter(out iter) \
+           or slideshow_cancellable.is_cancelled()
             return
+        slideshow_continuation = slideshow.callback
         do
             var path = iconlist_store.get_path(iter)
             icon_view.select_path(path)
             icon_view.item_activated(path)
             yield
-            timeout_id = 0
-        while iconlist_store.iter_next(ref iter) and \
-              not cancellable.is_cancelled()
+            slideshow_timeout = 0
+        while iconlist_store.iter_next(ref iter) \
+              and not slideshow_cancellable.is_cancelled()
+        slideshow_continuation = null
+        slideshow_cancellable = null
         close()
-        continuation = null
-        cancellable = null
 
     def get_and_select_iter(out iter: TreeIter): bool
         path: TreePath
@@ -214,35 +219,37 @@ class ImageViewWindow: ApplicationWindow
         change_folder()
 
     def change_folder()
-        if cancellable == null
+        if fill_icons_cancellable == null
+            print "proceed"
             iconlist_store.clear()
-            cancellable = new Cancellable()
-            iconlist_control.add_folder(current_folder, cancellable)
+            fill_icons_cancellable = new Cancellable()
+            iconlist_control.add_folder(current_folder, fill_icons_cancellable)
         else
-            cancellable.cancel()
+            print "sorry"
+            fill_icons_cancellable.cancel()
             Idle.add(retry_change_folder)
-    
+
     def retry_change_folder(): bool
-        if cancellable == null
+        if fill_icons_cancellable == null
             change_folder()
             return false
         return true
 
     def on_iconlist_files_added()
-        if cancellable != null
+        if fill_icons_cancellable != null
             Idle.add(fill_visible_icons)
 
     def do_fill_visible_icons()
-        if cancellable == null
-            cancellable = new Cancellable()
+        if fill_icons_cancellable == null
+            fill_icons_cancellable = new Cancellable()
             fill_visible_icons()
         else
             if is_filling_icons
-                cancellable.cancel()
+                fill_icons_cancellable.cancel()
             Idle.add(retry_do_fill_visible_icons)
 
     def retry_do_fill_visible_icons(): bool
-        if cancellable == null
+        if fill_icons_cancellable == null
             do_fill_visible_icons()
             return false
         return true
@@ -252,10 +259,10 @@ class ImageViewWindow: ApplicationWindow
         end: TreePath
         icon_view.get_visible_range(out start, out end)
         is_filling_icons = true
-        iconlist_control.fill_icons(start, end, cancellable)
+        iconlist_control.fill_icons(start, end, fill_icons_cancellable)
         return false
 
     def on_iconlist_icons_filled()
-        cancellable = null
+        fill_icons_cancellable = null
         is_filling_icons = false
 

@@ -106,12 +106,16 @@ struct _ImageViewWindow {
 	char* current_folder;
 	GtkToolButton* image_button;
 	GtkToolButton* slideshow_button;
+	guint slideshow_timeout;
+	GSourceFunc slideshow_continuation;
+	gpointer slideshow_continuation_target;
+	GDestroyNotify slideshow_continuation_target_destroy_notify;
+	GCancellable* slideshow_cancellable;
 	gboolean is_filling_icons;
-	GSourceFunc continuation;
-	gpointer continuation_target;
-	GDestroyNotify continuation_target_destroy_notify;
-	guint timeout_id;
-	GCancellable* cancellable;
+	GSourceFunc fill_icons_continuation;
+	gpointer fill_icons_continuation_target;
+	GDestroyNotify fill_icons_continuation_target_destroy_notify;
+	GCancellable* fill_icons_cancellable;
 };
 
 struct _ImageViewWindowClass {
@@ -138,14 +142,14 @@ struct _ImageViewWindowSlideshowData {
 	GAsyncResult* _res_;
 	GSimpleAsyncResult* _async_result;
 	ImageViewWindow* self;
-	GCancellable* cancellable;
-	GSourceFunc _tmp0_;
 	GtkTreeIter iter;
-	gboolean _tmp1_;
+	gboolean _tmp0_;
+	GSourceFunc _tmp1_;
 	gboolean _tmp2_;
 	gboolean _tmp3_;
 	GtkTreePath* path;
 	GSourceFunc _tmp4_;
+	GCancellable* _tmp5_;
 };
 
 
@@ -210,7 +214,7 @@ void image_view_window_close (ImageViewWindow* self);
 gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter);
 void image_view_window_start_slideshow (ImageViewWindow* self);
 void image_view_window_stop_slideshow (ImageViewWindow* self);
-void image_view_window_slideshow (ImageViewWindow* self, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void image_view_window_slideshow (ImageViewWindow* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void image_view_window_slideshow_finish (ImageViewWindow* self, GAsyncResult* _res_);
 static void image_view_window_slideshow_data_free (gpointer _data);
 static void image_view_window_slideshow_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
@@ -505,7 +509,7 @@ void image_view_window_on_slideshow (ImageViewWindow* self) {
 	if (!gtk_tree_model_get_iter_first ((GtkTreeModel*) self->iconlist_store, &iter)) {
 		return;
 	}
-	if (self->continuation == NULL) {
+	if (self->slideshow_continuation == NULL) {
 		image_view_window_start_slideshow (self);
 	} else {
 		image_view_window_stop_slideshow (self);
@@ -517,17 +521,17 @@ void image_view_window_start_slideshow (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
 	gtk_tool_button_set_stock_id (self->slideshow_button, GTK_STOCK_MEDIA_STOP);
-	self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
-	image_view_window_slideshow (self, self->cancellable, NULL, NULL);
+	self->slideshow_cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->slideshow_cancellable), _tmp0_);
+	image_view_window_slideshow (self, NULL, NULL);
 }
 
 
 void image_view_window_stop_slideshow (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
-	g_cancellable_cancel (self->cancellable);
-	if (self->timeout_id != 0) {
-		g_source_remove (self->timeout_id);
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->continuation, self->continuation_target, NULL);
+	g_cancellable_cancel (self->slideshow_cancellable);
+	if (self->slideshow_timeout != 0) {
+		g_source_remove (self->slideshow_timeout);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}
 }
 
@@ -536,8 +540,8 @@ void image_view_window_on_image_control_eos (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
 	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
-	if (self->continuation != NULL) {
-		self->timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->continuation, self->continuation_target, NULL);
+	if (self->slideshow_continuation != NULL) {
+		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}
 }
 
@@ -545,18 +549,16 @@ void image_view_window_on_image_control_eos (ImageViewWindow* self) {
 static void image_view_window_slideshow_data_free (gpointer _data) {
 	ImageViewWindowSlideshowData* data;
 	data = _data;
-	_g_object_unref0 (data->cancellable);
 	g_slice_free (ImageViewWindowSlideshowData, data);
 }
 
 
-void image_view_window_slideshow (ImageViewWindow* self, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+void image_view_window_slideshow (ImageViewWindow* self, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	ImageViewWindowSlideshowData* _data_;
 	_data_ = g_slice_new0 (ImageViewWindowSlideshowData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, image_view_window_slideshow);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, image_view_window_slideshow_data_free);
 	_data_->self = self;
-	_data_->cancellable = _g_object_ref0 (cancellable);
 	image_view_window_slideshow_co (_data_);
 }
 
@@ -586,13 +588,12 @@ static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* da
 		g_assert_not_reached ();
 		case 0:
 		{
-			data->self->continuation = (data->_tmp0_ = _image_view_window_slideshow_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp0_);
 			if (!image_view_window_get_and_select_iter (data->self, &data->iter)) {
-				data->_tmp1_ = TRUE;
+				data->_tmp0_ = TRUE;
 			} else {
-				data->_tmp1_ = g_cancellable_is_cancelled (data->cancellable);
+				data->_tmp0_ = g_cancellable_is_cancelled (data->self->slideshow_cancellable);
 			}
-			if (data->_tmp1_) {
+			if (data->_tmp0_) {
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -603,12 +604,13 @@ static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* da
 					return FALSE;
 				}
 			}
+			data->self->slideshow_continuation = (data->_tmp1_ = _image_view_window_slideshow_co_gsource_func, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = data, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp1_);
 			{
 				data->_tmp2_ = TRUE;
 				while (TRUE) {
 					if (!data->_tmp2_) {
 						if (gtk_tree_model_iter_next ((GtkTreeModel*) data->self->iconlist_store, &data->iter)) {
-							data->_tmp3_ = !g_cancellable_is_cancelled (data->cancellable);
+							data->_tmp3_ = !g_cancellable_is_cancelled (data->self->slideshow_cancellable);
 						} else {
 							data->_tmp3_ = FALSE;
 						}
@@ -624,13 +626,13 @@ static gboolean image_view_window_slideshow_co (ImageViewWindowSlideshowData* da
 					return FALSE;
 					case 1:
 					;
-					data->self->timeout_id = (guint) 0;
+					data->self->slideshow_timeout = (guint) 0;
 					_gtk_tree_path_free0 (data->path);
 				}
 			}
+			data->self->slideshow_continuation = (data->_tmp4_ = NULL, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp4_);
+			data->self->slideshow_cancellable = (data->_tmp5_ = NULL, _g_object_unref0 (data->self->slideshow_cancellable), data->_tmp5_);
 			image_view_window_close (data->self);
-			data->self->continuation = (data->_tmp4_ = NULL, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL, data->_tmp4_);
-			data->cancellable = NULL;
 		}
 		{
 			if (data->_state_ == 0) {
@@ -702,13 +704,15 @@ static gboolean _image_view_window_retry_change_folder_gsource_func (gpointer se
 
 void image_view_window_change_folder (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
-	if (self->cancellable == NULL) {
+	if (self->fill_icons_cancellable == NULL) {
 		GCancellable* _tmp0_;
+		g_print ("proceed\n");
 		gtk_list_store_clear (self->iconlist_store);
-		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
-		icon_list_control_add_folder (self->iconlist_control, self->current_folder, self->cancellable, NULL, NULL);
+		self->fill_icons_cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
+		icon_list_control_add_folder (self->iconlist_control, self->current_folder, self->fill_icons_cancellable, NULL, NULL);
 	} else {
-		g_cancellable_cancel (self->cancellable);
+		g_print ("sorry\n");
+		g_cancellable_cancel (self->fill_icons_cancellable);
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_change_folder_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
@@ -717,7 +721,7 @@ void image_view_window_change_folder (ImageViewWindow* self) {
 gboolean image_view_window_retry_change_folder (ImageViewWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (self->cancellable == NULL) {
+	if (self->fill_icons_cancellable == NULL) {
 		image_view_window_change_folder (self);
 		result = FALSE;
 		return result;
@@ -734,7 +738,7 @@ static gboolean _image_view_window_fill_visible_icons_gsource_func (gpointer sel
 
 void image_view_window_on_iconlist_files_added (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
-	if (self->cancellable != NULL) {
+	if (self->fill_icons_cancellable != NULL) {
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
@@ -747,13 +751,13 @@ static gboolean _image_view_window_retry_do_fill_visible_icons_gsource_func (gpo
 
 void image_view_window_do_fill_visible_icons (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
-	if (self->cancellable == NULL) {
+	if (self->fill_icons_cancellable == NULL) {
 		GCancellable* _tmp0_;
-		self->cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->cancellable), _tmp0_);
+		self->fill_icons_cancellable = (_tmp0_ = g_cancellable_new (), _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
 		image_view_window_fill_visible_icons (self);
 	} else {
 		if (self->is_filling_icons) {
-			g_cancellable_cancel (self->cancellable);
+			g_cancellable_cancel (self->fill_icons_cancellable);
 		}
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _image_view_window_retry_do_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
 	}
@@ -763,7 +767,7 @@ void image_view_window_do_fill_visible_icons (ImageViewWindow* self) {
 gboolean image_view_window_retry_do_fill_visible_icons (ImageViewWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (self->cancellable == NULL) {
+	if (self->fill_icons_cancellable == NULL) {
 		image_view_window_do_fill_visible_icons (self);
 		result = FALSE;
 		return result;
@@ -790,7 +794,7 @@ gboolean image_view_window_fill_visible_icons (ImageViewWindow* self) {
 	end = (_tmp5_ = _gtk_tree_path_copy0 (_tmp3_), _gtk_tree_path_free0 (end), _tmp5_);
 	_tmp4_;
 	self->is_filling_icons = TRUE;
-	icon_list_control_fill_icons (self->iconlist_control, start, end, self->cancellable, NULL, NULL);
+	icon_list_control_fill_icons (self->iconlist_control, start, end, self->fill_icons_cancellable, NULL, NULL);
 	result = FALSE;
 	_gtk_tree_path_free0 (start);
 	_gtk_tree_path_free0 (end);
@@ -801,7 +805,7 @@ gboolean image_view_window_fill_visible_icons (ImageViewWindow* self) {
 void image_view_window_on_iconlist_icons_filled (ImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
-	self->cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->cancellable), _tmp0_);
+	self->fill_icons_cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
 	self->is_filling_icons = FALSE;
 }
 
@@ -850,11 +854,16 @@ static void image_view_window_finalize (GObject* obj) {
 	_g_free0 (self->current_folder);
 	_g_object_unref0 (self->image_button);
 	_g_object_unref0 (self->slideshow_button);
-	(self->continuation_target_destroy_notify == NULL) ? NULL : self->continuation_target_destroy_notify (self->continuation_target);
-	self->continuation = NULL;
-	self->continuation_target = NULL;
-	self->continuation_target_destroy_notify = NULL;
-	_g_object_unref0 (self->cancellable);
+	(self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : self->slideshow_continuation_target_destroy_notify (self->slideshow_continuation_target);
+	self->slideshow_continuation = NULL;
+	self->slideshow_continuation_target = NULL;
+	self->slideshow_continuation_target_destroy_notify = NULL;
+	_g_object_unref0 (self->slideshow_cancellable);
+	(self->fill_icons_continuation_target_destroy_notify == NULL) ? NULL : self->fill_icons_continuation_target_destroy_notify (self->fill_icons_continuation_target);
+	self->fill_icons_continuation = NULL;
+	self->fill_icons_continuation_target = NULL;
+	self->fill_icons_continuation_target_destroy_notify = NULL;
+	_g_object_unref0 (self->fill_icons_cancellable);
 	G_OBJECT_CLASS (image_view_window_parent_class)->finalize (obj);
 }
 

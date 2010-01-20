@@ -46,6 +46,10 @@ class IconListControl: MediaControl
         error_message += on_error
         element_message += on_element
 
+    final
+        if pipeline != null
+            pipeline.set_state(State.NULL)
+
     construct(model: ListStore) raises Error
         iconlist_store = model
         if not pixbufs_loaded
@@ -84,7 +88,7 @@ class IconListControl: MediaControl
                         "No element named imagedec in the icon_pipeline")
         imagedec_src = imagedec.get_static_pad("src")
 
-        set_pipeline(icon_pipeline)
+        pipeline = icon_pipeline
 
     def async add_folder(dirname: string, cancellable: Cancellable)
         var dir = File.new_for_path (dirname)
@@ -115,7 +119,8 @@ class IconListControl: MediaControl
                     Col.PIXBUF, loading_pixbuf, \
                     -1)
 
-    def async fill_icons(path: TreePath, end: TreePath, cancellable: Cancellable)
+    def async fill_icons(path: TreePath, end: TreePath, \
+                         cancellable: Cancellable)
         if path != null and end != null
             continuation = fill_icons.callback
             pipeline.set_state(State.READY)
@@ -144,7 +149,7 @@ class IconListControl: MediaControl
                         get_playing_image_size(out width, out height)
                     else
                         pixbuf = missing_pixbuf
-                    
+
                     iconlist_store.set(iter, \
                         Col.PIXBUF, pixbuf, \
                         Col.VALID, valid, \

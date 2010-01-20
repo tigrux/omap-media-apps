@@ -45,7 +45,7 @@ class DebugDialog: Dialog
     def text_insert_new_line(ref iter: TextIter)
         text_buffer.insert(iter, "\n", -1)
 
-    def new_error_box(): Box        
+    def new_error_box(): Box
         var box = new HBox(false, 0)
 
         var image = new Image.from_stock(STOCK_DIALOG_ERROR, IconSize.DIALOG)
