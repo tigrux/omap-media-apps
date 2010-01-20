@@ -77,7 +77,7 @@ class MuxerControl: MediaControl
             overlay.set("silent", true)
         self.tee.unlink(self.queue)
         preview_bin.remove(record_bin)
-        record_bin.set_bus(preview_bin.get_bus())
+        record_bin.bus = preview_bin.bus
         queue.send_event(new Event.eos())
         if audiosrc != null
             audiosrc.send_event(new Event.eos())

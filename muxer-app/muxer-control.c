@@ -221,7 +221,6 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 
 
 void muxer_control_stop_record (MuxerControl* self) {
-	GstBus* _tmp0_;
 	g_return_if_fail (self != NULL);
 	if (!self->recording) {
 		return;
@@ -232,8 +231,7 @@ void muxer_control_stop_record (MuxerControl* self) {
 	}
 	gst_element_unlink (self->tee, self->queue);
 	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
-	gst_element_set_bus ((GstElement*) self->record_bin, _tmp0_ = gst_element_get_bus ((GstElement*) self->preview_bin));
-	_gst_object_unref0 (_tmp0_);
+	((GstElement*) self->record_bin)->bus = ((GstElement*) self->preview_bin)->bus;
 	gst_element_send_event (self->queue, gst_event_new_eos ());
 	if (self->audiosrc != NULL) {
 		gst_element_send_event (self->audiosrc, gst_event_new_eos ());
