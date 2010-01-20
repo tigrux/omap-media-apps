@@ -6,7 +6,7 @@ uses Gtk
 const TITLE: string = "PlayerApp"
 
 
-class PlayerWindow: ApplicationWindow
+class PlayerWindow: MediaWindow
     playlist_view: TreeView
     playlist_store: ListStore
     playlist_selection: TreeSelection
@@ -66,7 +66,7 @@ class PlayerWindow: ApplicationWindow
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
         notebook.switch_page += def(page, num_page)
-            fullscreen_button.set_visible(num_page == ApplicationTab.VIDEO)
+            fullscreen_button.set_visible(num_page == Tab.VIDEO)
 
     def setup_toolbar()
         var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
@@ -216,7 +216,7 @@ class PlayerWindow: ApplicationWindow
         box.pack_start(video_area, true, true, 0)
         video_area.activated += toggle_fullscreen
         video_area.prepared += def()
-            notebook.set_current_page(ApplicationTab.VIDEO)
+            notebook.set_current_page(Tab.VIDEO)
         video_area.set_control(playlist_control)
 
         return box
@@ -257,7 +257,7 @@ class PlayerWindow: ApplicationWindow
                     return
                 var row = playlist_store.get_path(iter)
                 playlist_control.move_to(row)
-                notebook.set_current_page(ApplicationTab.LIST)
+                notebook.set_current_page(Tab.LIST)
                 on_play()
 
     def on_playlist_control_playing(iter: TreeIter)
@@ -273,8 +273,8 @@ class PlayerWindow: ApplicationWindow
     def on_playlist_control_stopped(iter: TreeIter)
         set_title(TITLE)
         var page = notebook.get_current_page()
-        if page != ApplicationTab.LIST
-            notebook.set_current_page(ApplicationTab.LIST)
+        if page != Tab.LIST
+            notebook.set_current_page(Tab.LIST)
         play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
         remove_update_scale_timeout()
         seeking_scale.hide()

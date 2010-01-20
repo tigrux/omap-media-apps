@@ -2,7 +2,7 @@
 
 uses Gtk
 
-const APPLICATION_DEFAULT_STYLE: string = """
+const DEFAULT_STYLE: string = """
 style "custom"
 {
     GtkRange::slider-width = 24
@@ -14,19 +14,19 @@ style "custom"
 widget_class "*" style "custom"
 """
 
-enum ApplicationTab
-    LIST
-    VIDEO
 
-
-class ApplicationWindow: Window
+class MediaWindow: Window
     notebook: Notebook
     toolbar: Toolbar
     main_box: VBox
     rc_parsed: static bool = rc_parse()
 
+    enum Tab
+        LIST
+        VIDEO
+
     def static rc_parse(): bool
-        rc_parse_string(APPLICATION_DEFAULT_STYLE)
+        rc_parse_string(DEFAULT_STYLE)
         return true
 
     init

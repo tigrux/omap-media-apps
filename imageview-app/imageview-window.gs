@@ -6,7 +6,7 @@ uses Gtk
 const TITLE: string = "ImageViewApp"
 
 
-class ImageViewWindow: ApplicationWindow
+class ImageViewWindow: MediaWindow
     chooser_button: FileChooserButton
     icon_view: IconView
     video_area: VideoArea
@@ -138,7 +138,7 @@ class ImageViewWindow: ApplicationWindow
         toolbar_add_quit_button()
 
     def on_open_close()
-        if notebook.get_current_page() == ApplicationTab.LIST
+        if notebook.get_current_page() == Tab.LIST
             open()
         else
             close()
@@ -149,7 +149,7 @@ class ImageViewWindow: ApplicationWindow
             icon_view.item_activated(iconlist_store.get_path(iter))
 
     def close()
-        notebook.set_current_page(ApplicationTab.LIST)
+        notebook.set_current_page(Tab.LIST)
         image_button.set_stock_id(STOCK_ZOOM_100)
         slideshow_button.set_stock_id(STOCK_MEDIA_PLAY)
 
@@ -175,7 +175,7 @@ class ImageViewWindow: ApplicationWindow
 
     def on_image_control_eos()
         image_control.set_state(Gst.State.READY)
-        notebook.set_current_page(ApplicationTab.VIDEO)
+        notebook.set_current_page(Tab.VIDEO)
         if slideshow_continuation != null
             slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 

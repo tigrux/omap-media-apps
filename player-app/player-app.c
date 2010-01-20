@@ -10,15 +10,15 @@
 #include <string.h>
 
 
-#define TYPE_APPLICATION_WINDOW (application_window_get_type ())
-#define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
-#define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
-#define IS_APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_APPLICATION_WINDOW))
-#define IS_APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_APPLICATION_WINDOW))
-#define APPLICATION_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
+#define TYPE_MEDIA_WINDOW (media_window_get_type ())
+#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
+#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
+#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
+#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
+#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
 
-typedef struct _ApplicationWindow ApplicationWindow;
-typedef struct _ApplicationWindowClass ApplicationWindowClass;
+typedef struct _MediaWindow MediaWindow;
+typedef struct _MediaWindowClass MediaWindowClass;
 
 #define TYPE_PLAYER_WINDOW (player_window_get_type ())
 #define PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAYER_WINDOW, PlayerWindow))
@@ -35,7 +35,7 @@ typedef struct _PlayerWindowClass PlayerWindowClass;
 
 PlayerWindow* player_window_new (void);
 PlayerWindow* player_window_construct (GType object_type);
-GType application_window_get_type (void);
+GType media_window_get_type (void);
 GType player_window_get_type (void);
 void _main (char** args, int args_length1);
 

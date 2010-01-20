@@ -3,7 +3,7 @@ all: vala.stamp
 VALASOURCES = \
 	video-area.gs \
 	error-dialog.gs \
-	application-window.gs \
+	media-window.gs \
 	media-control.gs
 
 SOURCES = \

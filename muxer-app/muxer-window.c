@@ -10,16 +10,16 @@
 #include <gst/gst.h>
 
 
-#define TYPE_APPLICATION_WINDOW (application_window_get_type ())
-#define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
-#define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
-#define IS_APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_APPLICATION_WINDOW))
-#define IS_APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_APPLICATION_WINDOW))
-#define APPLICATION_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
+#define TYPE_MEDIA_WINDOW (media_window_get_type ())
+#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
+#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
+#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
+#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
+#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
 
-typedef struct _ApplicationWindow ApplicationWindow;
-typedef struct _ApplicationWindowClass ApplicationWindowClass;
-typedef struct _ApplicationWindowPrivate ApplicationWindowPrivate;
+typedef struct _MediaWindow MediaWindow;
+typedef struct _MediaWindowClass MediaWindowClass;
+typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define TYPE_MUXER_WINDOW (muxer_window_get_type ())
 #define MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_WINDOW, MuxerWindow))
@@ -88,20 +88,20 @@ typedef struct _MuxerConfigParser MuxerConfigParser;
 typedef struct _MuxerConfigParserClass MuxerConfigParserClass;
 #define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
 
-struct _ApplicationWindow {
+struct _MediaWindow {
 	GtkWindow parent_instance;
-	ApplicationWindowPrivate * priv;
+	MediaWindowPrivate * priv;
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 };
 
-struct _ApplicationWindowClass {
+struct _MediaWindowClass {
 	GtkWindowClass parent_class;
 };
 
 struct _MuxerWindow {
-	ApplicationWindow parent_instance;
+	MediaWindow parent_instance;
 	MuxerWindowPrivate * priv;
 	GtkComboBox* combo_box;
 	GtkListStore* combo_model;
@@ -115,7 +115,7 @@ struct _MuxerWindow {
 };
 
 struct _MuxerWindowClass {
-	ApplicationWindowClass parent_class;
+	MediaWindowClass parent_class;
 };
 
 typedef enum  {
@@ -128,7 +128,7 @@ typedef enum  {
 static gpointer muxer_window_parent_class = NULL;
 
 #define TITLE "MuxerApp"
-GType application_window_get_type (void);
+GType media_window_get_type (void);
 GType muxer_window_get_type (void);
 GType media_control_get_type (void);
 GType muxer_control_get_type (void);
@@ -145,12 +145,12 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self);
 static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self);
 void muxer_window_on_combo_changed (MuxerWindow* self);
 static void _muxer_window_on_combo_changed_gtk_combo_box_changed (GtkComboBox* _sender, gpointer self);
-void application_window_toolbar_add_expander (ApplicationWindow* self);
+void media_window_toolbar_add_expander (MediaWindow* self);
 void muxer_window_on_record (MuxerWindow* self);
 static void _muxer_window_on_record_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void muxer_window_on_stop (MuxerWindow* self);
 static void _muxer_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void application_window_toolbar_add_quit_button (ApplicationWindow* self);
+void media_window_toolbar_add_quit_button (MediaWindow* self);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** record);
@@ -203,7 +203,7 @@ void muxer_window_setup_widgets (MuxerWindow* self) {
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
 	muxer_window_setup_toolbar (self);
 	muxer_window_setup_notebook (self);
-	gtk_widget_show_all ((GtkWidget*) ((ApplicationWindow*) self)->main_box);
+	gtk_widget_show_all ((GtkWidget*) ((MediaWindow*) self)->main_box);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
 }
 
@@ -242,7 +242,7 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 	GtkToolButton* _tmp5_;
 	g_return_if_fail (self != NULL);
 	chooser_item = g_object_ref_sink (gtk_tool_item_new ());
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) chooser_item);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) chooser_item);
 	gtk_tool_item_set_expand (chooser_item, TRUE);
 	self->chooser_button = (_tmp0_ = g_object_ref_sink ((GtkFileChooserButton*) gtk_file_chooser_button_new ("Config file", GTK_FILE_CHOOSER_ACTION_OPEN)), _g_object_unref0 (self->chooser_button), _tmp0_);
 	gtk_container_add ((GtkContainer*) chooser_item, (GtkWidget*) self->chooser_button);
@@ -253,7 +253,7 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 	gtk_file_filter_add_pattern (file_filter, "*.xml");
 	gtk_file_chooser_add_filter ((GtkFileChooser*) self->chooser_button, file_filter);
 	combo_item = g_object_ref_sink (gtk_tool_item_new ());
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) combo_item);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) combo_item);
 	s = G_TYPE_STRING;
 	self->combo_model = (_tmp1_ = gtk_list_store_new (3, s, s, s, NULL), _g_object_unref0 (self->combo_model), _tmp1_);
 	self->combo_box = (_tmp2_ = g_object_ref_sink ((GtkComboBox*) gtk_combo_box_new_with_model ((GtkTreeModel*) self->combo_model)), _g_object_unref0 (self->combo_box), _tmp2_);
@@ -262,18 +262,18 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 	gtk_cell_layout_pack_start ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, TRUE);
 	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", MUXER_WINDOW_COMBO_COL_GROUP, NULL, NULL);
 	g_signal_connect_object (self->combo_box, "changed", (GCallback) _muxer_window_on_combo_changed_gtk_combo_box_changed, self, 0);
-	application_window_toolbar_add_expander ((ApplicationWindow*) self);
+	media_window_toolbar_add_expander ((MediaWindow*) self);
 	self->record_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_RECORD)), _g_object_unref0 (self->record_button), _tmp3_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->record_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->record_button);
 	gtk_widget_set_sensitive ((GtkWidget*) self->record_button, FALSE);
 	g_signal_connect_object (self->record_button, "clicked", (GCallback) _muxer_window_on_record_gtk_tool_button_clicked, self, 0);
 	self->probe_button = (_tmp4_ = g_object_ref_sink ((GtkToggleToolButton*) gtk_toggle_tool_button_new_from_stock (GTK_STOCK_CONVERT)), _g_object_unref0 (self->probe_button), _tmp4_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->probe_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->probe_button);
 	self->stop_button = (_tmp5_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP)), _g_object_unref0 (self->stop_button), _tmp5_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->stop_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->stop_button);
 	gtk_widget_set_sensitive ((GtkWidget*) self->stop_button, FALSE);
 	g_signal_connect_object (self->stop_button, "clicked", (GCallback) _muxer_window_on_stop_gtk_tool_button_clicked, self, 0);
-	application_window_toolbar_add_quit_button ((ApplicationWindow*) self);
+	media_window_toolbar_add_quit_button ((MediaWindow*) self);
 	_g_object_unref0 (chooser_item);
 	_g_object_unref0 (file_filter);
 	_g_object_unref0 (combo_item);
@@ -286,7 +286,7 @@ void muxer_window_setup_notebook (MuxerWindow* self) {
 	GtkLabel* _tmp1_;
 	g_return_if_fail (self != NULL);
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
-	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) self->video_area, (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Capture"))));
+	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) self->video_area, (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Capture"))));
 	_g_object_unref0 (_tmp1_);
 }
 
@@ -699,7 +699,7 @@ GType muxer_window_get_type (void) {
 	static GType muxer_window_type_id = 0;
 	if (muxer_window_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (MuxerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerWindow), 0, (GInstanceInitFunc) muxer_window_instance_init, NULL };
-		muxer_window_type_id = g_type_register_static (TYPE_APPLICATION_WINDOW, "MuxerWindow", &g_define_type_info, 0);
+		muxer_window_type_id = g_type_register_static (TYPE_MEDIA_WINDOW, "MuxerWindow", &g_define_type_info, 0);
 	}
 	return muxer_window_type_id;
 }

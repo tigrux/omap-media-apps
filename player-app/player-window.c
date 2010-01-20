@@ -13,16 +13,16 @@
 #include <gdk/gdk.h>
 
 
-#define TYPE_APPLICATION_WINDOW (application_window_get_type ())
-#define APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindow))
-#define APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
-#define IS_APPLICATION_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_APPLICATION_WINDOW))
-#define IS_APPLICATION_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_APPLICATION_WINDOW))
-#define APPLICATION_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_APPLICATION_WINDOW, ApplicationWindowClass))
+#define TYPE_MEDIA_WINDOW (media_window_get_type ())
+#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
+#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
+#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
+#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
+#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
 
-typedef struct _ApplicationWindow ApplicationWindow;
-typedef struct _ApplicationWindowClass ApplicationWindowClass;
-typedef struct _ApplicationWindowPrivate ApplicationWindowPrivate;
+typedef struct _MediaWindow MediaWindow;
+typedef struct _MediaWindowClass MediaWindowClass;
+typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define TYPE_PLAYER_WINDOW (player_window_get_type ())
 #define PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAYER_WINDOW, PlayerWindow))
@@ -77,24 +77,24 @@ typedef struct _DebugDialogClass DebugDialogClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define TYPE_APPLICATION_TAB (application_tab_get_type ())
+#define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define __g_list_free_gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_gtk_tree_path_free (var), NULL)))
 
-struct _ApplicationWindow {
+struct _MediaWindow {
 	GtkWindow parent_instance;
-	ApplicationWindowPrivate * priv;
+	MediaWindowPrivate * priv;
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 };
 
-struct _ApplicationWindowClass {
+struct _MediaWindowClass {
 	GtkWindowClass parent_class;
 };
 
 struct _PlayerWindow {
-	ApplicationWindow parent_instance;
+	MediaWindow parent_instance;
 	PlayerWindowPrivate * priv;
 	GtkTreeView* playlist_view;
 	GtkListStore* playlist_store;
@@ -124,19 +124,19 @@ struct _PlayerWindow {
 };
 
 struct _PlayerWindowClass {
-	ApplicationWindowClass parent_class;
+	MediaWindowClass parent_class;
 };
 
 typedef enum  {
-	APPLICATION_TAB_LIST,
-	APPLICATION_TAB_VIDEO
-} ApplicationTab;
+	MEDIA_WINDOW_TAB_LIST,
+	MEDIA_WINDOW_TAB_VIDEO
+} MediaWindowTab;
 
 
 static gpointer player_window_parent_class = NULL;
 
 #define TITLE "PlayerApp"
-GType application_window_get_type (void);
+GType media_window_get_type (void);
 GType player_window_get_type (void);
 GType media_control_get_type (void);
 GType play_list_control_get_type (void);
@@ -167,7 +167,7 @@ void player_window_setup_seeking (PlayerWindow* self);
 void player_window_setup_widgets (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
-GType application_tab_get_type (void);
+GType media_window_tab_get_type (void);
 static void _lambda5_ (void* page, guint num_page, PlayerWindow* self);
 static void __lambda5__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void player_window_on_prev (PlayerWindow* self);
@@ -178,7 +178,7 @@ void player_window_on_next (PlayerWindow* self);
 static void _player_window_on_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_stop (PlayerWindow* self);
 static void _player_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void application_window_toolbar_add_expander (ApplicationWindow* self);
+void media_window_toolbar_add_expander (MediaWindow* self);
 GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self);
 void player_window_toggle_fullscreen (PlayerWindow* self);
 static void _player_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
@@ -186,7 +186,7 @@ void player_window_on_add (PlayerWindow* self);
 static void _player_window_on_add_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_on_remove (PlayerWindow* self);
 static void _player_window_on_remove_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void application_window_toolbar_add_quit_button (ApplicationWindow* self);
+void media_window_toolbar_add_quit_button (MediaWindow* self);
 gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self);
 static gboolean _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
 gboolean player_window_on_seeking_scale_released (PlayerWindow* self);
@@ -238,7 +238,7 @@ gboolean player_window_update_scale_timeout (PlayerWindow* self);
 static gboolean _player_window_update_scale_timeout_gsource_func (gpointer self);
 gint64 media_control_get_position (MediaControl* self);
 gint64 media_control_get_duration (MediaControl* self);
-void application_window_set_fullscreen (ApplicationWindow* self, gboolean value);
+void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 DebugDialog* debug_dialog_new (GtkWindow* parent);
 DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
 void player_window_on_debug_dialog_closed (PlayerWindow* self);
@@ -313,12 +313,12 @@ void player_window_setup_widgets (PlayerWindow* self) {
 	player_window_setup_notebook (self);
 	player_window_setup_seeking (self);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
-	gtk_widget_show_all ((GtkWidget*) ((ApplicationWindow*) self)->main_box);
+	gtk_widget_show_all ((GtkWidget*) ((MediaWindow*) self)->main_box);
 }
 
 
 static void _lambda5_ (void* page, guint num_page, PlayerWindow* self) {
-	gtk_widget_set_visible ((GtkWidget*) self->fullscreen_button, num_page == APPLICATION_TAB_VIDEO);
+	gtk_widget_set_visible ((GtkWidget*) self->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
 }
 
 
@@ -333,13 +333,13 @@ void player_window_setup_notebook (PlayerWindow* self) {
 	GtkLabel* _tmp3_;
 	GtkBox* _tmp2_;
 	g_return_if_fail (self != NULL);
-	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) (_tmp0_ = player_window_new_playlist_box (self)), (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("List"))));
+	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp0_ = player_window_new_playlist_box (self)), (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("List"))));
 	_g_object_unref0 (_tmp1_);
 	_g_object_unref0 (_tmp0_);
-	gtk_notebook_append_page (((ApplicationWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
+	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	g_signal_connect_object (((ApplicationWindow*) self)->notebook, "switch-page", (GCallback) __lambda5__gtk_notebook_switch_page, self, 0);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda5__gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -391,33 +391,33 @@ void player_window_setup_toolbar (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	prev_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PREVIOUS));
 	g_signal_connect_object (prev_button, "clicked", (GCallback) _player_window_on_prev_gtk_tool_button_clicked, self, 0);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) prev_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) prev_button);
 	self->play_pause_button = (_tmp0_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->play_pause_button), _tmp0_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->play_pause_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->play_pause_button);
 	g_signal_connect_object (self->play_pause_button, "clicked", (GCallback) _player_window_on_play_pause_gtk_tool_button_clicked, self, 0);
 	self->next_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_NEXT)), _g_object_unref0 (self->next_button), _tmp1_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->next_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->next_button);
 	g_signal_connect_object (self->next_button, "clicked", (GCallback) _player_window_on_next_gtk_tool_button_clicked, self, 0);
 	stop_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP));
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) stop_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) stop_button);
 	g_signal_connect_object (stop_button, "clicked", (GCallback) _player_window_on_stop_gtk_tool_button_clicked, self, 0);
-	application_window_toolbar_add_expander ((ApplicationWindow*) self);
+	media_window_toolbar_add_expander ((MediaWindow*) self);
 	volume_button_item = g_object_ref_sink (gtk_tool_item_new ());
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) volume_button_item);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) volume_button_item);
 	self->volume_button = (_tmp2_ = player_window_new_volume_button_with_mute (self), _g_object_unref0 (self->volume_button), _tmp2_);
 	gtk_container_add ((GtkContainer*) volume_button_item, (GtkWidget*) self->volume_button);
 	self->fullscreen_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_FULLSCREEN)), _g_object_unref0 (self->fullscreen_button), _tmp3_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->fullscreen_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->fullscreen_button);
 	gtk_widget_set_no_show_all ((GtkWidget*) self->fullscreen_button, TRUE);
 	g_signal_connect_object (self->fullscreen_button, "clicked", (GCallback) _player_window_toggle_fullscreen_gtk_tool_button_clicked, self, 0);
-	application_window_toolbar_add_expander ((ApplicationWindow*) self);
+	media_window_toolbar_add_expander ((MediaWindow*) self);
 	self->add_button = (_tmp4_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ADD)), _g_object_unref0 (self->add_button), _tmp4_);
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) self->add_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->add_button);
 	g_signal_connect_object (self->add_button, "clicked", (GCallback) _player_window_on_add_gtk_tool_button_clicked, self, 0);
 	remove_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_REMOVE));
-	gtk_container_add ((GtkContainer*) ((ApplicationWindow*) self)->toolbar, (GtkWidget*) remove_button);
+	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) remove_button);
 	g_signal_connect_object (remove_button, "clicked", (GCallback) _player_window_on_remove_gtk_tool_button_clicked, self, 0);
-	application_window_toolbar_add_quit_button ((ApplicationWindow*) self);
+	media_window_toolbar_add_quit_button ((MediaWindow*) self);
 	_g_object_unref0 (prev_button);
 	_g_object_unref0 (stop_button);
 	_g_object_unref0 (volume_button_item);
@@ -446,7 +446,7 @@ void player_window_setup_seeking (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	self->seeking_adjustment = (_tmp0_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, (double) 100, 0.1, (double) 1, (double) 1)), _g_object_unref0 (self->seeking_adjustment), _tmp0_);
 	self->seeking_scale = (_tmp1_ = (GtkScale*) g_object_ref_sink ((GtkHScale*) gtk_hscale_new (self->seeking_adjustment)), _g_object_unref0 (self->seeking_scale), _tmp1_);
-	gtk_box_pack_start ((GtkBox*) ((ApplicationWindow*) self)->main_box, (GtkWidget*) self->seeking_scale, FALSE, FALSE, (guint) 0);
+	gtk_box_pack_start ((GtkBox*) ((MediaWindow*) self)->main_box, (GtkWidget*) self->seeking_scale, FALSE, FALSE, (guint) 0);
 	gtk_widget_set_no_show_all ((GtkWidget*) self->seeking_scale, TRUE);
 	gtk_range_set_update_policy ((GtkRange*) self->seeking_scale, GTK_UPDATE_DISCONTINUOUS);
 	g_signal_connect_object ((GtkWidget*) self->seeking_scale, "button-press-event", (GCallback) _player_window_on_seeking_scale_pressed_gtk_widget_button_press_event, self, 0);
@@ -584,7 +584,7 @@ GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self) 
 	GtkAdjustment* _tmp7_;
 	g_return_val_if_fail (self != NULL, NULL);
 	volume_button = g_object_ref_sink ((GtkVolumeButton*) gtk_volume_button_new ());
-	icon_size = gtk_tool_shell_get_icon_size ((GtkToolShell*) ((ApplicationWindow*) self)->toolbar);
+	icon_size = gtk_tool_shell_get_icon_size ((GtkToolShell*) ((MediaWindow*) self)->toolbar);
 	g_object_set ((GtkScaleButton*) volume_button, "size", icon_size, NULL);
 	g_signal_connect_object ((GtkWidget*) volume_button, "button-press-event", (GCallback) _player_window_on_volume_button_pressed_gtk_widget_button_press_event, self, 0);
 	popup_window = _g_object_ref0 ((_tmp0_ = gtk_scale_button_get_popup ((GtkScaleButton*) volume_button), GTK_IS_WINDOW (_tmp0_) ? ((GtkWindow*) _tmp0_) : NULL));
@@ -643,7 +643,7 @@ static void _player_window_toggle_fullscreen_video_area_activated (VideoArea* _s
 
 
 static void _lambda4_ (PlayerWindow* self) {
-	gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_VIDEO);
+	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
 }
 
 
@@ -738,7 +738,7 @@ void player_window_on_play_pause (PlayerWindow* self) {
 				}
 				row = gtk_tree_model_get_path ((GtkTreeModel*) self->playlist_store, &iter);
 				play_list_control_move_to (self->playlist_control, row);
-				gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_LIST);
+				gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
 				player_window_on_play (self);
 				_gtk_tree_path_free0 (row);
 			}
@@ -770,9 +770,9 @@ void player_window_on_playlist_control_stopped (PlayerWindow* self, GtkTreeIter*
 	gint page;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	page = gtk_notebook_get_current_page (((ApplicationWindow*) self)->notebook);
-	if (page != APPLICATION_TAB_LIST) {
-		gtk_notebook_set_current_page (((ApplicationWindow*) self)->notebook, (gint) APPLICATION_TAB_LIST);
+	page = gtk_notebook_get_current_page (((MediaWindow*) self)->notebook);
+	if (page != MEDIA_WINDOW_TAB_LIST) {
+		gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
 	}
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PLAY);
 	player_window_remove_update_scale_timeout (self);
@@ -985,10 +985,10 @@ void player_window_toggle_fullscreen (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->is_fullscreen) {
 		self->is_fullscreen = FALSE;
-		application_window_set_fullscreen ((ApplicationWindow*) self, FALSE);
+		media_window_set_fullscreen ((MediaWindow*) self, FALSE);
 	} else {
 		self->is_fullscreen = TRUE;
-		application_window_set_fullscreen ((ApplicationWindow*) self, TRUE);
+		media_window_set_fullscreen ((MediaWindow*) self, TRUE);
 	}
 }
 
@@ -1005,7 +1005,7 @@ void player_window_setup_debug_dialog (PlayerWindow* self) {
 		return;
 	}
 	gtk_widget_hide ((GtkWidget*) self->seeking_scale);
-	gtk_widget_hide ((GtkWidget*) ((ApplicationWindow*) self)->toolbar);
+	gtk_widget_hide ((GtkWidget*) ((MediaWindow*) self)->toolbar);
 	self->debug_dialog = (_tmp0_ = g_object_ref_sink (debug_dialog_new ((GtkWindow*) self)), _g_object_unref0 (self->debug_dialog), _tmp0_);
 	g_signal_connect_object (self->debug_dialog, "closed", (GCallback) _player_window_on_debug_dialog_closed_debug_dialog_closed, self, 0);
 	gtk_widget_show ((GtkWidget*) self->debug_dialog);
@@ -1015,7 +1015,7 @@ void player_window_setup_debug_dialog (PlayerWindow* self) {
 void player_window_on_debug_dialog_closed (PlayerWindow* self) {
 	DebugDialog* _tmp0_;
 	g_return_if_fail (self != NULL);
-	gtk_widget_show ((GtkWidget*) ((ApplicationWindow*) self)->toolbar);
+	gtk_widget_show ((GtkWidget*) ((MediaWindow*) self)->toolbar);
 	player_window_on_stop (self);
 	self->debug_dialog = (_tmp0_ = NULL, _g_object_unref0 (self->debug_dialog), _tmp0_);
 }
@@ -1105,7 +1105,7 @@ GType player_window_get_type (void) {
 	static GType player_window_type_id = 0;
 	if (player_window_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (PlayerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) player_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (PlayerWindow), 0, (GInstanceInitFunc) player_window_instance_init, NULL };
-		player_window_type_id = g_type_register_static (TYPE_APPLICATION_WINDOW, "PlayerWindow", &g_define_type_info, 0);
+		player_window_type_id = g_type_register_static (TYPE_MEDIA_WINDOW, "PlayerWindow", &g_define_type_info, 0);
 	}
 	return player_window_type_id;
 }

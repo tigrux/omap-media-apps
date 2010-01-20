@@ -6,7 +6,7 @@ uses Gtk
 const TITLE: string = "MuxerApp"
 
 
-class MuxerWindow: ApplicationWindow
+class MuxerWindow: MediaWindow
 
     enum ComboCol
         GROUP
