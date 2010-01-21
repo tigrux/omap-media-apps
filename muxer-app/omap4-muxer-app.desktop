@@ -1,6 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=MuxerApp
+Name=Omap4 Muxer
 Exec=omap4-muxer-app
 Icon=omap4-muxer-app.png
 Terminal=false

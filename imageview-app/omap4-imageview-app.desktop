@@ -1,6 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=ImageViewApp
+Name=Omap4 ImageView
 Exec=omap4-imageview-app
 Icon=omap4-imageview-app.png
 Terminal=false

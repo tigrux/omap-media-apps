@@ -1,6 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=PlayerApp
+Name=Omap4 Player
 Exec=omap4-player-app
 Icon=omap4-player-app.png
 Terminal=false
