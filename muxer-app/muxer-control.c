@@ -79,8 +79,6 @@ MuxerControl* muxer_control_new (const char* preview, const char* record);
 MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
 void muxer_control_load_preview_bin (MuxerControl* self, GError** error);
 void muxer_control_load (MuxerControl* self, GError** error);
-gboolean muxer_control_is_previewing (MuxerControl* self);
-gboolean muxer_control_is_recording (MuxerControl* self);
 void muxer_control_start_preview (MuxerControl* self);
 void muxer_control_stop_preview (MuxerControl* self);
 void muxer_control_load_record_bin (MuxerControl* self, GError** error);
@@ -131,22 +129,6 @@ void muxer_control_load (MuxerControl* self, GError** error) {
 }
 
 
-gboolean muxer_control_is_previewing (MuxerControl* self) {
-	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
-	result = self->previewing;
-	return result;
-}
-
-
-gboolean muxer_control_is_recording (MuxerControl* self) {
-	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
-	result = self->recording;
-	return result;
-}
-
-
 void muxer_control_start_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	if (gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
@@ -188,6 +170,7 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	} else {
 		gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
 	}
+	g_print ("start_record enter\n");
 	muxer_control_load_record_bin (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
@@ -216,6 +199,7 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	if (gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
 		self->recording = TRUE;
 	}
+	g_print ("start_record leave\n");
 	_gst_object_unref0 (tee_src1_pad);
 }
 

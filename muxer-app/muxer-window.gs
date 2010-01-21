@@ -17,6 +17,7 @@ class MuxerWindow: MediaWindow
     combo_box: ComboBox
     combo_model: ListStore
     chooser_button: FileChooserButton
+    preview_button: ToolButton
     record_button: ToolButton
     probe_button: ToggleToolButton
     stop_button: ToolButton
@@ -65,18 +66,22 @@ class MuxerWindow: MediaWindow
 
         toolbar_add_expander()
 
+        preview_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        toolbar.add(preview_button)
+        preview_button.clicked += on_preview
+
         record_button = new ToolButton.from_stock(STOCK_MEDIA_RECORD)
         toolbar.add(record_button)
-        record_button.set_sensitive(false)
         record_button.clicked += on_record
-
-        probe_button = new ToggleToolButton.from_stock(STOCK_CONVERT)
-        toolbar.add(probe_button)
 
         stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
-        stop_button.set_sensitive(false)
         stop_button.clicked += on_stop
+
+        toolbar_add_expander()
+
+        probe_button = new ToggleToolButton.from_stock(STOCK_CONVERT)
+        toolbar.add(probe_button)
 
         toolbar_add_quit_button()
 
@@ -91,7 +96,6 @@ class MuxerWindow: MediaWindow
             print "Could not get the pipelines"
             return
         muxer_control = new MuxerControl(preview, record)
-        muxer_control.buffer_probe_enabled = probe_button.get_active()
         muxer_control.error_message += on_control_error
         try
             muxer_control.load()
@@ -99,24 +103,41 @@ class MuxerWindow: MediaWindow
             error_dialog(e)
             return
         video_area.set_control(muxer_control)
-        muxer_control.start_preview()
         muxer_control.eos_message += record_stopped
-        record_button.set_sensitive(true)
+
+
+    def on_preview()
+        if muxer_control == null
+            return
+        if muxer_control.previewing
+            return
+        if muxer_control.recording
+            return
+        muxer_control.start_preview()
 
     def on_record()
+        if muxer_control == null
+            return
+        if not muxer_control.previewing
+            return
+        if muxer_control.recording
+            return
+        muxer_control.buffer_probe_enabled = probe_button.get_active()
         try
             muxer_control.start_record()
-            stop_button.set_sensitive(true)
-            record_button.set_sensitive(false)
         except e: Error
             error_dialog(e)
 
     def on_stop()
-        muxer_control.stop_record()
-        stop_button.set_sensitive(false)
+        if muxer_control == null
+            return
+        if muxer_control.recording
+            muxer_control.stop_record()
+        else if muxer_control.previewing
+            muxer_control.stop_preview()
 
     def record_stopped()
-        record_button.set_sensitive(true)
+        pass
 
     def on_chooser_file_set()
         var config_file = chooser_button.get_filename()

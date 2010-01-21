@@ -36,12 +36,6 @@ class MuxerControl: MediaControl
     def load() raises Error
         load_preview_bin()
 
-    def is_previewing(): bool
-        return previewing
-
-    def is_recording(): bool
-        return recording
-
     def start_preview()
         if preview_bin.set_state(State.PLAYING) != StateChangeReturn.FAILURE
             previewing = true
