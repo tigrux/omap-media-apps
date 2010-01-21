@@ -7,6 +7,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glib/gstdio.h>
 
 
 #define TYPE_MEDIA_WINDOW (media_window_get_type ())
@@ -22,6 +23,7 @@ typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
 #define _gtk_icon_info_free0(var) ((var == NULL) ? NULL : (var = (gtk_icon_info_free (var), NULL)))
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 
@@ -44,17 +46,16 @@ typedef enum  {
 } MediaWindowTab;
 
 
-extern gboolean media_window_rc_parsed;
-gboolean media_window_rc_parsed = FALSE;
+extern gboolean media_window_style_applie;
+gboolean media_window_style_applie = FALSE;
 static gpointer media_window_parent_class = NULL;
 
-#define DEFAULT_STYLE "\nstyle \"custom\"\n{\n    GtkRange::slider-width = 24\n    GtkComboBox::arrow-size = 18\n    GtkComboBox::appears-as-list = 1\n    GtkToolbar::space-size = 0\n    font_name = \"Sans 12\"\n}\n\nwidget_class \"*\" style \"custom\"\n"
 GType media_window_get_type (void);
 enum  {
 	MEDIA_WINDOW_DUMMY_PROPERTY
 };
 GType media_window_tab_get_type (void);
-gboolean media_window_rc_parse (void);
+gboolean media_window_apply_style (void);
 void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void media_window_toolbar_add_expander (MediaWindow* self);
 void media_window_on_quit (MediaWindow* self);
@@ -69,6 +70,7 @@ MediaWindow* media_window_construct (GType object_type);
 static void _media_window_on_quit_gtk_object_destroy (MediaWindow* _sender, gpointer self);
 static GObject * media_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void media_window_finalize (GObject* obj);
+static gint _vala_array_length (gpointer array);
 
 
 
@@ -83,10 +85,36 @@ GType media_window_tab_get_type (void) {
 }
 
 
-gboolean media_window_rc_parse (void) {
+gboolean media_window_apply_style (void) {
 	gboolean result;
-	gtk_rc_parse_string (DEFAULT_STYLE);
-	result = TRUE;
+	{
+		char** _tmp0_;
+		char** dir_collection;
+		int dir_collection_length1;
+		int dir_it;
+		dir_collection = _tmp0_ = g_get_system_data_dirs ();
+		dir_collection_length1 = _vala_array_length (_tmp0_);
+		for (dir_it = 0; dir_it < _vala_array_length (_tmp0_); dir_it = dir_it + 1) {
+			char* dir;
+			dir = g_strdup (dir_collection[dir_it]);
+			{
+				char* rc_file;
+				rc_file = g_build_filename (dir, "omap4-apps", "style.rc", NULL);
+				if (g_file_test (rc_file, G_FILE_TEST_IS_REGULAR)) {
+					gtk_rc_parse (rc_file);
+					{
+						result = TRUE;
+						_g_free0 (dir);
+						_g_free0 (rc_file);
+						return result;
+					}
+				}
+				_g_free0 (dir);
+				_g_free0 (rc_file);
+			}
+		}
+	}
+	result = FALSE;
 	return result;
 }
 
@@ -267,7 +295,7 @@ static void media_window_class_init (MediaWindowClass * klass) {
 	media_window_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->constructor = media_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = media_window_finalize;
-	media_window_rc_parsed = media_window_rc_parse ();
+	media_window_style_applie = media_window_apply_style ();
 }
 
 
@@ -292,6 +320,18 @@ GType media_window_get_type (void) {
 		media_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "MediaWindow", &g_define_type_info, 0);
 	}
 	return media_window_type_id;
+}
+
+
+static gint _vala_array_length (gpointer array) {
+	int length;
+	length = 0;
+	if (array) {
+		while (((gpointer*) array)[length]) {
+			length++;
+		}
+	}
+	return length;
 }
 
 

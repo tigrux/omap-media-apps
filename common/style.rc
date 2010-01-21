@@ -1,0 +1,11 @@
+style "omap4"
+{
+    GtkRange::slider-width = 24
+    GtkComboBox::arrow-size = 18
+    GtkComboBox::appears-as-list = 1
+    GtkToolbar::space-size = 0
+    font_name = "Sans 12"
+}
+
+widget_class "*" style "omap4"
+
