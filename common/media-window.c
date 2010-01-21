@@ -5,6 +5,8 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 #define TYPE_MEDIA_WINDOW (media_window_get_type ())
@@ -20,6 +22,8 @@ typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
+#define _gtk_icon_info_free0(var) ((var == NULL) ? NULL : (var = (gtk_icon_info_free (var), NULL)))
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 
 struct _MediaWindow {
@@ -52,6 +56,7 @@ enum  {
 };
 GType media_window_tab_get_type (void);
 gboolean media_window_rc_parse (void);
+void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void media_window_toolbar_add_expander (MediaWindow* self);
 void media_window_on_quit (MediaWindow* self);
 static void _media_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
@@ -84,6 +89,56 @@ gboolean media_window_rc_parse (void) {
 	gtk_rc_parse_string (DEFAULT_STYLE);
 	result = TRUE;
 	return result;
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name) {
+	GError * _inner_error_;
+	GtkIconTheme* theme;
+	GtkIconInfo* icon_info;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (name != NULL);
+	_inner_error_ = NULL;
+	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
+	icon_info = gtk_icon_theme_lookup_icon (theme, name, 64, 0);
+	if (icon_info != NULL) {
+		{
+			char* _tmp0_;
+			g_print ("%s", _tmp0_ = g_strconcat (gtk_icon_info_get_filename (icon_info), "\n", NULL));
+			_g_free0 (_tmp0_);
+			gtk_window_set_icon_from_file ((GtkWindow*) self, gtk_icon_info_get_filename (icon_info), &_inner_error_);
+			if (_inner_error_ != NULL) {
+				goto __catch0_g_error;
+				goto __finally0;
+			}
+		}
+		goto __finally0;
+		__catch0_g_error:
+		{
+			g_clear_error (&_inner_error_);
+			_inner_error_ = NULL;
+			{
+				g_print ("could not load the icon\n");
+			}
+		}
+		__finally0:
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (theme);
+			_gtk_icon_info_free0 (icon_info);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return;
+		}
+	} else {
+		g_print ("could not find the icon\n");
+	}
+	_g_object_unref0 (theme);
+	_gtk_icon_info_free0 (icon_info);
 }
 
 
@@ -175,11 +230,6 @@ MediaWindow* media_window_construct (GType object_type) {
 
 MediaWindow* media_window_new (void) {
 	return media_window_construct (TYPE_MEDIA_WINDOW);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
 }
 
 

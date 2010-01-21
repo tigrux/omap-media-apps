@@ -163,7 +163,8 @@ struct _MuxerControlClass {
 
 static gpointer muxer_window_parent_class = NULL;
 
-#define TITLE "MuxerApp"
+#define TITLE "Omap4 Muxer"
+#define ICON "omap4-muxer-app"
 GType media_window_get_type (void);
 GType muxer_window_get_type (void);
 GType media_control_get_type (void);
@@ -174,6 +175,7 @@ enum  {
 	MUXER_WINDOW_DUMMY_PROPERTY
 };
 GType muxer_window_combo_col_get_type (void);
+void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void muxer_window_setup_toolbar (MuxerWindow* self);
 void muxer_window_setup_notebook (MuxerWindow* self);
 void muxer_window_setup_widgets (MuxerWindow* self);
@@ -236,6 +238,7 @@ GType muxer_window_combo_col_get_type (void) {
 void muxer_window_setup_widgets (MuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
+	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	muxer_window_setup_toolbar (self);
 	muxer_window_setup_notebook (self);
 	gtk_widget_show_all ((GtkWidget*) ((MediaWindow*) self)->main_box);

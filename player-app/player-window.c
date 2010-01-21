@@ -135,7 +135,8 @@ typedef enum  {
 
 static gpointer player_window_parent_class = NULL;
 
-#define TITLE "PlayerApp"
+#define TITLE "Omap4 Player"
+#define ICON "omap4-player-app"
 GType media_window_get_type (void);
 GType player_window_get_type (void);
 GType media_control_get_type (void);
@@ -161,6 +162,7 @@ static void _player_window_playlist_control_stopped_play_list_control_stopped (P
 void player_window_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_setup_controls (PlayerWindow* self);
+void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void player_window_setup_toolbar (PlayerWindow* self);
 void player_window_setup_notebook (PlayerWindow* self);
 void player_window_setup_seeking (PlayerWindow* self);
@@ -308,6 +310,7 @@ void player_window_setup_controls (PlayerWindow* self) {
 void player_window_setup_widgets (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
+	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	player_window_setup_toolbar (self);
 	player_window_setup_notebook (self);
 	player_window_setup_seeking (self);

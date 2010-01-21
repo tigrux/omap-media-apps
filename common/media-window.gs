@@ -50,6 +50,18 @@ class MediaWindow: Window
         main_box.pack_start(notebook, true, true, 0)
         main_box.show_all()
 
+    def lookup_and_set_icon_name(name: string)
+        var theme = IconTheme.get_default()
+        var icon_info = theme.lookup_icon(name, 64, 0)
+        if icon_info != null
+            try
+                print icon_info.get_filename()
+                set_icon_from_file(icon_info.get_filename())
+            except
+                print "could not load the icon"
+        else
+            print "could not find the icon"
+
     def toolbar_add_quit_button()
         toolbar_add_expander()
 

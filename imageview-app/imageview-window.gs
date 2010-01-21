@@ -3,7 +3,8 @@
 uses Gtk
 
 
-const TITLE: string = "ImageViewApp"
+const TITLE: string = "Omap4 ImageView"
+const ICON: string = "omap4-imageview-app"
 
 
 class ImageViewWindow: MediaWindow
@@ -52,6 +53,7 @@ class ImageViewWindow: MediaWindow
 
     def setup_widgets()
         set_title(TITLE)
+        lookup_and_set_icon_name(ICON)
         setup_toolbar()
         setup_notebook()
         video_area.realize()

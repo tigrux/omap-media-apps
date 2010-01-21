@@ -3,7 +3,8 @@
 uses Gtk
 
 
-const TITLE: string = "MuxerApp"
+const TITLE: string = "Omap4 Muxer"
+const ICON: string = "omap4-muxer-app"
 
 
 class MuxerWindow: MediaWindow
@@ -29,6 +30,7 @@ class MuxerWindow: MediaWindow
 
     def setup_widgets()
         set_title(TITLE)
+        lookup_and_set_icon_name(ICON)
         setup_toolbar()
         setup_notebook()
         main_box.show_all()
@@ -81,7 +83,6 @@ class MuxerWindow: MediaWindow
     def setup_notebook()
         video_area = new VideoArea()
         notebook.append_page(video_area, new Label("Capture"))
-
 
     def on_combo_changed()
         preview: string

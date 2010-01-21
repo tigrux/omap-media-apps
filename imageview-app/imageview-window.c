@@ -156,7 +156,8 @@ struct _ImageViewWindowSlideshowData {
 
 static gpointer image_view_window_parent_class = NULL;
 
-#define TITLE "ImageViewApp"
+#define TITLE "Omap4 ImageView"
+#define ICON "omap4-imageview-app"
 GType media_window_get_type (void);
 GType image_view_window_get_type (void);
 GType video_area_get_type (void);
@@ -181,6 +182,7 @@ ImageControl* image_control_construct (GType object_type, GError** error);
 void image_view_window_on_image_control_eos (ImageViewWindow* self);
 static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
 void video_area_set_control (VideoArea* self, MediaControl* control);
+void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void image_view_window_setup_toolbar (ImageViewWindow* self);
 void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
@@ -321,6 +323,7 @@ void image_view_window_setup_controls (ImageViewWindow* self, GError** error) {
 void image_view_window_setup_widgets (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
+	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	image_view_window_setup_toolbar (self);
 	image_view_window_setup_notebook (self);
 	gtk_widget_realize ((GtkWidget*) self->video_area);

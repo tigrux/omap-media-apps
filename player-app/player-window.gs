@@ -3,7 +3,8 @@
 uses Gtk
 
 
-const TITLE: string = "PlayerApp"
+const TITLE: string = "Omap4 Player"
+const ICON: string = "omap4-player-app"
 
 
 class PlayerWindow: MediaWindow
@@ -55,6 +56,7 @@ class PlayerWindow: MediaWindow
 
     def setup_widgets()
         set_title(TITLE)
+        lookup_and_set_icon_name(ICON)
         setup_toolbar()
         setup_notebook()
         setup_seeking()
