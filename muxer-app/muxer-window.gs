@@ -105,7 +105,6 @@ class MuxerWindow: MediaWindow
         video_area.set_control(muxer_control)
         muxer_control.eos_message += record_stopped
 
-
     def on_preview()
         if muxer_control == null
             return

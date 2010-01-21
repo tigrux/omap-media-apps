@@ -10,7 +10,7 @@ class MuxerControl: MediaControl
     previewing: bool
     buffer_probe_enabled: bool
 
-    overlay: Element
+    overlay: dynamic Element
     tee: Element
     audiosrc: Element
     preview_bin: Gst.Bin
@@ -59,7 +59,7 @@ class MuxerControl: MediaControl
             var audio_src_pad = audiosrc.get_static_pad("src")
             audio_probe_id = audio_src_pad.add_buffer_probe(audio_buffer_probe)
         if overlay != null
-            overlay.set("silent", false)
+            overlay.silent = false
         if preview_bin.set_state(State.PLAYING) != StateChangeReturn.FAILURE
             recording = true
 
@@ -68,7 +68,7 @@ class MuxerControl: MediaControl
             return
         tee.set_state(State.PAUSED)
         if overlay != null
-            overlay.set("silent", true)
+            overlay.silent = true
         self.tee.unlink(self.queue)
         preview_bin.remove(record_bin)
         record_bin.bus = preview_bin.bus

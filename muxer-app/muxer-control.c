@@ -86,7 +86,9 @@ gboolean muxer_control_video_buffer_probe (MuxerControl* self, GstPad* pad, GstB
 static gboolean _muxer_control_video_buffer_probe_gst_buffer_probe_callback (GstPad* pad, GstBuffer* buffer, gpointer self);
 gboolean muxer_control_audio_buffer_probe (MuxerControl* self, GstPad* pad, GstBuffer* buffer);
 static gboolean _muxer_control_audio_buffer_probe_gst_buffer_probe_callback (GstPad* pad, GstBuffer* buffer, gpointer self);
+static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value);
 void muxer_control_start_record (MuxerControl* self, GError** error);
+static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void muxer_control_stop_record (MuxerControl* self);
 void media_control_set_pipeline (MediaControl* self, GstBin* value);
 void muxer_control_on_eos (MuxerControl* self, GstObject* src);
@@ -159,6 +161,11 @@ static gboolean _muxer_control_audio_buffer_probe_gst_buffer_probe_callback (Gst
 }
 
 
+static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value) {
+	g_object_set (obj, "silent", value, NULL);
+}
+
+
 void muxer_control_start_record (MuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	GstPad* tee_src1_pad;
@@ -170,7 +177,6 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	} else {
 		gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
 	}
-	g_print ("start_record enter\n");
 	muxer_control_load_record_bin (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
@@ -194,13 +200,17 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 		_gst_object_unref0 (audio_src_pad);
 	}
 	if (self->overlay != NULL) {
-		g_object_set ((GObject*) self->overlay, "silent", FALSE, NULL);
+		_dynamic_set_silent0 (self->overlay, FALSE);
 	}
 	if (gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
 		self->recording = TRUE;
 	}
-	g_print ("start_record leave\n");
 	_gst_object_unref0 (tee_src1_pad);
+}
+
+
+static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value) {
+	g_object_set (obj, "silent", value, NULL);
 }
 
 
@@ -211,7 +221,7 @@ void muxer_control_stop_record (MuxerControl* self) {
 	}
 	gst_element_set_state (self->tee, GST_STATE_PAUSED);
 	if (self->overlay != NULL) {
-		g_object_set ((GObject*) self->overlay, "silent", TRUE, NULL);
+		_dynamic_set_silent1 (self->overlay, TRUE);
 	}
 	gst_element_unlink (self->tee, self->queue);
 	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
