@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=MuxerApp
+Exec=omap4-muxer-app
+Icon=omap4-muxer-app.png
+Terminal=false
+Type=Application
+Categories=Application;Desktop;AudioVideo;Multimedia;
+

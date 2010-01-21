@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=ImageViewApp
+Exec=omap4-imageview-app
+Icon=omap4-imageview-app.png
+Terminal=false
+Type=Application
+Categories=Application;Desktop;Graphics;Multimedia;
+

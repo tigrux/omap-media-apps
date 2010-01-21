@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=PlayerApp
+Exec=omap4-player-app
+Icon=omap4-player-app.png
+Terminal=false
+Type=Application
+Categories=Application;Desktop;AudioVideo;Multimedia;
+

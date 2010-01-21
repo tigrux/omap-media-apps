@@ -24,9 +24,17 @@ vala.stamp: $(omap4_imageview_app_VALASOURCES) $(COMMON_VALASOURCES)
 omap4_imageview_app_LDADD = \
 	$(PROGRAM_LIBS)
 
+desktopdir = $(datadir)/applications
+desktop_DATA = omap4-imageview-app.desktop
+
+pixmapsdir   = $(datadir)/pixmaps
+pixmaps_DATA = omap4-imageview-app.png
+
 EXTRA_DIST = \
 	$(omap4_imageview_app_VALASOURCES) \
-	vala.stamp
+	vala.stamp \
+	omap4-imageview-app.png \
+	omap4-imageview-app.desktop
 
 DISTCLEANFILES =
 

@@ -24,9 +24,17 @@ vala.stamp: $(omap4_muxer_app_VALASOURCES) $(COMMON_VALASOURCES)
 omap4_muxer_app_LDADD = \
 	$(PROGRAM_LIBS)
 
+desktopdir = $(datadir)/applications
+desktop_DATA = omap4-muxer-app.desktop
+
+pixmapsdir   = $(datadir)/pixmaps
+pixmaps_DATA = omap4-muxer-app.png
+
 EXTRA_DIST = \
 	$(omap4_muxer_app_VALASOURCES) \
 	vala.stamp \
+	omap4-muxer-app.png \
+	omap4-muxer-app.desktop \
 	test.ini \
 	test.xml
 
