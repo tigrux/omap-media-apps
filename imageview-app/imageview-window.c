@@ -482,7 +482,7 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
 	media_window_toolbar_add_expander ((MediaWindow*) self);
-	self->image_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_OPEN)), _g_object_unref0 (self->image_button), _tmp1_);
+	self->image_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ZOOM_100)), _g_object_unref0 (self->image_button), _tmp1_);
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->image_button);
 	g_signal_connect_object (self->image_button, "clicked", (GCallback) _image_view_window_on_open_close_gtk_tool_button_clicked, self, 0);
 	media_window_toolbar_add_expander ((MediaWindow*) self);
@@ -531,7 +531,7 @@ void image_view_window_close_image (ImageViewWindow* self) {
 		image_view_window_stop_slideshow (self);
 	}
 	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
-	gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_OPEN);
+	gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
 }
 
 

@@ -127,7 +127,7 @@ class ImageViewWindow: MediaWindow
 
         toolbar_add_expander()
 
-        image_button = new ToolButton.from_stock(STOCK_OPEN)
+        image_button = new ToolButton.from_stock(STOCK_ZOOM_100)
         toolbar.add(image_button)
         image_button.clicked += on_open_close
 
@@ -163,7 +163,7 @@ class ImageViewWindow: MediaWindow
         if slideshow_cancellable != null
             stop_slideshow()
         notebook.set_current_page(Tab.LIST)
-        image_button.set_stock_id(STOCK_OPEN)
+        image_button.set_stock_id(STOCK_ZOOM_100)
 
     def on_slideshow()
         iter: TreeIter
