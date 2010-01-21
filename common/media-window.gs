@@ -55,12 +55,9 @@ class MediaWindow: Window
         var icon_info = theme.lookup_icon(name, 64, 0)
         if icon_info != null
             try
-                print icon_info.get_filename()
                 set_icon_from_file(icon_info.get_filename())
             except
-                print "could not load the icon"
-        else
-            print "could not find the icon"
+                pass
 
     def toolbar_add_quit_button()
         toolbar_add_expander()

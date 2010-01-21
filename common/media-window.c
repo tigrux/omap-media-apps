@@ -22,7 +22,6 @@ typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_free0(var) (var = (g_free (var), NULL))
 #define _gtk_icon_info_free0(var) ((var == NULL) ? NULL : (var = (gtk_icon_info_free (var), NULL)))
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 
@@ -108,9 +107,6 @@ void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name)
 	icon_info = gtk_icon_theme_lookup_icon (theme, name, 64, 0);
 	if (icon_info != NULL) {
 		{
-			char* _tmp0_;
-			g_print ("%s", _tmp0_ = g_strconcat (gtk_icon_info_get_filename (icon_info), "\n", NULL));
-			_g_free0 (_tmp0_);
 			gtk_window_set_icon_from_file ((GtkWindow*) self, gtk_icon_info_get_filename (icon_info), &_inner_error_);
 			if (_inner_error_ != NULL) {
 				goto __catch0_g_error;
@@ -123,7 +119,7 @@ void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name)
 			g_clear_error (&_inner_error_);
 			_inner_error_ = NULL;
 			{
-				g_print ("could not load the icon\n");
+				;
 			}
 		}
 		__finally0:
@@ -134,8 +130,6 @@ void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name)
 			g_clear_error (&_inner_error_);
 			return;
 		}
-	} else {
-		g_print ("could not find the icon\n");
 	}
 	_g_object_unref0 (theme);
 	_gtk_icon_info_free0 (icon_info);
