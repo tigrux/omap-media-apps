@@ -43,7 +43,7 @@ class MediaWindow: Window
 
     def lookup_and_set_icon_name(name: string)
         var theme = IconTheme.get_default()
-        var icon_info = theme.lookup_icon(name, 64, 0)
+        var icon_info = theme.lookup_icon(name, 48, 0)
         if icon_info != null
             try
                 set_icon_from_file(icon_info.get_filename())

@@ -132,7 +132,7 @@ void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name)
 	g_return_if_fail (name != NULL);
 	_inner_error_ = NULL;
 	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-	icon_info = gtk_icon_theme_lookup_icon (theme, name, 64, 0);
+	icon_info = gtk_icon_theme_lookup_icon (theme, name, 48, 0);
 	if (icon_info != NULL) {
 		{
 			gtk_window_set_icon_from_file ((GtkWindow*) self, gtk_icon_info_get_filename (icon_info), &_inner_error_);
