@@ -26,7 +26,7 @@
 <record>
     matroskamux name=muxer ! filesink location=test.mkv
     queue name=queue ! x264enc ! queue ! muxer.
-    pulsesrc name=audiosrc !
+    gconfaudiosrc name=audiosrc !
       audio/x-raw-int,endianness=1234,width=16,rate=44100,channels=1 !
         faac ! muxer.
 </record>
