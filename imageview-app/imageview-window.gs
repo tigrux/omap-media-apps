@@ -50,7 +50,7 @@ class ImageViewWindow: MediaWindow
         iconlist_control.icons_filled += on_iconlist_icons_filled
         image_control = new ImageControl()
         image_control.eos_message += on_image_control_eos
-        video_area.set_control(image_control)
+        image_control.prepare_xwindow_id += on_xid_prepared
 
     def setup_widgets()
         set_title(TITLE)
@@ -103,6 +103,9 @@ class ImageViewWindow: MediaWindow
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.state = Gst.State.PLAYING
+
+    def on_xid_prepared(imagesink: Gst.XOverlay)
+        video_area.sink = imagesink
 
     def new_video_box(): Box
         var box = new VBox(false, 0)

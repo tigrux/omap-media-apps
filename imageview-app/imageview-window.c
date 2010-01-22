@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gst/gst.h>
+#include <gst/interfaces/xoverlay.h>
 
 
 #define TYPE_MEDIA_WINDOW (media_window_get_type ())
@@ -182,7 +183,8 @@ ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
 void image_view_window_on_image_control_eos (ImageViewWindow* self);
 static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
-void video_area_set_control (VideoArea* self, MediaControl* control);
+void image_view_window_on_xid_prepared (ImageViewWindow* self, GstXOverlay* imagesink);
+static void _image_view_window_on_xid_prepared_media_control_prepare_xwindow_id (ImageControl* _sender, GstXOverlay* imagesink, gpointer self);
 void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void image_view_window_setup_toolbar (ImageViewWindow* self);
 void image_view_window_setup_notebook (ImageViewWindow* self);
@@ -202,6 +204,7 @@ void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, 
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void image_control_set_location (ImageControl* self, const char* value);
 void media_control_set_state (MediaControl* self, GstState value);
+void video_area_set_sink (VideoArea* self, GstXOverlay* value);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 void media_window_toggle_fullscreen (MediaWindow* self);
@@ -294,6 +297,11 @@ static void _image_view_window_on_image_control_eos_media_control_eos_message (I
 }
 
 
+static void _image_view_window_on_xid_prepared_media_control_prepare_xwindow_id (ImageControl* _sender, GstXOverlay* imagesink, gpointer self) {
+	image_view_window_on_xid_prepared (self, imagesink);
+}
+
+
 void image_view_window_setup_controls (ImageViewWindow* self, GError** error) {
 	GError * _inner_error_;
 	IconListControl* _tmp0_;
@@ -317,7 +325,7 @@ void image_view_window_setup_controls (ImageViewWindow* self, GError** error) {
 	}
 	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
 	g_signal_connect_object ((MediaControl*) self->image_control, "eos-message", (GCallback) _image_view_window_on_image_control_eos_media_control_eos_message, self, 0);
-	video_area_set_control (self->video_area, (MediaControl*) self->image_control);
+	g_signal_connect_object ((MediaControl*) self->image_control, "prepare-xwindow-id", (GCallback) _image_view_window_on_xid_prepared_media_control_prepare_xwindow_id, self, 0);
 }
 
 
@@ -420,6 +428,13 @@ void image_view_window_on_icon_activated (ImageViewWindow* self, GtkTreePath* pa
 		media_control_set_state ((MediaControl*) self->image_control, GST_STATE_PLAYING);
 		_g_free0 (file);
 	}
+}
+
+
+void image_view_window_on_xid_prepared (ImageViewWindow* self, GstXOverlay* imagesink) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (imagesink != NULL);
+	video_area_set_sink (self->video_area, imagesink);
 }
 
 

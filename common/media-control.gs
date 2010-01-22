@@ -5,7 +5,9 @@ uses Gst
 
 class MediaControl: GLib.Object
     _pipeline: Bin
+    prepare_xwindow_q: static Quark = Quark.from_string("prepare-xwindow-id")
 
+    event prepare_xwindow_id(imagesink: Gst.XOverlay)
     event eos_message(src: Gst.Object)
     event error_message(src: Gst.Object, error: Error, debug: string)
     event element_message(src: Gst.Object, structure: Structure)
@@ -15,14 +17,26 @@ class MediaControl: GLib.Object
     event state_changed_message(src: Gst.Object, \
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
+    final
+        remove_signals()
+
+    def remove_signals()
+        if _pipeline != null
+            var bus = _pipeline.bus
+            bus.message.disconnect(on_bus_message)
+            bus.message.disconnect(on_bus_sync_message)
+            bus.disable_sync_message_emission()
+            bus.remove_signal_watch()
+
     prop pipeline: Bin
         set
-            if _pipeline != null
-                _pipeline.bus.message.disconnect(on_bus_message)
+            remove_signals()
             _pipeline = value
             var bus = _pipeline.bus
             bus.add_signal_watch()
+            bus.enable_sync_message_emission()
             bus.message += on_bus_message
+            bus.sync_message += on_bus_sync_message
         get
             return _pipeline
 
@@ -59,6 +73,14 @@ class MediaControl: GLib.Object
                 tag_message(message.src, tag_list)
             default
                 pass
+
+    def on_bus_sync_message(message: Gst.Message)
+        structure: Structure
+        if (structure = message.structure) == null
+            return
+        if structure.name == prepare_xwindow_q
+            var imagesink = message.src as Gst.XOverlay
+            prepare_xwindow_id(imagesink)
 
     prop state: Gst.State
         get

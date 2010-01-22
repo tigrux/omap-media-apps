@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/interfaces/xoverlay.h>
 #include <gdk/gdk.h>
 
 
@@ -161,6 +162,8 @@ void player_window_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* it
 static void _player_window_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
+void player_window_on_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink);
+static void _player_window_on_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self);
 void player_window_setup_controls (PlayerWindow* self);
 void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void player_window_setup_toolbar (PlayerWindow* self);
@@ -170,8 +173,8 @@ void player_window_setup_widgets (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
 GType media_window_tab_get_type (void);
-static void _lambda5_ (void* page, guint num_page, PlayerWindow* self);
-static void __lambda5__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
+static void _lambda4_ (void* page, guint num_page, PlayerWindow* self);
+static void __lambda4__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void player_window_on_prev (PlayerWindow* self);
 static void _player_window_on_prev_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_play_pause (PlayerWindow* self);
@@ -204,6 +207,7 @@ void player_window_pause (PlayerWindow* self);
 gboolean play_list_control_stop (PlayListControl* self);
 gboolean play_list_control_next (PlayListControl* self);
 gboolean play_list_control_prev (PlayListControl* self);
+void video_area_set_sink (VideoArea* self, GstXOverlay* value);
 void player_window_on_mute_clicked (PlayerWindow* self);
 gboolean player_window_on_volume_button_pressed (PlayerWindow* self);
 static gboolean _player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkVolumeButton* _sender, GdkEventButton* event, gpointer self);
@@ -216,9 +220,6 @@ GtkTreeView* player_window_new_playlist_view (PlayerWindow* self);
 VideoArea* video_area_new (void);
 VideoArea* video_area_construct (GType object_type);
 static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _sender, gpointer self);
-static void _lambda4_ (PlayerWindow* self);
-static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self);
-void video_area_set_control (VideoArea* self, MediaControl* control);
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
 gint play_list_control_get_icon_column (void);
@@ -294,6 +295,11 @@ static void _player_window_playlist_control_moved_play_list_control_moved (PlayL
 }
 
 
+static void _player_window_on_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self) {
+	player_window_on_xid_prepared (self, imagesink);
+}
+
+
 void player_window_setup_controls (PlayerWindow* self) {
 	PlayListControl* _tmp0_;
 	g_return_if_fail (self != NULL);
@@ -304,6 +310,7 @@ void player_window_setup_controls (PlayerWindow* self) {
 	g_signal_connect_object (self->playlist_control, "paused", (GCallback) _player_window_playlist_control_paused_play_list_control_paused, self, 0);
 	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _player_window_playlist_control_stopped_play_list_control_stopped, self, 0);
 	g_signal_connect_object (self->playlist_control, "moved", (GCallback) _player_window_playlist_control_moved_play_list_control_moved, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "prepare-xwindow-id", (GCallback) _player_window_on_xid_prepared_media_control_prepare_xwindow_id, self, 0);
 }
 
 
@@ -319,13 +326,13 @@ void player_window_setup_widgets (PlayerWindow* self) {
 }
 
 
-static void _lambda5_ (void* page, guint num_page, PlayerWindow* self) {
+static void _lambda4_ (void* page, guint num_page, PlayerWindow* self) {
 	gtk_widget_set_visible ((GtkWidget*) self->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
 }
 
 
-static void __lambda5__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
-	_lambda5_ (page, page_num, self);
+static void __lambda4__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
+	_lambda4_ (page, page_num, self);
 }
 
 
@@ -341,7 +348,7 @@ void player_window_setup_notebook (PlayerWindow* self) {
 	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda5__gtk_notebook_switch_page, self, 0);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda4__gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -512,6 +519,14 @@ void player_window_on_prev (PlayerWindow* self) {
 }
 
 
+void player_window_on_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (imagesink != NULL);
+	video_area_set_sink (self->video_area, imagesink);
+	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
+}
+
+
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
 }
@@ -644,16 +659,6 @@ static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _se
 }
 
 
-static void _lambda4_ (PlayerWindow* self) {
-	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
-}
-
-
-static void __lambda4__video_area_prepared (VideoArea* _sender, gpointer self) {
-	_lambda4_ (self);
-}
-
-
 GtkBox* player_window_new_video_box (PlayerWindow* self) {
 	GtkBox* result;
 	GtkVBox* box;
@@ -663,8 +668,6 @@ GtkBox* player_window_new_video_box (PlayerWindow* self) {
 	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) self->video_area, TRUE, TRUE, (guint) 0);
 	g_signal_connect_object (self->video_area, "activated", (GCallback) _media_window_toggle_fullscreen_video_area_activated, (MediaWindow*) self, 0);
-	g_signal_connect_object (self->video_area, "prepared", (GCallback) __lambda4__video_area_prepared, self, 0);
-	video_area_set_control (self->video_area, (MediaControl*) self->playlist_control);
 	result = (GtkBox*) box;
 	return result;
 }

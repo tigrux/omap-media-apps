@@ -53,6 +53,7 @@ class PlayerWindow: MediaWindow
         playlist_control.paused += playlist_control_paused
         playlist_control.stopped += playlist_control_stopped
         playlist_control.moved += playlist_control_moved
+        playlist_control.prepare_xwindow_id += on_xid_prepared
 
     def setup_widgets()
         set_title(TITLE)
@@ -149,6 +150,10 @@ class PlayerWindow: MediaWindow
             if was_playing
                 play()
 
+    def on_xid_prepared(imagesink: Gst.XOverlay)
+        video_area.sink = imagesink
+        notebook.set_current_page(Tab.VIDEO)
+
     def on_mute_clicked()
         var volume = volume_button.get_adjustment()
         previous_volume = volume.get_value()
@@ -216,10 +221,6 @@ class PlayerWindow: MediaWindow
         video_area = new VideoArea()
         box.pack_start(video_area, true, true, 0)
         video_area.activated += toggle_fullscreen
-        video_area.prepared += def()
-            notebook.set_current_page(Tab.VIDEO)
-        video_area.set_control(playlist_control)
-
         return box
 
     def new_playlist_view(): TreeView

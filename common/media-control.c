@@ -7,6 +7,7 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/interfaces/xoverlay.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -40,6 +41,8 @@ struct _MediaControlPrivate {
 };
 
 
+extern GQuark media_control_prepare_xwindow_q;
+GQuark media_control_prepare_xwindow_q = 0U;
 static gpointer media_control_parent_class = NULL;
 
 GType media_control_get_type (void);
@@ -52,10 +55,14 @@ enum  {
 	MEDIA_CONTROL_DURATION
 };
 void media_control_on_bus_message (MediaControl* self, GstMessage* message);
+static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message);
+static void _media_control_on_bus_sync_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+void media_control_remove_signals (MediaControl* self);
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);
 GstBin* media_control_get_pipeline (MediaControl* self);
-static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
+static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
 void media_control_set_pipeline (MediaControl* self, GstBin* value);
 GstState media_control_get_state (MediaControl* self);
 void media_control_set_state (MediaControl* self, GstState value);
@@ -71,6 +78,37 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * clos
 static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+
+static gpointer _gst_object_ref0 (gpointer self) {
+	return self ? gst_object_ref (self) : NULL;
+}
+
+
+static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
+	media_control_on_bus_message (self, message);
+}
+
+
+static void _media_control_on_bus_sync_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
+	media_control_on_bus_sync_message (self, message);
+}
+
+
+void media_control_remove_signals (MediaControl* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->_pipeline != NULL) {
+		GstBus* bus;
+		guint _tmp0_;
+		guint _tmp1_;
+		bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
+		g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
+		g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _media_control_on_bus_sync_message_gst_bus_message, self);
+		gst_bus_disable_sync_message_emission (bus);
+		gst_bus_remove_signal_watch (bus);
+		_gst_object_unref0 (bus);
+	}
+}
+
 
 static gpointer _gst_structure_copy0 (gpointer self) {
 	return self ? gst_structure_copy (self) : NULL;
@@ -176,6 +214,27 @@ void media_control_on_bus_message (MediaControl* self, GstMessage* message) {
 }
 
 
+void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message) {
+	GstStructure* structure;
+	GstStructure* _tmp0_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (message != NULL);
+	structure = NULL;
+	if ((structure = (_tmp0_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (structure), _tmp0_)) == NULL) {
+		_gst_structure_free0 (structure);
+		return;
+	}
+	if (structure->name == media_control_prepare_xwindow_q) {
+		GstObject* _tmp1_;
+		GstXOverlay* imagesink;
+		imagesink = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL));
+		g_signal_emit_by_name (self, "prepare-xwindow-id", imagesink);
+		_gst_object_unref0 (imagesink);
+	}
+	_gst_structure_free0 (structure);
+}
+
+
 MediaControl* media_control_construct (GType object_type) {
 	MediaControl * self;
 	self = (MediaControl*) g_object_new (object_type, NULL);
@@ -196,28 +255,22 @@ GstBin* media_control_get_pipeline (MediaControl* self) {
 }
 
 
-static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self) {
-	media_control_on_bus_message (self, message);
-}
-
-
-static gpointer _gst_object_ref0 (gpointer self) {
-	return self ? gst_object_ref (self) : NULL;
+static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self) {
+	media_control_on_bus_sync_message (self, message);
 }
 
 
 void media_control_set_pipeline (MediaControl* self, GstBin* value) {
-	GstBin* _tmp1_;
+	GstBin* _tmp0_;
 	GstBus* bus;
 	g_return_if_fail (self != NULL);
-	if (self->priv->_pipeline != NULL) {
-		guint _tmp0_;
-		g_signal_handlers_disconnect_matched (((GstElement*) self->priv->_pipeline)->bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
-	}
-	self->priv->_pipeline = (_tmp1_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_pipeline), _tmp1_);
+	media_control_remove_signals (self);
+	self->priv->_pipeline = (_tmp0_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_pipeline), _tmp0_);
 	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
 	gst_bus_add_signal_watch (bus);
+	gst_bus_enable_sync_message_emission (bus);
 	g_signal_connect_object (bus, "message", (GCallback) _media_control_on_bus_message_gst_bus_message, self, 0);
+	g_signal_connect_object (bus, "sync-message", (GCallback) _media_control_on_bus_sync_message_gst_bus_sync_message, self, 0);
 	_gst_object_unref0 (bus);
 	g_object_notify ((GObject *) self, "pipeline");
 }
@@ -289,6 +342,7 @@ static void media_control_class_init (MediaControlClass * klass) {
 	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_STATE, g_param_spec_enum ("state", "state", "state", GST_TYPE_STATE, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_POSITION, g_param_spec_int64 ("position", "position", "position", G_MININT64, G_MAXINT64, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_CONTROL_DURATION, g_param_spec_int64 ("duration", "duration", "duration", G_MININT64, G_MAXINT64, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_signal_new ("prepare_xwindow_id", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_X_OVERLAY);
 	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
 	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
@@ -296,6 +350,7 @@ static void media_control_class_init (MediaControlClass * klass) {
 	g_signal_new ("segment_done_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
 	g_signal_new ("tag_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
 	g_signal_new ("state_changed_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM, G_TYPE_NONE, 4, GST_TYPE_OBJECT, GST_TYPE_STATE, GST_TYPE_STATE, GST_TYPE_STATE);
+	media_control_prepare_xwindow_q = g_quark_from_string ("prepare-xwindow-id");
 }
 
 
@@ -307,6 +362,9 @@ static void media_control_instance_init (MediaControl * self) {
 static void media_control_finalize (GObject* obj) {
 	MediaControl * self;
 	self = MEDIA_CONTROL (obj);
+	{
+		media_control_remove_signals (self);
+	}
 	_gst_object_unref0 (self->priv->_pipeline);
 	G_OBJECT_CLASS (media_control_parent_class)->finalize (obj);
 }
