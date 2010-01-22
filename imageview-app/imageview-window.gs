@@ -125,7 +125,6 @@ class ImageViewWindow: MediaWindow
         chooser_button = new FileChooserButton( \
             "Select folder", FileChooserAction.SELECT_FOLDER)
         chooser_item.add(chooser_button)
-        chooser_button.set_create_folders(false)
         chooser_button.current_folder_changed += on_chooser_folder_changed
 
         toolbar_add_expander()

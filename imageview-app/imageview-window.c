@@ -432,7 +432,6 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) chooser_item);
 	self->chooser_button = (_tmp0_ = g_object_ref_sink ((GtkFileChooserButton*) gtk_file_chooser_button_new ("Select folder", GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER)), _g_object_unref0 (self->chooser_button), _tmp0_);
 	gtk_container_add ((GtkContainer*) chooser_item, (GtkWidget*) self->chooser_button);
-	gtk_file_chooser_set_create_folders ((GtkFileChooser*) self->chooser_button, FALSE);
 	g_signal_connect_object ((GtkFileChooser*) self->chooser_button, "current-folder-changed", (GCallback) _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed, self, 0);
 	media_window_toolbar_add_expander ((MediaWindow*) self);
 	self->image_button = (_tmp1_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_ZOOM_100)), _g_object_unref0 (self->image_button), _tmp1_);
