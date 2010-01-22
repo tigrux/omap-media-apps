@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <common.h>
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,17 +13,6 @@
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 
-
-#define TYPE_MEDIA_WINDOW (media_window_get_type ())
-#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
-#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
-#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
-#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
-#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
-
-typedef struct _MediaWindow MediaWindow;
-typedef struct _MediaWindowClass MediaWindowClass;
-typedef struct _MediaWindowPrivate MediaWindowPrivate;
 
 #define TYPE_IMAGE_VIEW_WINDOW (image_view_window_get_type ())
 #define IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindow))
@@ -34,26 +24,6 @@ typedef struct _MediaWindowPrivate MediaWindowPrivate;
 typedef struct _ImageViewWindow ImageViewWindow;
 typedef struct _ImageViewWindowClass ImageViewWindowClass;
 typedef struct _ImageViewWindowPrivate ImageViewWindowPrivate;
-
-#define TYPE_VIDEO_AREA (video_area_get_type ())
-#define VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_VIDEO_AREA, VideoArea))
-#define VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_VIDEO_AREA, VideoAreaClass))
-#define IS_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_VIDEO_AREA))
-#define IS_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_VIDEO_AREA))
-#define VIDEO_AREA_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_VIDEO_AREA, VideoAreaClass))
-
-typedef struct _VideoArea VideoArea;
-typedef struct _VideoAreaClass VideoAreaClass;
-
-#define TYPE_MEDIA_CONTROL (media_control_get_type ())
-#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
-#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
-#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
-#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
-#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
-
-typedef struct _MediaControl MediaControl;
-typedef struct _MediaControlClass MediaControlClass;
 
 #define TYPE_ICON_LIST_CONTROL (icon_list_control_get_type ())
 #define ICON_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ICON_LIST_CONTROL, IconListControl))
@@ -78,23 +48,8 @@ typedef struct _ImageControlClass ImageControlClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define ICON_LIST_CONTROL_TYPE_COL (icon_list_control_col_get_type ())
-
-#define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 typedef struct _ImageViewWindowSlideshowData ImageViewWindowSlideshowData;
-
-struct _MediaWindow {
-	GtkWindow parent_instance;
-	MediaWindowPrivate * priv;
-	GtkNotebook* notebook;
-	GtkToolbar* toolbar;
-	GtkVBox* main_box;
-	gboolean is_fullscreen;
-};
-
-struct _MediaWindowClass {
-	GtkWindowClass parent_class;
-};
 
 struct _ImageViewWindow {
 	MediaWindow parent_instance;
@@ -135,11 +90,6 @@ typedef enum  {
 	ICON_LIST_CONTROL_COL_HEIGHT
 } IconListControlCol;
 
-typedef enum  {
-	MEDIA_WINDOW_TAB_LIST,
-	MEDIA_WINDOW_TAB_VIDEO
-} MediaWindowTab;
-
 struct _ImageViewWindowSlideshowData {
 	int _state_;
 	GAsyncResult* _res_;
@@ -160,10 +110,7 @@ static gpointer image_view_window_parent_class = NULL;
 
 #define TITLE "Omap4 ImageView"
 #define ICON "omap4-imageview-app"
-GType media_window_get_type (void);
 GType image_view_window_get_type (void);
-GType video_area_get_type (void);
-GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
 GType image_control_get_type (void);
 enum  {
@@ -185,7 +132,6 @@ void image_view_window_on_image_control_eos (ImageViewWindow* self);
 static void _image_view_window_on_image_control_eos_media_control_eos_message (ImageControl* _sender, GstObject* src, gpointer self);
 void image_view_window_on_xid_prepared (ImageViewWindow* self, GstXOverlay* imagesink);
 static void _image_view_window_on_xid_prepared_media_control_prepare_xwindow_id (ImageControl* _sender, GstXOverlay* imagesink, gpointer self);
-void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
 void image_view_window_setup_toolbar (ImageViewWindow* self);
 void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
@@ -203,23 +149,15 @@ gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* it
 void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void image_control_set_location (ImageControl* self, const char* value);
-void media_control_set_state (MediaControl* self, GstState value);
-void video_area_set_sink (VideoArea* self, GstXOverlay* value);
-VideoArea* video_area_new (void);
-VideoArea* video_area_construct (GType object_type);
-void media_window_toggle_fullscreen (MediaWindow* self);
 static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _sender, gpointer self);
 void image_view_window_on_chooser_folder_changed (ImageViewWindow* self);
 static void _image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
-void media_window_toolbar_add_expander (MediaWindow* self);
 void image_view_window_on_open_close (ImageViewWindow* self);
 static void _image_view_window_on_open_close_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void image_view_window_on_slideshow (ImageViewWindow* self);
 static void _image_view_window_on_slideshow_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void image_view_window_on_fullscreen (ImageViewWindow* self);
 static void _image_view_window_on_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void media_window_toolbar_add_quit_button (MediaWindow* self);
-GType media_window_tab_get_type (void);
 gboolean image_view_window_open_image (ImageViewWindow* self);
 void image_view_window_close_image (ImageViewWindow* self);
 gboolean image_view_window_get_and_select_iter (ImageViewWindow* self, GtkTreeIter* iter);

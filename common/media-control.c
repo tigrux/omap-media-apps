@@ -59,10 +59,11 @@ static void _media_control_on_bus_message_gst_bus_message (GstBus* _sender, GstM
 void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message);
 static void _media_control_on_bus_sync_message_gst_bus_message (GstBus* _sender, GstMessage* message, gpointer self);
 void media_control_remove_signals (MediaControl* self);
+static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
+void media_control_add_signals (MediaControl* self);
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);
 GstBin* media_control_get_pipeline (MediaControl* self);
-static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self);
 void media_control_set_pipeline (MediaControl* self, GstBin* value);
 GstState media_control_get_state (MediaControl* self);
 void media_control_set_state (MediaControl* self, GstState value);
@@ -95,18 +96,31 @@ static void _media_control_on_bus_sync_message_gst_bus_message (GstBus* _sender,
 
 
 void media_control_remove_signals (MediaControl* self) {
+	GstBus* bus;
+	guint _tmp0_;
+	guint _tmp1_;
 	g_return_if_fail (self != NULL);
-	if (self->priv->_pipeline != NULL) {
-		GstBus* bus;
-		guint _tmp0_;
-		guint _tmp1_;
-		bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
-		g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
-		g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _media_control_on_bus_sync_message_gst_bus_message, self);
-		gst_bus_disable_sync_message_emission (bus);
-		gst_bus_remove_signal_watch (bus);
-		_gst_object_unref0 (bus);
-	}
+	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
+	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _media_control_on_bus_message_gst_bus_message, self);
+	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _media_control_on_bus_sync_message_gst_bus_message, self);
+	_gst_object_unref0 (bus);
+}
+
+
+static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self) {
+	media_control_on_bus_sync_message (self, message);
+}
+
+
+void media_control_add_signals (MediaControl* self) {
+	GstBus* bus;
+	g_return_if_fail (self != NULL);
+	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
+	gst_bus_add_signal_watch (bus);
+	gst_bus_enable_sync_message_emission (bus);
+	g_signal_connect_object (bus, "message", (GCallback) _media_control_on_bus_message_gst_bus_message, self, 0);
+	g_signal_connect_object (bus, "sync-message", (GCallback) _media_control_on_bus_sync_message_gst_bus_sync_message, self, 0);
+	_gst_object_unref0 (bus);
 }
 
 
@@ -255,23 +269,14 @@ GstBin* media_control_get_pipeline (MediaControl* self) {
 }
 
 
-static void _media_control_on_bus_sync_message_gst_bus_sync_message (GstBus* _sender, GstMessage* message, gpointer self) {
-	media_control_on_bus_sync_message (self, message);
-}
-
-
 void media_control_set_pipeline (MediaControl* self, GstBin* value) {
 	GstBin* _tmp0_;
-	GstBus* bus;
 	g_return_if_fail (self != NULL);
-	media_control_remove_signals (self);
+	if (self->priv->_pipeline != NULL) {
+		media_control_remove_signals (self);
+	}
 	self->priv->_pipeline = (_tmp0_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_pipeline), _tmp0_);
-	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
-	gst_bus_add_signal_watch (bus);
-	gst_bus_enable_sync_message_emission (bus);
-	g_signal_connect_object (bus, "message", (GCallback) _media_control_on_bus_message_gst_bus_message, self, 0);
-	g_signal_connect_object (bus, "sync-message", (GCallback) _media_control_on_bus_sync_message_gst_bus_sync_message, self, 0);
-	_gst_object_unref0 (bus);
+	media_control_add_signals (self);
 	g_object_notify ((GObject *) self, "pipeline");
 }
 
@@ -363,7 +368,9 @@ static void media_control_finalize (GObject* obj) {
 	MediaControl * self;
 	self = MEDIA_CONTROL (obj);
 	{
-		media_control_remove_signals (self);
+		if (self->priv->_pipeline != NULL) {
+			media_control_remove_signals (self);
+		}
 	}
 	_gst_object_unref0 (self->priv->_pipeline);
 	G_OBJECT_CLASS (media_control_parent_class)->finalize (obj);

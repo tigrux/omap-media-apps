@@ -6,19 +6,10 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <gtk/gtk.h>
+#include <common.h>
 #include <stdlib.h>
 #include <string.h>
 
-
-#define TYPE_MEDIA_WINDOW (media_window_get_type ())
-#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
-#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
-#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
-#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
-#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
-
-typedef struct _MediaWindow MediaWindow;
-typedef struct _MediaWindowClass MediaWindowClass;
 
 #define TYPE_IMAGE_VIEW_WINDOW (image_view_window_get_type ())
 #define IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindow))
@@ -36,9 +27,7 @@ typedef struct _ImageViewWindowClass ImageViewWindowClass;
 
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
-GType media_window_get_type (void);
 GType image_view_window_get_type (void);
-void error_dialog (GError* _error_);
 void _main (char** args, int args_length1);
 
 

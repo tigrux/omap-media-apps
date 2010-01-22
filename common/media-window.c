@@ -46,8 +46,8 @@ typedef enum  {
 } MediaWindowTab;
 
 
-extern gboolean media_window_style_applie;
-gboolean media_window_style_applie = FALSE;
+extern gboolean media_window_style_applied;
+gboolean media_window_style_applied = FALSE;
 static gpointer media_window_parent_class = NULL;
 
 GType media_window_get_type (void);
@@ -295,7 +295,7 @@ static void media_window_class_init (MediaWindowClass * klass) {
 	media_window_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->constructor = media_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = media_window_finalize;
-	media_window_style_applie = media_window_apply_style ();
+	media_window_style_applied = media_window_apply_style ();
 }
 
 

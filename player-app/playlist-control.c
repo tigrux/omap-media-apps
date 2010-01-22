@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <common.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <stdlib.h>
@@ -11,17 +12,6 @@
 #include <float.h>
 #include <math.h>
 
-
-#define TYPE_MEDIA_CONTROL (media_control_get_type ())
-#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
-#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
-#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
-#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
-#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
-
-typedef struct _MediaControl MediaControl;
-typedef struct _MediaControlClass MediaControlClass;
-typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_PLAY_LIST_CONTROL (play_list_control_get_type ())
 #define PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAY_LIST_CONTROL, PlayListControl))
@@ -39,15 +29,6 @@ typedef struct _PlayListControlPrivate PlayListControlPrivate;
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-
-struct _MediaControl {
-	GObject parent_instance;
-	MediaControlPrivate * priv;
-};
-
-struct _MediaControlClass {
-	GObjectClass parent_class;
-};
 
 struct _PlayListControl {
 	MediaControl parent_instance;
@@ -71,7 +52,6 @@ typedef enum  {
 
 static gpointer play_list_control_parent_class = NULL;
 
-GType media_control_get_type (void);
 GType play_list_control_get_type (void);
 enum  {
 	PLAY_LIST_CONTROL_DUMMY_PROPERTY,
@@ -87,9 +67,7 @@ static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkLis
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
-GstState media_control_get_state (MediaControl* self);
 void play_list_control_set_location (PlayListControl* self, const char* value);
-GstBin* media_control_get_pipeline (MediaControl* self);
 gboolean play_list_control_play (PlayListControl* self);
 gboolean play_list_control_pause (PlayListControl* self);
 gboolean play_list_control_stop (PlayListControl* self);
@@ -107,7 +85,6 @@ static inline void _dynamic_set_volume1 (GstBin* obj, double value);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
 static inline void _dynamic_set_uri2 (GstBin* obj, char* value);
-void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
 static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);

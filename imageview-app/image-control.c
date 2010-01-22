@@ -4,21 +4,11 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <common.h>
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
 
-
-#define TYPE_MEDIA_CONTROL (media_control_get_type ())
-#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
-#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
-#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
-#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
-#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
-
-typedef struct _MediaControl MediaControl;
-typedef struct _MediaControlClass MediaControlClass;
-typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_IMAGE_CONTROL (image_control_get_type ())
 #define IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_CONTROL, ImageControl))
@@ -31,15 +21,6 @@ typedef struct _ImageControl ImageControl;
 typedef struct _ImageControlClass ImageControlClass;
 typedef struct _ImageControlPrivate ImageControlPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
-
-struct _MediaControl {
-	GObject parent_instance;
-	MediaControlPrivate * priv;
-};
-
-struct _MediaControlClass {
-	GObjectClass parent_class;
-};
 
 struct _ImageControl {
 	MediaControl parent_instance;
@@ -55,21 +36,16 @@ struct _ImageControlClass {
 static gpointer image_control_parent_class = NULL;
 
 #define IMAGE_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! ximagesink"
-GType media_control_get_type (void);
 GType image_control_get_type (void);
 enum  {
 	IMAGE_CONTROL_DUMMY_PROPERTY,
 	IMAGE_CONTROL_LOCATION
 };
-MediaControl* media_control_new (void);
-MediaControl* media_control_construct (GType object_type);
 void image_control_setup_pipeline (ImageControl* self, GError** error);
 ImageControl* image_control_new (GError** error);
 ImageControl* image_control_construct (GType object_type, GError** error);
-void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static inline void _dynamic_set_location2 (GstElement* obj, const char* value);
 void image_control_set_location (ImageControl* self, const char* value);
-GstBin* media_control_get_pipeline (MediaControl* self);
 static void image_control_finalize (GObject* obj);
 static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 

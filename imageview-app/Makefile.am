@@ -1,9 +1,5 @@
 include $(top_srcdir)/common/common.am
 
-AM_CPPFLAGS = \
-	$(PROGRAM_CFLAGS) \
-	-include $(CONFIG_HEADER)
-
 BUILT_SOURCES = vala.stamp
 
 bin_PROGRAMS = omap4-imageview-app
@@ -17,7 +13,7 @@ omap4_imageview_app_VALASOURCES = \
 omap4_imageview_app_SOURCES = \
 	$(omap4_imageview_app_VALASOURCES:.gs=.c) $(COMMON_SOURCES)
 
-vala.stamp: $(omap4_imageview_app_VALASOURCES) $(COMMON_VALASOURCES)
+vala.stamp: $(omap4_imageview_app_VALASOURCES) $(COMMON_VAPI)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 

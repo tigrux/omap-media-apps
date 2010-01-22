@@ -18,25 +18,27 @@ class MediaControl: GLib.Object
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
     final
-        remove_signals()
+        if _pipeline != null
+            remove_signals()
 
     def remove_signals()
-        if _pipeline != null
-            var bus = _pipeline.bus
-            bus.message.disconnect(on_bus_message)
-            bus.message.disconnect(on_bus_sync_message)
-            bus.disable_sync_message_emission()
-            bus.remove_signal_watch()
+        var bus = _pipeline.bus
+        bus.message.disconnect(on_bus_message)
+        bus.message.disconnect(on_bus_sync_message)
+
+    def add_signals()
+        var bus = _pipeline.bus
+        bus.add_signal_watch()
+        bus.enable_sync_message_emission()
+        bus.message += on_bus_message
+        bus.sync_message += on_bus_sync_message
 
     prop pipeline: Bin
         set
-            remove_signals()
+            if _pipeline != null
+                remove_signals()
             _pipeline = value
-            var bus = _pipeline.bus
-            bus.add_signal_watch()
-            bus.enable_sync_message_emission()
-            bus.message += on_bus_message
-            bus.sync_message += on_bus_sync_message
+            add_signals()
         get
             return _pipeline
 

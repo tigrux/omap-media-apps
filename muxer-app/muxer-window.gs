@@ -19,7 +19,6 @@ class MuxerWindow: MediaWindow
     chooser_button: FileChooserButton
     preview_button: ToolButton
     record_button: ToolButton
-    probe_button: ToggleToolButton
     stop_button: ToolButton
     muxer_control: MuxerControl
     video_area: VideoArea
@@ -62,13 +61,16 @@ class MuxerWindow: MediaWindow
         var renderer = new CellRendererText()
         combo_box.pack_start(renderer, true)
         combo_box.set_attributes(renderer, "text", ComboCol.GROUP, null)
-        combo_box.changed += on_combo_changed
 
         toolbar_add_expander()
 
         preview_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
         toolbar.add(preview_button)
         preview_button.clicked += on_preview
+
+        var pause_button = new ToolButton.from_stock(STOCK_MEDIA_PAUSE)
+        toolbar.add(pause_button)
+        pause_button.clicked += on_pause
 
         record_button = new ToolButton.from_stock(STOCK_MEDIA_RECORD)
         toolbar.add(record_button)
@@ -80,38 +82,35 @@ class MuxerWindow: MediaWindow
 
         toolbar_add_expander()
 
-        probe_button = new ToggleToolButton.from_stock(STOCK_CONVERT)
-        toolbar.add(probe_button)
-
         toolbar_add_quit_button()
 
     def setup_notebook()
         video_area = new VideoArea()
         notebook.append_page(video_area, new Label("Capture"))
 
-    def on_combo_changed()
-        preview: string
-        record: string
-        if not get_pipelines(out preview, out record)
-            print "Could not get the pipelines"
-            return
+    def setup_control(preview: string, record: string)
         muxer_control = new MuxerControl(preview, record)
-        muxer_control.error_message += on_control_error
+        muxer_control.error_message += on_control_error    
+        muxer_control.preview_started += on_preview_started
+        muxer_control.preview_stopped += on_preview_stopped
+        muxer_control.record_started += on_record_started
+        muxer_control.record_stopped += on_record_stopped
+        muxer_control.prepare_xwindow_id += def(imagesink)
+            video_area.sink = imagesink
+
         try
             muxer_control.load()
         except e: Error
             error_dialog(e)
             return
-        video_area.set_control(muxer_control)
-        muxer_control.eos_message += record_stopped
 
     def on_preview()
         if muxer_control == null
-            return
-        if muxer_control.previewing
-            return
-        if muxer_control.recording
-            return
+            preview, record: string
+            if not get_pipelines(out preview, out record)
+                print "Could not get the pipelines"
+                return
+            setup_control(preview, record)
         muxer_control.start_preview()
 
     def on_record()
@@ -121,7 +120,6 @@ class MuxerWindow: MediaWindow
             return
         if muxer_control.recording
             return
-        muxer_control.buffer_probe_enabled = probe_button.get_active()
         try
             muxer_control.start_record()
         except e: Error
@@ -134,9 +132,6 @@ class MuxerWindow: MediaWindow
             muxer_control.stop_record()
         else if muxer_control.previewing
             muxer_control.stop_preview()
-
-    def record_stopped()
-        pass
 
     def on_chooser_file_set()
         var config_file = chooser_button.get_filename()
@@ -182,6 +177,22 @@ class MuxerWindow: MediaWindow
             ComboCol.RECORD, out record, \
             -1)
         return true
+
+    def on_pause()
+        muxer_control.state = Gst.State.PAUSED
+
+    def on_preview_started()
+        print "preview started"
+
+    def on_preview_stopped()
+        print "preview stopped"
+
+    def on_record_started()
+        print "record started"
+
+    def on_record_stopped()
+        print "record stopped"
+        muxer_control = null
 
     def on_control_error(src: Gst.Object, error: Error, debug: string)
         show_debug(error, debug)

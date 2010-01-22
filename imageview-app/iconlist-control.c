@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <common.h>
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gtk/gtk.h>
@@ -11,17 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#define TYPE_MEDIA_CONTROL (media_control_get_type ())
-#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
-#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
-#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
-#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
-#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
-
-typedef struct _MediaControl MediaControl;
-typedef struct _MediaControlClass MediaControlClass;
-typedef struct _MediaControlPrivate MediaControlPrivate;
 
 #define TYPE_ICON_LIST_CONTROL (icon_list_control_get_type ())
 #define ICON_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_ICON_LIST_CONTROL, IconListControl))
@@ -46,15 +36,6 @@ typedef struct _IconListControlAddFolderData IconListControlAddFolderData;
 typedef struct _IconListControlFillIconsData IconListControlFillIconsData;
 #define _gst_caps_unref0(var) ((var == NULL) ? NULL : (var = (gst_caps_unref (var), NULL)))
 #define _gst_structure_free0(var) ((var == NULL) ? NULL : (var = (gst_structure_free (var), NULL)))
-
-struct _MediaControl {
-	GObject parent_instance;
-	MediaControlPrivate * priv;
-};
-
-struct _MediaControlClass {
-	GObjectClass parent_class;
-};
 
 struct _IconListControl {
 	MediaControl parent_instance;
@@ -141,7 +122,6 @@ static gpointer icon_list_control_parent_class = NULL;
 
 #define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
-GType media_control_get_type (void);
 GType icon_list_control_get_type (void);
 #define ICON_LIST_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_ICON_LIST_CONTROL, IconListControlPrivate))
 enum  {
@@ -155,12 +135,10 @@ void icon_list_control_setup_elements (IconListControl* self, GError** error);
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
 void icon_list_control_setup_pipeline (IconListControl* self, GError** error);
-void media_control_set_pipeline (MediaControl* self, GstBin* value);
 static void icon_list_control_add_folder_data_free (gpointer _data);
 static void icon_list_control_add_folder_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static void _g_list_free_g_object_unref (GList* self);
 void icon_list_control_add_next_files (IconListControl* self, const char* dirname, GList* files);
-void error_dialog (GError* _error_);
 void icon_list_control_add_folder (IconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_add_folder_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean icon_list_control_add_folder_co (IconListControlAddFolderData* data);
@@ -170,7 +148,6 @@ static void icon_list_control_fill_icons_ready (GObject* source_object, GAsyncRe
 void icon_list_control_fill_icons (IconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void icon_list_control_fill_icons_finish (IconListControl* self, GAsyncResult* _res_);
 static gboolean _icon_list_control_fill_icons_co_gsource_func (gpointer self);
-GstBin* media_control_get_pipeline (MediaControl* self);
 static inline void _dynamic_set_location0 (GstElement* obj, const char* value);
 void icon_list_control_get_playing_image_size (IconListControl* self, gint* width, gint* height);
 static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* data);

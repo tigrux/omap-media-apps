@@ -4,7 +4,7 @@
       video/x-raw-yuv,format=(fourcc)I420,width=640,height=480,framerate=30/1 !
         timeoverlay shaded-background=true silent=1 name=overlay !
           tee name=tee !
-            queue ! gconfvideosink name=videosink
+            queue ! ffmpegcolorspace ! ximagesink name=videosink
 </preview>
 <record>
     matroskamux name=muxer ! filesink location=test.mkv

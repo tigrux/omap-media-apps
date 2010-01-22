@@ -7,7 +7,7 @@ class MediaWindow: Window
     notebook: Notebook
     toolbar: Toolbar
     main_box: VBox
-    style_applie: static bool = apply_style()
+    style_applied: static bool = apply_style()
     is_fullscreen: bool
 
     enum Tab
