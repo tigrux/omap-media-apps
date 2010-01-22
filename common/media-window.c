@@ -209,7 +209,11 @@ void media_window_set_fullscreen (MediaWindow* self, gboolean value) {
 			child = (GtkWidget*) child_it->data;
 			{
 				if (child != GTK_WIDGET (self->notebook)) {
-					gtk_widget_set_visible (child, !value);
+					if (value) {
+						gtk_widget_hide (child);
+					} else {
+						gtk_widget_show (child);
+					}
 				}
 			}
 		}

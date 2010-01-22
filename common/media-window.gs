@@ -70,7 +70,10 @@ class MediaWindow: Window
     def set_fullscreen(value: bool)
         for child in main_box.get_children()
             if child != notebook
-                child.set_visible(not value)
+                if value
+                    child.hide()
+                else
+                    child.show()
         if value
             fullscreen()
         else
