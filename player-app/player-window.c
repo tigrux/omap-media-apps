@@ -248,7 +248,11 @@ void player_window_setup_widgets (PlayerWindow* self) {
 
 
 static void _lambda1_ (void* page, guint num_page, PlayerWindow* self) {
-	gtk_widget_set_visible ((GtkWidget*) self->fullscreen_button, num_page == MEDIA_WINDOW_TAB_VIDEO);
+	if (num_page == MEDIA_WINDOW_TAB_VIDEO) {
+		gtk_widget_show ((GtkWidget*) self->fullscreen_button);
+	} else {
+		gtk_widget_hide ((GtkWidget*) self->fullscreen_button);
+	}
 }
 
 

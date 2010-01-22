@@ -68,7 +68,10 @@ class PlayerWindow: MediaWindow
         notebook.append_page(new_playlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
         notebook.switch_page += def(page, num_page)
-            fullscreen_button.set_visible(num_page == Tab.VIDEO)
+            if num_page == Tab.VIDEO
+                fullscreen_button.show()
+            else
+                fullscreen_button.hide()
 
     def setup_toolbar()
         var prev_button = new ToolButton.from_stock(STOCK_MEDIA_PREVIOUS)
