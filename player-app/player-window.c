@@ -107,8 +107,8 @@ void player_window_setup_seeking (PlayerWindow* self);
 void player_window_setup_widgets (PlayerWindow* self);
 GtkBox* player_window_new_playlist_box (PlayerWindow* self);
 GtkBox* player_window_new_video_box (PlayerWindow* self);
-static void _lambda1_ (void* page, guint num_page, PlayerWindow* self);
-static void __lambda1__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
+void player_window_on_notebook_switch_page (PlayerWindow* self, void* page, guint num_page);
+static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void player_window_on_prev (PlayerWindow* self);
 static void _player_window_on_prev_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void player_window_play_pause (PlayerWindow* self);
@@ -247,17 +247,8 @@ void player_window_setup_widgets (PlayerWindow* self) {
 }
 
 
-static void _lambda1_ (void* page, guint num_page, PlayerWindow* self) {
-	if (num_page == MEDIA_WINDOW_TAB_VIDEO) {
-		gtk_widget_show ((GtkWidget*) self->fullscreen_button);
-	} else {
-		gtk_widget_hide ((GtkWidget*) self->fullscreen_button);
-	}
-}
-
-
-static void __lambda1__gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
-	_lambda1_ (page, page_num, self);
+static void _player_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
+	player_window_on_notebook_switch_page (self, page, page_num);
 }
 
 
@@ -273,7 +264,7 @@ void player_window_setup_notebook (PlayerWindow* self) {
 	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = player_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda1__gtk_notebook_switch_page, self, 0);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) _player_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -483,6 +474,16 @@ gboolean player_window_on_volume_button_pressed (PlayerWindow* self) {
 	}
 	result = FALSE;
 	return result;
+}
+
+
+void player_window_on_notebook_switch_page (PlayerWindow* self, void* page, guint num_page) {
+	g_return_if_fail (self != NULL);
+	if (num_page == MEDIA_WINDOW_TAB_VIDEO) {
+		gtk_widget_show ((GtkWidget*) self->fullscreen_button);
+	} else {
+		gtk_widget_hide ((GtkWidget*) self->fullscreen_button);
+	}
 }
 
 
