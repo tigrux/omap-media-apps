@@ -4,13 +4,13 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <stdlib.h>
+#include <string.h>
 #include <common.h>
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
-#include <stdlib.h>
-#include <string.h>
 
 
 #define TYPE_ICON_LIST_CONTROL (icon_list_control_get_type ())

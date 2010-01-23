@@ -4,10 +4,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <common.h>
-#include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <common.h>
+#include <gtk/gtk.h>
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <gst/gst.h>
@@ -137,8 +137,9 @@ void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
-void image_view_window_on_notebook_switch_page (ImageViewWindow* self, void* page, guint num_page);
-static void _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
+void image_view_window_on_notebook_switch_page (ImageViewWindow* self, guint num_page);
+static void _lambda0_ (GtkNotebookPage* page, guint num_page, ImageViewWindow* self);
+static void __lambda0__gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self);
 void image_view_window_do_fill_visible_icons (ImageViewWindow* self);
 static void _image_view_window_do_fill_visible_icons_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 static void _image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self);
@@ -280,8 +281,14 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 }
 
 
-static void _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
-	image_view_window_on_notebook_switch_page (self, page, page_num);
+static void _lambda0_ (GtkNotebookPage* page, guint num_page, ImageViewWindow* self) {
+	g_return_if_fail (page != NULL);
+	image_view_window_on_notebook_switch_page (self, num_page);
+}
+
+
+static void __lambda0__gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self) {
+	_lambda0_ (page, page_num, self);
 }
 
 
@@ -297,7 +304,7 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda0__gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -508,7 +515,7 @@ void image_view_window_on_slideshow (ImageViewWindow* self) {
 }
 
 
-void image_view_window_on_notebook_switch_page (ImageViewWindow* self, void* page, guint num_page) {
+void image_view_window_on_notebook_switch_page (ImageViewWindow* self, guint num_page) {
 	g_return_if_fail (self != NULL);
 	if (num_page == MEDIA_WINDOW_TAB_LIST) {
 		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);

@@ -378,7 +378,7 @@ static void media_control_class_init (MediaControlClass * klass) {
 	g_signal_new ("tag_found", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__STRING_BOXED, G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_VALUE);
 	g_signal_new ("eos_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 	g_signal_new ("error_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
-	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
+	g_signal_new ("element_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, GST_TYPE_STRUCTURE);
 	g_signal_new ("segment_start_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
 	g_signal_new ("segment_done_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
 	g_signal_new ("tag_message", TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
@@ -513,7 +513,7 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GV
 		data2 = closure->data;
 	}
 	callback = (GMarshalFunc_VOID__OBJECT_POINTER) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_object (param_values + 1), g_value_get_pointer (param_values + 2), data2);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_boxed (param_values + 2), data2);
 }
 
 

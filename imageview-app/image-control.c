@@ -4,10 +4,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <common.h>
-#include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
+#include <common.h>
+#include <gst/gst.h>
 
 
 #define TYPE_IMAGE_CONTROL (image_control_get_type ())

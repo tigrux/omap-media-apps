@@ -4,10 +4,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <common.h>
-#include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <common.h>
+#include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 

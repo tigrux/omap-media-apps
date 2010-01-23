@@ -63,7 +63,8 @@ class ImageViewWindow: MediaWindow
     def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        notebook.switch_page += on_notebook_switch_page
+        notebook.switch_page += def(page, num_page)
+            on_notebook_switch_page(num_page)
 
     def new_iconlist_box(): Box
         var box = new VBox(false, 0)
@@ -175,7 +176,7 @@ class ImageViewWindow: MediaWindow
         else
             stop_slideshow()
 
-    def on_notebook_switch_page(page: void*, num_page: uint)
+    def on_notebook_switch_page(num_page: uint)
         if num_page == Tab.LIST
             image_button.set_stock_id(STOCK_ZOOM_100)
         else
