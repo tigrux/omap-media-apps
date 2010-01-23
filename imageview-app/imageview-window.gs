@@ -63,7 +63,8 @@ class ImageViewWindow: MediaWindow
     def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Label("List"))
         notebook.append_page(new_video_box(), new Label("Video"))
-        
+        notebook.switch_page += on_notebook_switch_page
+
     def new_iconlist_box(): Box
         var box = new VBox(false, 0)
         var scrolled_window = new ScrolledWindow(null, null)
@@ -157,7 +158,6 @@ class ImageViewWindow: MediaWindow
         iter: TreeIter
         if get_and_select_iter(out iter)
             icon_view.item_activated(iconlist_store.get_path(iter))
-            image_button.set_stock_id(STOCK_CLOSE)
             return true
         return false
 
@@ -165,7 +165,6 @@ class ImageViewWindow: MediaWindow
         if slideshow_cancellable != null
             stop_slideshow()
         notebook.set_current_page(Tab.LIST)
-        image_button.set_stock_id(STOCK_ZOOM_100)
 
     def on_slideshow()
         iter: TreeIter
@@ -175,6 +174,12 @@ class ImageViewWindow: MediaWindow
             start_slideshow()
         else
             stop_slideshow()
+
+    def on_notebook_switch_page(page: void*, num_page: uint)
+        if num_page == Tab.LIST
+            image_button.set_stock_id(STOCK_ZOOM_100)
+        else
+            image_button.set_stock_id(STOCK_CLOSE)
 
     def on_fullscreen()
         if notebook.get_current_page() == Tab.VIDEO

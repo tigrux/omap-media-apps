@@ -137,6 +137,8 @@ void image_view_window_setup_notebook (ImageViewWindow* self);
 void image_view_window_setup_widgets (ImageViewWindow* self);
 GtkBox* image_view_window_new_iconlist_box (ImageViewWindow* self);
 GtkBox* image_view_window_new_video_box (ImageViewWindow* self);
+void image_view_window_on_notebook_switch_page (ImageViewWindow* self, void* page, guint num_page);
+static void _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self);
 void image_view_window_do_fill_visible_icons (ImageViewWindow* self);
 static void _image_view_window_do_fill_visible_icons_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 static void _image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self);
@@ -278,6 +280,11 @@ void image_view_window_setup_widgets (ImageViewWindow* self) {
 }
 
 
+static void _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, void* page, guint page_num, gpointer self) {
+	image_view_window_on_notebook_switch_page (self, page, page_num);
+}
+
+
 void image_view_window_setup_notebook (ImageViewWindow* self) {
 	GtkLabel* _tmp1_;
 	GtkBox* _tmp0_;
@@ -290,6 +297,7 @@ void image_view_window_setup_notebook (ImageViewWindow* self) {
 	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
+	g_signal_connect_object (((MediaWindow*) self)->notebook, "switch-page", (GCallback) _image_view_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -468,7 +476,6 @@ gboolean image_view_window_open_image (ImageViewWindow* self) {
 		GtkTreePath* _tmp0_;
 		gtk_icon_view_item_activated (self->icon_view, _tmp0_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, &iter));
 		_gtk_tree_path_free0 (_tmp0_);
-		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_CLOSE);
 		result = TRUE;
 		return result;
 	}
@@ -483,7 +490,6 @@ void image_view_window_close_image (ImageViewWindow* self) {
 		image_view_window_stop_slideshow (self);
 	}
 	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
-	gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
 }
 
 
@@ -498,6 +504,16 @@ void image_view_window_on_slideshow (ImageViewWindow* self) {
 		} else {
 			image_view_window_stop_slideshow (self);
 		}
+	}
+}
+
+
+void image_view_window_on_notebook_switch_page (ImageViewWindow* self, void* page, guint num_page) {
+	g_return_if_fail (self != NULL);
+	if (num_page == MEDIA_WINDOW_TAB_LIST) {
+		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
+	} else {
+		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_CLOSE);
 	}
 }
 
