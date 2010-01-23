@@ -468,12 +468,12 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 	goto __finally2;
 	__catch2_g_file_error:
 	{
-		GError * e;
-		e = _inner_error_;
+		GError * e1;
+		e1 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
-			_g_error_free0 (e);
+			error_dialog (e1);
+			_g_error_free0 (e1);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
 			return;
@@ -482,12 +482,12 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 	goto __finally2;
 	__catch2_g_key_file_error:
 	{
-		GError * e;
-		e = _inner_error_;
+		GError * e2;
+		e2 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
-			_g_error_free0 (e);
+			error_dialog (e2);
+			_g_error_free0 (e2);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
 			return;
@@ -496,12 +496,12 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 	goto __finally2;
 	__catch2_g_markup_error:
 	{
-		GError * e;
-		e = _inner_error_;
+		GError * e3;
+		e3 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
-			_g_error_free0 (e);
+			error_dialog (e3);
+			_g_error_free0 (e3);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
 			return;
@@ -573,12 +573,12 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 	goto __finally3;
 	__catch3_g_key_file_error:
 	{
-		GError * e;
-		e = _inner_error_;
+		GError * e4;
+		e4 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
-			_g_error_free0 (e);
+			error_dialog (e4);
+			_g_error_free0 (e4);
 		}
 	}
 	__finally3:

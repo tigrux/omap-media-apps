@@ -268,7 +268,7 @@ void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	if (self->overlay != NULL) {
-		_dynamic_set_silent1 (self->overlay, FALSE);
+		_dynamic_set_silent1 (self->overlay, TRUE);
 	}
 	g_signal_emit_by_name (self, "record-stopped");
 	muxer_control_stop_preview (self);
