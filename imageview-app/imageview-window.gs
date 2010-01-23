@@ -239,7 +239,7 @@ class ImageViewWindow: MediaWindow
         return false
 
     def on_chooser_folder_changed()
-        var folder = chooser_button.get_current_folder()
+        var folder = chooser_button.get_filename()
         if folder == current_folder
             return
         current_folder = folder

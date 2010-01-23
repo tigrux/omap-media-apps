@@ -692,7 +692,7 @@ void image_view_window_on_chooser_folder_changed (ImageViewWindow* self) {
 	char* folder;
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-	folder = gtk_file_chooser_get_current_folder ((GtkFileChooser*) self->chooser_button);
+	folder = gtk_file_chooser_get_filename ((GtkFileChooser*) self->chooser_button);
 	if (_vala_strcmp0 (folder, self->current_folder) == 0) {
 		_g_free0 (folder);
 		return;
