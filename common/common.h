@@ -141,6 +141,7 @@ extern GQuark media_control_prepare_xwindow_q;
 void media_control_remove_signals (MediaControl* self);
 void media_control_add_signals (MediaControl* self);
 void media_control_on_bus_message (MediaControl* self, GstMessage* message);
+void media_control_tag_foreach_func (MediaControl* self, GstTagList* tag_list, const char* tag_name);
 void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message);
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);

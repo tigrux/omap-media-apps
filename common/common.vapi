@@ -50,6 +50,7 @@ public class MediaControl : GLib.Object {
 	public void on_bus_message (Gst.Message message);
 	public void on_bus_sync_message (Gst.Message message);
 	public void remove_signals ();
+	public void tag_foreach_func (Gst.TagList tag_list, string tag_name);
 	public int64 duration { get; }
 	public Gst.Bin pipeline { get; set; }
 	public int64 position { get; set; }
@@ -61,6 +62,7 @@ public class MediaControl : GLib.Object {
 	public signal void segment_done_message (Gst.Object src, Gst.Format format, int64 pos);
 	public signal void segment_start_message (Gst.Object src, Gst.Format format, int64 pos);
 	public signal void state_changed_message (Gst.Object src, Gst.State old, Gst.State current, Gst.State pending);
+	public signal void tag_found (string name, GLib.Value tag_value);
 	public signal void tag_message (Gst.Object src, Gst.TagList tag_list);
 }
 [CCode (cheader_filename = "common.h")]

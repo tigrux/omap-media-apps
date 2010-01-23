@@ -9,6 +9,8 @@ class MediaControl: GLib.Object
     xoverlay: XOverlay
 
     event prepare_xwindow_id(imagesink: XOverlay)
+    event tag_found(name: string, tag_value: GLib.Value)
+
     event eos_message(src: Gst.Object)
     event error_message(src: Gst.Object, error: Error, debug: string)
     event element_message(src: Gst.Object, structure: Structure)
@@ -24,8 +26,10 @@ class MediaControl: GLib.Object
 
     def remove_signals()
         var bus = _pipeline.bus
-        bus.message.disconnect(on_bus_message)
         bus.message.disconnect(on_bus_sync_message)
+        bus.message.disconnect(on_bus_message)
+        bus.disable_sync_message_emission()
+        bus.remove_signal_watch()
 
     def add_signals()
         var bus = _pipeline.bus
@@ -73,9 +77,15 @@ class MediaControl: GLib.Object
             when MessageType.TAG
                 tag_list: TagList
                 message.parse_tag(out tag_list)
+                tag_list.for_each(tag_foreach_func)
                 tag_message(message.src, tag_list)
             default
                 pass
+
+    def tag_foreach_func(tag_list: TagList, tag_name: string)
+        tag_value: GLib.Value
+        TagList.copy_value(out tag_value, tag_list, tag_name)
+        tag_found(tag_name, tag_value)
 
     def on_bus_sync_message(message: Message)
         structure: Structure
