@@ -35,7 +35,6 @@ class MuxerControl: MediaControl
     adjust_ts_audio: ClockTime
 
     init
-        error_message += on_error
         eos_message += on_eos
         state_changed_message += on_state_changed
 
@@ -54,7 +53,8 @@ class MuxerControl: MediaControl
 
     def stop_preview()
         preview_bin.set_state(State.NULL)
-        record_stopped()
+        _previewing = false
+        preview_stopped()
 
     def start_record() raises Error
         preview_bin.set_state(State.NULL)
@@ -106,18 +106,14 @@ class MuxerControl: MediaControl
     def on_eos(src: Gst.Object)
         if overlay != null
             overlay.silent = true
+        _recording = false
         record_stopped()
         stop_preview()
+        tee.unlink(queue)
+        preview_bin.remove(record_bin)
+        prepare_xwindow_id(xoverlay)
         start_preview()
-        _recording = false
-        pass
-
-    def on_error(src: Gst.Object, e: Error, debug: string)
-        print e.message
-        print debug
-        stop()
 
     def stop()
-        stop_record()
         stop_preview()
 

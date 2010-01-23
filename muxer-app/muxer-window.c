@@ -124,6 +124,7 @@ MuxerConfigParser* muxer_config_parser_new (void);
 MuxerConfigParser* muxer_config_parser_construct (GType object_type);
 GType muxer_config_parser_get_type (void);
 gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
+void muxer_control_stop (MuxerControl* self);
 void muxer_window_show_debug (MuxerWindow* self, GError* _error_, const char* debug);
 void muxer_window_setup_debug_dialog (MuxerWindow* self);
 void muxer_window_on_debug_dialog_closed (MuxerWindow* self);
@@ -642,6 +643,7 @@ void muxer_window_on_control_error (MuxerWindow* self, GstObject* src, GError* _
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
+	muxer_control_stop (self->muxer_control);
 	muxer_window_show_debug (self, _error_, debug);
 }
 

@@ -73,10 +73,8 @@ void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstStat
 static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void muxer_control_on_eos (MuxerControl* self, GstObject* src);
 void muxer_control_stop (MuxerControl* self);
-void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, const char* debug);
 gboolean muxer_control_get_previewing (MuxerControl* self);
 gboolean muxer_control_get_recording (MuxerControl* self);
-static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self);
 static void _muxer_control_on_state_changed_media_control_state_changed_message (MuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self);
 static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -124,7 +122,8 @@ void muxer_control_start_preview (MuxerControl* self) {
 void muxer_control_stop_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
-	g_signal_emit_by_name (self, "record-stopped");
+	self->priv->_previewing = FALSE;
+	g_signal_emit_by_name (self, "preview-stopped");
 }
 
 
@@ -270,31 +269,18 @@ void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
 	if (self->overlay != NULL) {
 		_dynamic_set_silent1 (self->overlay, TRUE);
 	}
+	self->priv->_recording = FALSE;
 	g_signal_emit_by_name (self, "record-stopped");
 	muxer_control_stop_preview (self);
+	gst_element_unlink (self->tee, self->queue);
+	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
+	g_signal_emit_by_name ((MediaControl*) self, "prepare-xwindow-id", ((MediaControl*) self)->xoverlay);
 	muxer_control_start_preview (self);
-	self->priv->_recording = FALSE;
-	;
-}
-
-
-void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, const char* debug) {
-	char* _tmp0_;
-	char* _tmp1_;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (src != NULL);
-	g_return_if_fail (debug != NULL);
-	g_print ("%s", _tmp0_ = g_strconcat (e->message, "\n", NULL));
-	_g_free0 (_tmp0_);
-	g_print ("%s", _tmp1_ = g_strconcat (debug, "\n", NULL));
-	_g_free0 (_tmp1_);
-	muxer_control_stop (self);
 }
 
 
 void muxer_control_stop (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	muxer_control_stop_record (self);
 	muxer_control_stop_preview (self);
 }
 
@@ -312,11 +298,6 @@ gboolean muxer_control_get_recording (MuxerControl* self) {
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_recording;
 	return result;
-}
-
-
-static void _muxer_control_on_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
-	muxer_control_on_error (self, src, _error_, debug);
 }
 
 
@@ -338,7 +319,6 @@ static GObject * muxer_control_constructor (GType type, guint n_construct_proper
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = MUXER_CONTROL (obj);
 	{
-		g_signal_connect_object ((MediaControl*) self, "error-message", (GCallback) _muxer_control_on_error_media_control_error_message, self, 0);
 		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _muxer_control_on_eos_media_control_eos_message, self, 0);
 		g_signal_connect_object ((MediaControl*) self, "state-changed-message", (GCallback) _muxer_control_on_state_changed_media_control_state_changed_message, self, 0);
 	}

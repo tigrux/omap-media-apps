@@ -4,10 +4,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gst/interfaces/xoverlay.h>
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gst/interfaces/xoverlay.h>
 
 
 #define TYPE_MEDIA_CONTROL (media_control_get_type ())
@@ -30,6 +30,7 @@ typedef struct _MediaControlPrivate MediaControlPrivate;
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
+	GstXOverlay* xoverlay;
 };
 
 struct _MediaControlClass {
@@ -239,11 +240,10 @@ void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message)
 		return;
 	}
 	if (structure->name == media_control_prepare_xwindow_q) {
+		GstXOverlay* _tmp2_;
 		GstObject* _tmp1_;
-		GstXOverlay* imagesink;
-		imagesink = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL));
-		g_signal_emit_by_name (self, "prepare-xwindow-id", imagesink);
-		_gst_object_unref0 (imagesink);
+		self->xoverlay = (_tmp2_ = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL)), _gst_object_unref0 (self->xoverlay), _tmp2_);
+		g_signal_emit_by_name (self, "prepare-xwindow-id", self->xoverlay);
 	}
 	_gst_structure_free0 (structure);
 }
@@ -373,6 +373,7 @@ static void media_control_finalize (GObject* obj) {
 		}
 	}
 	_gst_object_unref0 (self->priv->_pipeline);
+	_gst_object_unref0 (self->xoverlay);
 	G_OBJECT_CLASS (media_control_parent_class)->finalize (obj);
 }
 

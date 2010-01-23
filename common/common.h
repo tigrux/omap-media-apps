@@ -103,6 +103,7 @@ typedef enum  {
 struct _MediaControl {
 	GObject parent_instance;
 	MediaControlPrivate * priv;
+	GstXOverlay* xoverlay;
 };
 
 struct _MediaControlClass {

@@ -44,6 +44,7 @@ public class MediaWindow : Gtk.Window {
 [CCode (cheader_filename = "common.h")]
 public class MediaControl : GLib.Object {
 	public static GLib.Quark prepare_xwindow_q;
+	public Gst.XOverlay xoverlay;
 	public MediaControl ();
 	public void add_signals ();
 	public void on_bus_message (Gst.Message message);

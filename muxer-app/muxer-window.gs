@@ -197,6 +197,7 @@ class MuxerWindow: MediaWindow
         print "record stopped"
 
     def on_control_error(src: Gst.Object, error: Error, debug: string)
+        muxer_control.stop()
         show_debug(error, debug)
 
     def show_debug(error: Error, debug: string)
