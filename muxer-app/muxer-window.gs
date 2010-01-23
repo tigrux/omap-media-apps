@@ -113,6 +113,11 @@ class MuxerWindow: MediaWindow
             setup_control(preview, record)
         muxer_control.start_preview()
 
+    def on_pause()
+        if muxer_control == null
+            return
+        muxer_control.state = Gst.State.PAUSED
+
     def on_record()
         if muxer_control == null
             return
@@ -132,6 +137,7 @@ class MuxerWindow: MediaWindow
             muxer_control.stop_record()
         else if muxer_control.previewing
             muxer_control.stop_preview()
+            muxer_control = null
 
     def on_chooser_file_set()
         var config_file = chooser_button.get_filename()
@@ -142,14 +148,14 @@ class MuxerWindow: MediaWindow
             else
                 var xml_parser = new MuxerConfigParser()
                 xml_parser.parse_file(config_file, ref key_file)
-        except e: FileError
-            error_dialog(e)
+        except e1: FileError
+            error_dialog(e1)
             return
-        except e: KeyFileError
-            error_dialog(e)
+        except e2: KeyFileError
+            error_dialog(e2)
             return
-        except e: MarkupError
-            error_dialog(e)
+        except e3: MarkupError
+            error_dialog(e3)
             return
 
         try
@@ -165,8 +171,8 @@ class MuxerWindow: MediaWindow
                     ComboCol.PREVIEW, preview, \
                     ComboCol.RECORD, record, \
                     -1)
-        except e: KeyFileError
-            error_dialog(e)
+        except e4: KeyFileError
+            error_dialog(e4)
 
     def get_pipelines(out preview: string, out record: string): bool
         iter: TreeIter
@@ -177,9 +183,6 @@ class MuxerWindow: MediaWindow
             ComboCol.RECORD, out record, \
             -1)
         return true
-
-    def on_pause()
-        muxer_control.state = Gst.State.PAUSED
 
     def on_preview_started()
         print "preview started"
@@ -192,7 +195,6 @@ class MuxerWindow: MediaWindow
 
     def on_record_stopped()
         print "record stopped"
-        muxer_control = null
 
     def on_control_error(src: Gst.Object, error: Error, debug: string)
         show_debug(error, debug)

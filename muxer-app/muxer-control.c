@@ -32,6 +32,7 @@ struct _MuxerControl {
 	GstElement* tee;
 	GstElement* videosrc;
 	GstElement* audiosrc;
+	GstElement* filesrc;
 	GstBin* preview_bin;
 	GstBin* record_bin;
 	GstElement* queue;
@@ -67,11 +68,11 @@ void muxer_control_stop_preview (MuxerControl* self);
 void muxer_control_load_record_bin (MuxerControl* self, GError** error);
 static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value);
 void muxer_control_start_record (MuxerControl* self, GError** error);
-static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void muxer_control_stop_record (MuxerControl* self);
 void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending);
+static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void muxer_control_on_eos (MuxerControl* self, GstObject* src);
-void muxer_control_shutdown (MuxerControl* self);
+void muxer_control_stop (MuxerControl* self);
 void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, const char* debug);
 gboolean muxer_control_get_previewing (MuxerControl* self);
 gboolean muxer_control_get_recording (MuxerControl* self);
@@ -123,7 +124,7 @@ void muxer_control_start_preview (MuxerControl* self) {
 void muxer_control_stop_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
-	self->priv->_previewing = FALSE;
+	g_signal_emit_by_name (self, "record-stopped");
 }
 
 
@@ -156,11 +157,6 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 }
 
 
-static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value) {
-	g_object_set (obj, "silent", value, NULL);
-}
-
-
 void muxer_control_stop_record (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	if (!self->priv->_recording) {
@@ -169,9 +165,6 @@ void muxer_control_stop_record (MuxerControl* self) {
 	gst_element_send_event (self->videosrc, gst_event_new_eos ());
 	if (self->audiosrc != NULL) {
 		gst_element_send_event (self->audiosrc, gst_event_new_eos ());
-	}
-	if (self->overlay != NULL) {
-		_dynamic_set_silent1 (self->overlay, TRUE);
 	}
 }
 
@@ -191,8 +184,7 @@ void muxer_control_load_preview_bin (MuxerControl* self, GError** error) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	self->preview_bin = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->preview_bin), _tmp2_);
-	g_print ("bus 1 = %p\n", ((GstElement*) self->preview_bin)->bus);
+	self->preview_bin = (_tmp2_ = (GstBin*) (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->preview_bin), _tmp2_);
 	gst_object_set_name ((GstObject*) self->preview_bin, "preview_bin");
 	media_control_set_pipeline ((MediaControl*) self, self->preview_bin);
 	self->overlay = (_tmp3_ = gst_bin_get_by_name (self->preview_bin, "overlay"), _gst_object_unref0 (self->overlay), _tmp3_);
@@ -214,6 +206,7 @@ void muxer_control_load_record_bin (MuxerControl* self, GError** error) {
 	GstElement* _tmp1_;
 	GstElement* _tmp3_;
 	GstElement* _tmp4_;
+	GstElement* _tmp5_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	_tmp0_ = gst_parse_launch (self->record_desc, &_inner_error_);
@@ -221,8 +214,7 @@ void muxer_control_load_record_bin (MuxerControl* self, GError** error) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
-	self->record_bin = (_tmp2_ = (_tmp1_ = _tmp0_, GST_IS_BIN (_tmp1_) ? ((GstBin*) _tmp1_) : NULL), _gst_object_unref0 (self->record_bin), _tmp2_);
-	g_print ("bus 2 = %p\n", ((GstElement*) self->record_bin)->bus);
+	self->record_bin = (_tmp2_ = (GstBin*) (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->record_bin), _tmp2_);
 	gst_object_set_name ((GstObject*) self->record_bin, "record_bin");
 	if ((self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_bin, "queue"), _gst_object_unref0 (self->queue), _tmp3_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named queue in the record pipeline");
@@ -232,6 +224,7 @@ void muxer_control_load_record_bin (MuxerControl* self, GError** error) {
 		}
 	}
 	self->audiosrc = (_tmp4_ = gst_bin_get_by_name (self->record_bin, "audiosrc"), _gst_object_unref0 (self->audiosrc), _tmp4_);
+	self->filesrc = (_tmp5_ = gst_bin_get_by_name (self->record_bin, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp5_);
 }
 
 
@@ -240,8 +233,6 @@ void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstStat
 	g_return_if_fail (src != NULL);
 	if (src == GST_OBJECT (self->preview_bin)) {
 		gboolean _tmp0_ = FALSE;
-		gboolean _tmp1_ = FALSE;
-		g_print ("%s: %s -> %s\n", gst_object_get_name (src), gst_element_state_get_name (old), gst_element_state_get_name (current));
 		if (old == GST_STATE_PAUSED) {
 			_tmp0_ = current == GST_STATE_PLAYING;
 		} else {
@@ -251,25 +242,15 @@ void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstStat
 			self->priv->_previewing = TRUE;
 			g_signal_emit_by_name (self, "preview-started");
 		}
-		if (old == GST_STATE_READY) {
-			_tmp1_ = current == GST_STATE_NULL;
-		} else {
-			_tmp1_ = FALSE;
-		}
-		if (_tmp1_) {
-			self->priv->_previewing = FALSE;
-			g_signal_emit_by_name (self, "preview-stopped");
-		}
 	} else {
 		if (src == GST_OBJECT (self->record_bin)) {
-			gboolean _tmp2_ = FALSE;
-			g_print ("%s: %s -> %s\n", gst_object_get_name (src), gst_element_state_get_name (old), gst_element_state_get_name (current));
+			gboolean _tmp1_ = FALSE;
 			if (old == GST_STATE_PAUSED) {
-				_tmp2_ = current == GST_STATE_PLAYING;
+				_tmp1_ = current == GST_STATE_PLAYING;
 			} else {
-				_tmp2_ = FALSE;
+				_tmp1_ = FALSE;
 			}
-			if (_tmp2_) {
+			if (_tmp1_) {
 				self->priv->_recording = TRUE;
 				g_signal_emit_by_name (self, "record-started");
 			}
@@ -278,16 +259,22 @@ void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstStat
 }
 
 
+static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value) {
+	g_object_set (obj, "silent", value, NULL);
+}
+
+
 void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
-	g_print ("%s: eos, %s\n", gst_object_get_name (src), gst_element_state_get_name (media_control_get_state ((MediaControl*) self)));
-	self->priv->_recording = FALSE;
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
-	gst_element_unlink (self->tee, self->queue);
-	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING);
+	if (self->overlay != NULL) {
+		_dynamic_set_silent1 (self->overlay, FALSE);
+	}
 	g_signal_emit_by_name (self, "record-stopped");
+	muxer_control_stop_preview (self);
+	muxer_control_start_preview (self);
+	self->priv->_recording = FALSE;
+	;
 }
 
 
@@ -301,11 +288,11 @@ void muxer_control_on_error (MuxerControl* self, GstObject* src, GError* e, cons
 	_g_free0 (_tmp0_);
 	g_print ("%s", _tmp1_ = g_strconcat (debug, "\n", NULL));
 	_g_free0 (_tmp1_);
-	muxer_control_shutdown (self);
+	muxer_control_stop (self);
 }
 
 
-void muxer_control_shutdown (MuxerControl* self) {
+void muxer_control_stop (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	muxer_control_stop_record (self);
 	muxer_control_stop_preview (self);
@@ -383,7 +370,7 @@ static void muxer_control_finalize (GObject* obj) {
 	MuxerControl * self;
 	self = MUXER_CONTROL (obj);
 	{
-		muxer_control_shutdown (self);
+		muxer_control_stop (self);
 	}
 	_g_free0 (self->preview_desc);
 	_g_free0 (self->record_desc);
@@ -391,6 +378,7 @@ static void muxer_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->tee);
 	_gst_object_unref0 (self->videosrc);
 	_gst_object_unref0 (self->audiosrc);
+	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->preview_bin);
 	_gst_object_unref0 (self->record_bin);
 	_gst_object_unref0 (self->queue);

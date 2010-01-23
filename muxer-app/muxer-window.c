@@ -356,6 +356,15 @@ void muxer_window_on_preview (MuxerWindow* self) {
 }
 
 
+void muxer_window_on_pause (MuxerWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->muxer_control == NULL) {
+		return;
+	}
+	media_control_set_state ((MediaControl*) self->muxer_control, GST_STATE_PAUSED);
+}
+
+
 void muxer_window_on_record (MuxerWindow* self) {
 	GError * _inner_error_;
 	g_return_if_fail (self != NULL);
@@ -405,7 +414,9 @@ void muxer_window_on_stop (MuxerWindow* self) {
 		muxer_control_stop_record (self->muxer_control);
 	} else {
 		if (muxer_control_get_previewing (self->muxer_control)) {
+			MuxerControl* _tmp0_;
 			muxer_control_stop_preview (self->muxer_control);
+			self->muxer_control = (_tmp0_ = NULL, _g_object_unref0 (self->muxer_control), _tmp0_);
 		}
 	}
 }
@@ -603,12 +614,6 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 }
 
 
-void muxer_window_on_pause (MuxerWindow* self) {
-	g_return_if_fail (self != NULL);
-	media_control_set_state ((MediaControl*) self->muxer_control, GST_STATE_PAUSED);
-}
-
-
 void muxer_window_on_preview_started (MuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_print ("preview started\n");
@@ -628,10 +633,8 @@ void muxer_window_on_record_started (MuxerWindow* self) {
 
 
 void muxer_window_on_record_stopped (MuxerWindow* self) {
-	MuxerControl* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_print ("record stopped\n");
-	self->muxer_control = (_tmp0_ = NULL, _g_object_unref0 (self->muxer_control), _tmp0_);
 }
 
 
