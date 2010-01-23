@@ -77,7 +77,7 @@ class MediaControl: GLib.Object
             when MessageType.TAG
                 tag_list: TagList
                 message.parse_tag(out tag_list)
-                tag_list.for_each(tag_foreach_func)
+                tag_list.foreach(tag_foreach_func)
                 tag_message(message.src, tag_list)
             default
                 pass
