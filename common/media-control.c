@@ -67,9 +67,9 @@ static void _media_control_tag_foreach_func_gst_tag_foreach_func (GstTagList* li
 MediaControl* media_control_new (void);
 MediaControl* media_control_construct (GType object_type);
 GstBin* media_control_get_pipeline (MediaControl* self);
+void media_control_set_state (MediaControl* self, GstState value);
 void media_control_set_pipeline (MediaControl* self, GstBin* value);
 GstState media_control_get_state (MediaControl* self);
-void media_control_set_state (MediaControl* self, GstState value);
 gint64 media_control_get_position (MediaControl* self);
 void media_control_set_position (MediaControl* self, gint64 value);
 gint64 media_control_get_duration (MediaControl* self);
@@ -300,10 +300,13 @@ void media_control_set_pipeline (MediaControl* self, GstBin* value) {
 	GstBin* _tmp0_;
 	g_return_if_fail (self != NULL);
 	if (self->priv->_pipeline != NULL) {
+		media_control_set_state (self, GST_STATE_NULL);
 		media_control_remove_signals (self);
 	}
 	self->priv->_pipeline = (_tmp0_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_pipeline), _tmp0_);
-	media_control_add_signals (self);
+	if (value != NULL) {
+		media_control_add_signals (self);
+	}
 	g_object_notify ((GObject *) self, "pipeline");
 }
 
@@ -397,7 +400,7 @@ static void media_control_finalize (GObject* obj) {
 	self = MEDIA_CONTROL (obj);
 	{
 		if (self->priv->_pipeline != NULL) {
-			media_control_remove_signals (self);
+			media_control_set_pipeline (self, NULL);
 		}
 	}
 	_gst_object_unref0 (self->priv->_pipeline);

@@ -22,7 +22,7 @@ class MediaControl: GLib.Object
 
     final
         if _pipeline != null
-            remove_signals()
+            pipeline = null
 
     def remove_signals()
         var bus = _pipeline.bus
@@ -41,9 +41,11 @@ class MediaControl: GLib.Object
     prop pipeline: Bin
         set
             if _pipeline != null
+                state = State.NULL
                 remove_signals()
             _pipeline = value
-            add_signals()
+            if value != null
+                add_signals()
         get
             return _pipeline
 
