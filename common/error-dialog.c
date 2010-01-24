@@ -176,8 +176,8 @@ static GObject * debug_dialog_constructor (GType type, guint n_construct_propert
 		GtkBox* content_area;
 		GtkBox* _tmp1_;
 		gtk_window_set_title ((GtkWindow*) self, "Error");
-		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, -1);
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
+		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, -1);
 		content_area = _g_object_ref0 ((_tmp0_ = gtk_dialog_get_content_area ((GtkDialog*) self), GTK_IS_BOX (_tmp0_) ? ((GtkBox*) _tmp0_) : NULL));
 		gtk_container_add ((GtkContainer*) content_area, (GtkWidget*) (_tmp1_ = debug_dialog_new_error_box (self)));
 		_g_object_unref0 (_tmp1_);

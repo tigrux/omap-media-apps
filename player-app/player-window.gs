@@ -4,7 +4,6 @@ uses Gtk
 
 
 const TITLE: string = "Omap4 Player"
-const ICON: string = "omap4-player-app"
 
 
 class PlayerWindow: MediaWindow
@@ -36,6 +35,10 @@ class PlayerWindow: MediaWindow
 
     debug_dialog: DebugDialog
 
+    prop playing: bool
+        get
+            return playlist_control.state == Gst.State.PLAYING
+
     init
         setup_model()
         setup_controls()
@@ -56,8 +59,7 @@ class PlayerWindow: MediaWindow
         playlist_control.prepare_xwindow_id += on_xid_prepared
 
     def setup_widgets()
-        set_title(TITLE)
-        lookup_and_set_icon_name(ICON)
+        title = TITLE
         setup_toolbar()
         setup_notebook()
         setup_seeking()
@@ -95,7 +97,7 @@ class PlayerWindow: MediaWindow
         volume_button_item.add(volume_button)
 
         fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
-        fullscreen_button.set_no_show_all(true)
+        fullscreen_button.no_show_all = true
         fullscreen_button.clicked += toggle_fullscreen
         toolbar.add(fullscreen_button)
 
@@ -116,14 +118,11 @@ class PlayerWindow: MediaWindow
         seeking_scale = new HScale(seeking_adjustment)
         main_box.pack_start(seeking_scale, false, false, 0)
 
-        seeking_scale.set_no_show_all(true)
-        seeking_scale.set_update_policy(UpdateType.DISCONTINUOUS)
+        seeking_scale.no_show_all = true
+        seeking_scale.update_policy = UpdateType.DISCONTINUOUS
         seeking_scale.button_press_event += on_seeking_scale_pressed
         seeking_scale.button_release_event += on_seeking_scale_released
         seeking_scale.format_value += on_scale_format_value
-
-    def is_playing(): bool
-        return playlist_control.state == Gst.State.PLAYING
 
     def play()
         playlist_control.play()
@@ -135,7 +134,7 @@ class PlayerWindow: MediaWindow
         playlist_control.stop()
 
     def next()
-        var was_playing = is_playing()
+        var was_playing = playing
         if playlist_control.next()
             if was_playing
                 play()
@@ -145,26 +144,25 @@ class PlayerWindow: MediaWindow
                 playlist_selection.select_iter(iter)
 
     def on_prev()
-        var was_playing = is_playing()
+        var was_playing = playing
         if playlist_control.prev()
             if was_playing
                 play()
 
     def on_xid_prepared(imagesink: Gst.XOverlay)
         video_area.sink = imagesink
-        notebook.set_current_page(Tab.VIDEO)
+        notebook.page = Tab.VIDEO
 
     def on_mute_clicked()
-        var volume = volume_button.get_adjustment()
-        previous_volume = volume.get_value()
-        volume.set_value(0)
+        var volume = volume_button.adjustment
+        previous_volume = volume.value
+        volume.value = 0
         is_muted = true
         volume_button.get_popup().hide()
 
     def on_volume_button_pressed(): bool
         if is_muted
-            var volume = volume_button.get_adjustment()
-            volume.set_value(previous_volume)
+            volume_button.adjustment.value = previous_volume
             is_muted = false
             return true
         return false
@@ -183,11 +181,11 @@ class PlayerWindow: MediaWindow
         volume_button.button_press_event += on_volume_button_pressed
 
         var popup_window = volume_button.get_popup() as Window
-        popup_window.set_size_request(-1, 240)
+        popup_window.height_request = 240
 
-        var popup_frame = popup_window.get_child() as Frame
-        var popup_box = popup_frame.get_child() as Box
-        popup_box.set_spacing(24)
+        var popup_frame = popup_window.child as Frame
+        var popup_box = popup_frame.child as Box
+        popup_box.spacing = 24
         popup_box.remove(volume_button.get_plus_button())
         popup_box.remove(volume_button.get_minus_button())
 
@@ -200,10 +198,10 @@ class PlayerWindow: MediaWindow
         mute_button.realize()
 
         volume_adjustment = new Adjustment(0, 0, 1.0, 0.1, 0.1, 0)
-        volume_button.set_adjustment(volume_adjustment)
+        volume_button.adjustment = volume_adjustment
         volume_adjustment.value_changed += def(volume)
-            playlist_control.volume = volume.get_value()
-        volume_adjustment.set_value(playlist_control.volume)
+            playlist_control.volume = volume.value
+        volume_adjustment.value = playlist_control.volume
 
         return volume_button
 
@@ -216,7 +214,7 @@ class PlayerWindow: MediaWindow
 
         playlist_view = new_playlist_view()
         scrolled_window.add(playlist_view)
-        playlist_view.set_model(playlist_store)
+        playlist_view.model = playlist_store
         playlist_selection = playlist_view.get_selection()
         playlist_selection.set_mode(SelectionMode.BROWSE)
 
@@ -231,7 +229,7 @@ class PlayerWindow: MediaWindow
 
     def new_playlist_view(): TreeView
         var view = new TreeView()
-        view.set_headers_visible(false)
+        view.headers_visible = false
         view.row_activated += on_row_activated
 
         view.insert_column_with_attributes( \
@@ -265,25 +263,25 @@ class PlayerWindow: MediaWindow
                     return
                 var row = playlist_store.get_path(iter)
                 playlist_control.move_to(row)
-                notebook.set_current_page(Tab.LIST)
+                notebook.page = Tab.LIST
                 play()
 
     def playlist_control_playing(iter: TreeIter)
-        set_title(playlist_control.iter_get_name(iter))
-        play_pause_button.set_stock_id(STOCK_MEDIA_PAUSE)
+        title = playlist_control.iter_get_name(iter)
+        play_pause_button.stock_id = STOCK_MEDIA_PAUSE
         add_update_scale_timeout()
         seeking_scale.show()
 
     def playlist_control_paused(iter: TreeIter)
-        play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
+        play_pause_button.stock_id = STOCK_MEDIA_PLAY
         remove_update_scale_timeout()
 
     def playlist_control_stopped(iter: TreeIter)
-        set_title(TITLE)
-        var page = notebook.get_current_page()
+        title = TITLE
+        var page = notebook.page
         if page != Tab.LIST
-            notebook.set_current_page(Tab.LIST)
-        play_pause_button.set_stock_id(STOCK_MEDIA_PLAY)
+            notebook.page = Tab.LIST
+        play_pause_button.stock_id = STOCK_MEDIA_PLAY
         remove_update_scale_timeout()
         seeking_scale.hide()
 
@@ -333,7 +331,7 @@ class PlayerWindow: MediaWindow
             play()
 
     def on_seeking_scale_pressed(): bool
-        if is_playing()
+        if playing
             pause()
             should_resume_playback = true
         else
@@ -342,7 +340,7 @@ class PlayerWindow: MediaWindow
 
     def on_seeking_scale_released(): bool
         real_value: int64
-        real_value = (int64)(seeking_scale.get_value() * stream_duration/100)
+        real_value = (int64)(seeking_adjustment.value * stream_duration/100)
         playlist_control.position = real_value
         if should_resume_playback
             play()
@@ -381,7 +379,7 @@ class PlayerWindow: MediaWindow
 
         if stream_position >= 0 and stream_duration > 0
             var stream_value = stream_position * 100.0 / stream_duration
-            seeking_adjustment.set_value(stream_value)
+            seeking_adjustment.value = stream_value
         return true
 
     def setup_debug_dialog()

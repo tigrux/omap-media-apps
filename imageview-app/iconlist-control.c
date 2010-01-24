@@ -526,7 +526,7 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 			}
 			if (data->_tmp0_) {
 				data->self->continuation = (data->_tmp1_ = _icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
-				gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_READY);
+				media_control_set_state ((MediaControl*) data->self, GST_STATE_READY);
 				while (TRUE) {
 					if (gtk_tree_path_compare (data->path, data->end) > 0) {
 						data->_tmp2_ = TRUE;
@@ -542,7 +542,7 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
 						icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (icon_list_control_last_pixbuf), data->_tmp4_);
 						_dynamic_set_location0 (data->self->filesrc, data->file);
-						gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_PLAYING);
+						media_control_set_state ((MediaControl*) data->self, GST_STATE_PLAYING);
 						data->_state_ = 4;
 						return FALSE;
 						case 4:
@@ -564,11 +564,11 @@ static gboolean icon_list_control_fill_icons_co (IconListControlFillIconsData* d
 						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, ICON_LIST_CONTROL_COL_VALID, data->valid, ICON_LIST_CONTROL_COL_FILLED, TRUE, ICON_LIST_CONTROL_COL_WIDTH, data->width, ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
 						_g_object_unref0 (data->pixbuf);
 					}
-					gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_READY);
+					media_control_set_state ((MediaControl*) data->self, GST_STATE_READY);
 					gtk_tree_path_next (data->path);
 					_g_free0 (data->file);
 				}
-				gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) data->self), GST_STATE_NULL);
+				media_control_set_state ((MediaControl*) data->self, GST_STATE_NULL);
 			}
 			g_signal_emit_by_name (data->self, "icons-filled");
 		}
@@ -767,11 +767,6 @@ static void icon_list_control_instance_init (IconListControl * self) {
 static void icon_list_control_finalize (GObject* obj) {
 	IconListControl * self;
 	self = ICON_LIST_CONTROL (obj);
-	{
-		if (media_control_get_pipeline ((MediaControl*) self) != NULL) {
-			gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_NULL);
-		}
-	}
 	_gst_object_unref0 (self->filesrc);
 	_gst_object_unref0 (self->imagesink);
 	_gst_object_unref0 (self->imagedec);

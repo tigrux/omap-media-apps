@@ -46,10 +46,6 @@ class IconListControl: MediaControl
         error_message += on_error
         element_message += on_element
 
-    final
-        if pipeline != null
-            pipeline.set_state(State.NULL)
-
     construct(model: ListStore) raises Error
         iconlist_store = model
         if not pixbufs_loaded
@@ -76,7 +72,7 @@ class IconListControl: MediaControl
 
     def setup_pipeline() raises Error
         var icon_pipeline = parse_launch(ICON_PIPELINE_DESC) as Pipeline
-        icon_pipeline.set_name("icon_pipeline")
+        icon_pipeline.name = "icon_pipeline"
         if (filesrc = icon_pipeline.get_by_name("filesrc")) == null
             raise new CoreError.FAILED( \
                         "No element named filesrc in the icon_pipeline")
@@ -123,7 +119,7 @@ class IconListControl: MediaControl
                          cancellable: Cancellable)
         if path != null and end != null
             continuation = fill_icons.callback
-            pipeline.set_state(State.READY)
+            state = State.READY
             while not(path.compare(end) > 0 or cancellable.is_cancelled())
                 iter: TreeIter
                 iconlist_store.get_iter(out iter, path)
@@ -137,7 +133,7 @@ class IconListControl: MediaControl
                     continuation_error = null
                     last_pixbuf = null
                     filesrc.location = file
-                    pipeline.set_state(State.PLAYING)
+                    state = State.PLAYING
                     yield
                     width: int = 0
                     height: int = 0
@@ -157,9 +153,9 @@ class IconListControl: MediaControl
                         Col.WIDTH, width, \
                         Col.HEIGHT, height, \
                         -1)
-                pipeline.set_state(State.READY)
+                state = State.READY
                 path.next()
-            pipeline.set_state(State.NULL)
+            state = State.NULL
         icons_filled()
 
     def get_playing_image_size(out width: int, out height: int)

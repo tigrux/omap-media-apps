@@ -4,7 +4,6 @@ uses Gtk
 
 
 const TITLE: string = "Omap4 Muxer"
-const ICON: string = "omap4-muxer-app"
 
 
 class MuxerWindow: MediaWindow
@@ -29,8 +28,7 @@ class MuxerWindow: MediaWindow
         setup_widgets()
 
     def setup_widgets()
-        set_title(TITLE)
-        lookup_and_set_icon_name(ICON)
+        title = TITLE
         setup_toolbar()
         setup_notebook()
         main_box.show_all()

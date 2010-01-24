@@ -77,11 +77,11 @@ struct _PlayerWindowClass {
 static gpointer player_window_parent_class = NULL;
 
 #define TITLE "Omap4 Player"
-#define ICON "omap4-player-app"
 GType player_window_get_type (void);
 GType play_list_control_get_type (void);
 enum  {
-	PLAYER_WINDOW_DUMMY_PROPERTY
+	PLAYER_WINDOW_DUMMY_PROPERTY,
+	PLAYER_WINDOW_PLAYING
 };
 void player_window_setup_model (PlayerWindow* self);
 PlayListControl* play_list_control_new (GtkListStore* store);
@@ -130,12 +130,12 @@ gboolean player_window_on_seeking_scale_released (PlayerWindow* self);
 static gboolean _player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
 char* player_window_on_scale_format_value (PlayerWindow* self, double scale_value);
 static char* _player_window_on_scale_format_value_gtk_scale_format_value (GtkScale* _sender, double value, gpointer self);
-gboolean player_window_is_playing (PlayerWindow* self);
 gboolean play_list_control_play (PlayListControl* self);
 void player_window_play (PlayerWindow* self);
 gboolean play_list_control_pause (PlayListControl* self);
 void player_window_pause (PlayerWindow* self);
 gboolean play_list_control_stop (PlayListControl* self);
+gboolean player_window_get_playing (PlayerWindow* self);
 gboolean play_list_control_next (PlayListControl* self);
 gboolean play_list_control_prev (PlayListControl* self);
 void player_window_on_mute_clicked (PlayerWindow* self);
@@ -173,6 +173,7 @@ PlayerWindow* player_window_new (void);
 PlayerWindow* player_window_construct (GType object_type);
 static GObject * player_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void player_window_finalize (GObject* obj);
+static void player_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 
@@ -239,7 +240,6 @@ void player_window_setup_controls (PlayerWindow* self) {
 void player_window_setup_widgets (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	player_window_setup_toolbar (self);
 	player_window_setup_notebook (self);
 	player_window_setup_seeking (self);
@@ -387,14 +387,6 @@ void player_window_setup_seeking (PlayerWindow* self) {
 }
 
 
-gboolean player_window_is_playing (PlayerWindow* self) {
-	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
-	result = media_control_get_state ((MediaControl*) self->playlist_control) == GST_STATE_PLAYING;
-	return result;
-}
-
-
 void player_window_play (PlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	play_list_control_play (self->playlist_control);
@@ -416,7 +408,7 @@ void player_window_stop (PlayerWindow* self) {
 void player_window_next (PlayerWindow* self) {
 	gboolean was_playing;
 	g_return_if_fail (self != NULL);
-	was_playing = player_window_is_playing (self);
+	was_playing = player_window_get_playing (self);
 	if (play_list_control_next (self->playlist_control)) {
 		if (was_playing) {
 			player_window_play (self);
@@ -433,7 +425,7 @@ void player_window_next (PlayerWindow* self) {
 void player_window_on_prev (PlayerWindow* self) {
 	gboolean was_playing;
 	g_return_if_fail (self != NULL);
-	was_playing = player_window_is_playing (self);
+	was_playing = player_window_get_playing (self);
 	if (play_list_control_prev (self->playlist_control)) {
 		if (was_playing) {
 			player_window_play (self);
@@ -446,7 +438,7 @@ void player_window_on_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink) 
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (imagesink != NULL);
 	video_area_set_sink (self->video_area, imagesink);
-	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
+	g_object_set (((MediaWindow*) self)->notebook, "page", (gint) MEDIA_WINDOW_TAB_VIDEO, NULL);
 }
 
 
@@ -471,12 +463,9 @@ gboolean player_window_on_volume_button_pressed (PlayerWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->is_muted) {
-		GtkAdjustment* volume;
-		volume = _g_object_ref0 (gtk_scale_button_get_adjustment ((GtkScaleButton*) self->volume_button));
-		gtk_adjustment_set_value (volume, self->previous_volume);
+		gtk_adjustment_set_value (gtk_scale_button_get_adjustment ((GtkScaleButton*) self->volume_button), self->previous_volume);
 		self->is_muted = FALSE;
 		result = TRUE;
-		_g_object_unref0 (volume);
 		return result;
 	}
 	result = FALSE;
@@ -538,9 +527,9 @@ GtkVolumeButton* player_window_new_volume_button_with_mute (PlayerWindow* self) 
 	g_object_set ((GtkScaleButton*) volume_button, "size", icon_size, NULL);
 	g_signal_connect_object ((GtkWidget*) volume_button, "button-press-event", (GCallback) _player_window_on_volume_button_pressed_gtk_widget_button_press_event, self, 0);
 	popup_window = _g_object_ref0 ((_tmp0_ = gtk_scale_button_get_popup ((GtkScaleButton*) volume_button), GTK_IS_WINDOW (_tmp0_) ? ((GtkWindow*) _tmp0_) : NULL));
-	gtk_widget_set_size_request ((GtkWidget*) popup_window, -1, 240);
-	popup_frame = _g_object_ref0 ((_tmp1_ = gtk_bin_get_child ((GtkBin*) popup_window), GTK_IS_FRAME (_tmp1_) ? ((GtkFrame*) _tmp1_) : NULL));
-	popup_box = _g_object_ref0 ((_tmp2_ = gtk_bin_get_child ((GtkBin*) popup_frame), GTK_IS_BOX (_tmp2_) ? ((GtkBox*) _tmp2_) : NULL));
+	g_object_set ((GtkWidget*) popup_window, "height-request", 240, NULL);
+	popup_frame = _g_object_ref0 ((_tmp1_ = ((GtkBin*) popup_window)->child, GTK_IS_FRAME (_tmp1_) ? ((GtkFrame*) _tmp1_) : NULL));
+	popup_box = _g_object_ref0 ((_tmp2_ = ((GtkBin*) popup_frame)->child, GTK_IS_BOX (_tmp2_) ? ((GtkBox*) _tmp2_) : NULL));
 	gtk_box_set_spacing (popup_box, 24);
 	gtk_container_remove ((GtkContainer*) popup_box, gtk_scale_button_get_plus_button ((GtkScaleButton*) volume_button));
 	gtk_container_remove ((GtkContainer*) popup_box, gtk_scale_button_get_minus_button ((GtkScaleButton*) volume_button));
@@ -676,7 +665,7 @@ void player_window_play_pause (PlayerWindow* self) {
 				}
 				row = gtk_tree_model_get_path ((GtkTreeModel*) self->playlist_store, &iter);
 				play_list_control_move_to (self->playlist_control, row);
-				gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
+				g_object_set (((MediaWindow*) self)->notebook, "page", (gint) MEDIA_WINDOW_TAB_LIST, NULL);
 				player_window_play (self);
 				_gtk_tree_path_free0 (row);
 			}
@@ -705,12 +694,13 @@ void player_window_playlist_control_paused (PlayerWindow* self, GtkTreeIter* ite
 
 
 void player_window_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* iter) {
+	gint _tmp0_;
 	gint page;
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	page = gtk_notebook_get_current_page (((MediaWindow*) self)->notebook);
+	page = (g_object_get (((MediaWindow*) self)->notebook, "page", &_tmp0_, NULL), _tmp0_);
 	if (page != MEDIA_WINDOW_TAB_LIST) {
-		gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
+		g_object_set (((MediaWindow*) self)->notebook, "page", (gint) MEDIA_WINDOW_TAB_LIST, NULL);
 	}
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PLAY);
 	player_window_remove_update_scale_timeout (self);
@@ -826,7 +816,7 @@ void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row) {
 gboolean player_window_on_seeking_scale_pressed (PlayerWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (player_window_is_playing (self)) {
+	if (player_window_get_playing (self)) {
 		player_window_pause (self);
 		self->should_resume_playback = TRUE;
 	} else {
@@ -841,7 +831,7 @@ gboolean player_window_on_seeking_scale_released (PlayerWindow* self) {
 	gboolean result;
 	gint64 real_value = 0LL;
 	g_return_val_if_fail (self != NULL, FALSE);
-	real_value = (gint64) ((gtk_range_get_value ((GtkRange*) self->seeking_scale) * self->stream_duration) / 100);
+	real_value = (gint64) ((gtk_adjustment_get_value (self->seeking_adjustment) * self->stream_duration) / 100);
 	media_control_set_position ((MediaControl*) self->playlist_control, real_value);
 	if (self->should_resume_playback) {
 		player_window_play (self);
@@ -975,6 +965,14 @@ PlayerWindow* player_window_new (void) {
 }
 
 
+gboolean player_window_get_playing (PlayerWindow* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = media_control_get_state ((MediaControl*) self->playlist_control) == GST_STATE_PLAYING;
+	return result;
+}
+
+
 static GObject * player_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -993,8 +991,10 @@ static GObject * player_window_constructor (GType type, guint n_construct_proper
 
 static void player_window_class_init (PlayerWindowClass * klass) {
 	player_window_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->get_property = player_window_get_property;
 	G_OBJECT_CLASS (klass)->constructor = player_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = player_window_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAYER_WINDOW_PLAYING, g_param_spec_boolean ("playing", "playing", "playing", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 }
 
 
@@ -1034,6 +1034,20 @@ GType player_window_get_type (void) {
 		player_window_type_id = g_type_register_static (TYPE_MEDIA_WINDOW, "PlayerWindow", &g_define_type_info, 0);
 	}
 	return player_window_type_id;
+}
+
+
+static void player_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	PlayerWindow * self;
+	self = PLAYER_WINDOW (object);
+	switch (property_id) {
+		case PLAYER_WINDOW_PLAYING:
+		g_value_set_boolean (value, player_window_get_playing (self));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
 

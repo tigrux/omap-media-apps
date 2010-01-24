@@ -36,10 +36,10 @@ public class MediaWindow : Gtk.Window {
 	public void lookup_and_set_icon_name (string name);
 	public void on_quit ();
 	public bool quit ();
-	public void set_fullscreen (bool value);
 	public void toggle_fullscreen ();
 	public void toolbar_add_expander ();
 	public void toolbar_add_quit_button ();
+	public bool fullscreen { get; set; }
 }
 [CCode (cheader_filename = "common.h")]
 public class MediaControl : GLib.Object {

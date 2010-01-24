@@ -52,7 +52,8 @@ static gpointer media_window_parent_class = NULL;
 
 GType media_window_get_type (void);
 enum  {
-	MEDIA_WINDOW_DUMMY_PROPERTY
+	MEDIA_WINDOW_DUMMY_PROPERTY,
+	MEDIA_WINDOW_FULLSCREEN
 };
 GType media_window_tab_get_type (void);
 gboolean media_window_apply_style (void);
@@ -61,6 +62,7 @@ void media_window_toolbar_add_expander (MediaWindow* self);
 void media_window_on_quit (MediaWindow* self);
 static void _media_window_on_quit_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void media_window_toolbar_add_quit_button (MediaWindow* self);
+gboolean media_window_get_fullscreen (MediaWindow* self);
 void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 void media_window_toggle_fullscreen (MediaWindow* self);
 gboolean media_window_quit (MediaWindow* self);
@@ -70,6 +72,8 @@ MediaWindow* media_window_construct (GType object_type);
 static void _media_window_on_quit_gtk_object_destroy (MediaWindow* _sender, gpointer self);
 static GObject * media_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void media_window_finalize (GObject* obj);
+static void media_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void media_window_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static gint _vala_array_length (gpointer array);
 
 
@@ -193,37 +197,7 @@ void media_window_toolbar_add_expander (MediaWindow* self) {
 
 void media_window_toggle_fullscreen (MediaWindow* self) {
 	g_return_if_fail (self != NULL);
-	self->is_fullscreen = !self->is_fullscreen;
-	media_window_set_fullscreen (self, self->is_fullscreen);
-}
-
-
-void media_window_set_fullscreen (MediaWindow* self, gboolean value) {
-	g_return_if_fail (self != NULL);
-	{
-		GList* child_collection;
-		GList* child_it;
-		child_collection = gtk_container_get_children ((GtkContainer*) self->main_box);
-		for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
-			GtkWidget* child;
-			child = (GtkWidget*) child_it->data;
-			{
-				if (child != GTK_WIDGET (self->notebook)) {
-					if (value) {
-						gtk_widget_hide (child);
-					} else {
-						gtk_widget_show (child);
-					}
-				}
-			}
-		}
-		_g_list_free0 (child_collection);
-	}
-	if (value) {
-		gtk_window_fullscreen ((GtkWindow*) self);
-	} else {
-		gtk_window_unfullscreen ((GtkWindow*) self);
-	}
+	media_window_set_fullscreen (self, !media_window_get_fullscreen (self));
 }
 
 
@@ -259,6 +233,45 @@ MediaWindow* media_window_new (void) {
 }
 
 
+gboolean media_window_get_fullscreen (MediaWindow* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->is_fullscreen;
+	return result;
+}
+
+
+void media_window_set_fullscreen (MediaWindow* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->is_fullscreen = value;
+	{
+		GList* child_collection;
+		GList* child_it;
+		child_collection = gtk_container_get_children ((GtkContainer*) self->main_box);
+		for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+			GtkWidget* child;
+			child = (GtkWidget*) child_it->data;
+			{
+				if (child != GTK_WIDGET (self->notebook)) {
+					if (value) {
+						gtk_widget_hide (child);
+					} else {
+						gtk_widget_show (child);
+					}
+				}
+			}
+		}
+		_g_list_free0 (child_collection);
+	}
+	if (value) {
+		gtk_window_fullscreen (GTK_WINDOW (self));
+	} else {
+		gtk_window_unfullscreen (GTK_WINDOW (self));
+	}
+	g_object_notify ((GObject *) self, "fullscreen");
+}
+
+
 static void _media_window_on_quit_gtk_object_destroy (MediaWindow* _sender, gpointer self) {
 	media_window_on_quit (self);
 }
@@ -276,6 +289,7 @@ static GObject * media_window_constructor (GType type, guint n_construct_propert
 		GtkVBox* _tmp0_;
 		GtkToolbar* _tmp1_;
 		GtkNotebook* _tmp2_;
+		media_window_lookup_and_set_icon_name (self, g_get_prgname ());
 		settings = _g_object_ref0 (gtk_widget_get_settings ((GtkWidget*) self));
 		g_object_set ((GObject*) settings, "gtk-touchscreen-mode", TRUE, NULL);
 		gtk_window_set_default_size ((GtkWindow*) self, 800, 480);
@@ -297,8 +311,11 @@ static GObject * media_window_constructor (GType type, guint n_construct_propert
 
 static void media_window_class_init (MediaWindowClass * klass) {
 	media_window_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->get_property = media_window_get_property;
+	G_OBJECT_CLASS (klass)->set_property = media_window_set_property;
 	G_OBJECT_CLASS (klass)->constructor = media_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = media_window_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), MEDIA_WINDOW_FULLSCREEN, g_param_spec_boolean ("fullscreen", "fullscreen", "fullscreen", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	media_window_style_applied = media_window_apply_style ();
 }
 
@@ -324,6 +341,34 @@ GType media_window_get_type (void) {
 		media_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "MediaWindow", &g_define_type_info, 0);
 	}
 	return media_window_type_id;
+}
+
+
+static void media_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	MediaWindow * self;
+	self = MEDIA_WINDOW (object);
+	switch (property_id) {
+		case MEDIA_WINDOW_FULLSCREEN:
+		g_value_set_boolean (value, media_window_get_fullscreen (self));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void media_window_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	MediaWindow * self;
+	self = MEDIA_WINDOW (object);
+	switch (property_id) {
+		case MEDIA_WINDOW_FULLSCREEN:
+		media_window_set_fullscreen (self, g_value_get_boolean (value));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
 

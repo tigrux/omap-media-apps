@@ -10,9 +10,9 @@ class DebugDialog: Dialog
     event closed()
 
     init
-        set_title("Error")
+        title = "Error"
+        modal = true
         add_button(STOCK_CLOSE, -1)
-        set_modal(true)
         var content_area = get_content_area() as Box
         content_area.add(new_error_box())
         text_buffer.create_tag("bold", "weight", Pango.Weight.BOLD, null)
@@ -31,7 +31,7 @@ class DebugDialog: Dialog
     def add_error_debug(error: Error, debug: string)
         errors_n ++
         if errors_n > 1
-            set_title("%d errors".printf(errors_n))
+            title = "%d errors".printf(errors_n)
         iter: TextIter
         text_buffer.get_end_iter(out iter)
         text_insert_new_line(ref iter)
@@ -60,10 +60,10 @@ class DebugDialog: Dialog
 
         var text_view = new TextView()
         scrolled_window.add(text_view)
-        text_view.set_editable(false)
-        text_view.set_cursor_visible(false)
-        text_view.set_wrap_mode(WrapMode.WORD)
-        text_buffer = text_view.get_buffer()
+        text_view.editable = false
+        text_view.cursor_visible = false
+        text_view.wrap_mode = WrapMode.WORD
+        text_buffer = text_view.buffer
 
         box.show_all()
         return box
@@ -73,7 +73,7 @@ def error_dialog(error: Error)
         null, 0, \
         MessageType.ERROR,  ButtonsType.CLOSE, \
         "%s", error.message)
-    dialog.set_title("Error")
+    dialog.title = "Error"
     dialog.response += def(widget, response)
         if widget != null
             widget.destroy()

@@ -4,7 +4,6 @@ uses Gtk
 
 
 const TITLE: string = "Omap4 ImageView"
-const ICON: string = "omap4-imageview-app"
 
 
 class ImageViewWindow: MediaWindow
@@ -53,8 +52,7 @@ class ImageViewWindow: MediaWindow
         image_control.prepare_xwindow_id += on_xid_prepared
 
     def setup_widgets()
-        set_title(TITLE)
-        lookup_and_set_icon_name(ICON)
+        title = TITLE
         setup_toolbar()
         setup_notebook()
         video_area.realize()
@@ -74,23 +72,23 @@ class ImageViewWindow: MediaWindow
 
         adjustment: Adjustment
 
-        adjustment = scrolled_window.get_vadjustment()
+        adjustment = scrolled_window.vadjustment
         adjustment.value_changed += do_fill_visible_icons
 
-        adjustment = scrolled_window.get_hadjustment()
+        adjustment = scrolled_window.hadjustment
         adjustment.value_changed += do_fill_visible_icons
 
         icon_view = new IconView()
         scrolled_window.add(icon_view)
         icon_view.size_request += do_fill_visible_icons
-        icon_view.set_selection_mode(SelectionMode.BROWSE)
-        icon_view.set_model(iconlist_store)
-        icon_view.set_text_column(iconlist_control.get_text_column())
-        icon_view.set_pixbuf_column(iconlist_control.get_pixbuf_column())
-        icon_view.set_row_spacing(0)
-        icon_view.set_column_spacing(0)
-        icon_view.set_spacing(0)
-        icon_view.set_margin(0)
+        icon_view.selection_mode = SelectionMode.BROWSE
+        icon_view.model = iconlist_store
+        icon_view.text_column = iconlist_control.get_text_column()
+        icon_view.pixbuf_column = iconlist_control.get_pixbuf_column()
+        icon_view.row_spacing = 0
+        icon_view.column_spacing = 0
+        icon_view.spacing = 0
+        icon_view.margin = 0
         icon_view.item_activated += on_icon_activated
 
         return box
@@ -150,7 +148,7 @@ class ImageViewWindow: MediaWindow
         toolbar_add_quit_button()
 
     def on_open_close()
-        if notebook.get_current_page() == Tab.LIST
+        if notebook.page == Tab.LIST
             open_image()
         else
             close_image()
@@ -165,7 +163,7 @@ class ImageViewWindow: MediaWindow
     def close_image()
         if slideshow_cancellable != null
             stop_slideshow()
-        notebook.set_current_page(Tab.LIST)
+        notebook.page = Tab.LIST
 
     def on_slideshow()
         iter: TreeIter
@@ -178,12 +176,12 @@ class ImageViewWindow: MediaWindow
 
     def on_notebook_switch_page(num_page: uint)
         if num_page == Tab.LIST
-            image_button.set_stock_id(STOCK_ZOOM_100)
+            image_button.stock_id = STOCK_ZOOM_100
         else
-            image_button.set_stock_id(STOCK_CLOSE)
+            image_button.stock_id = STOCK_CLOSE
 
     def on_fullscreen()
-        if notebook.get_current_page() == Tab.VIDEO
+        if notebook.page == Tab.VIDEO
             toggle_fullscreen()
         else
             if open_image()
@@ -192,18 +190,18 @@ class ImageViewWindow: MediaWindow
     def start_slideshow()
         slideshow_cancellable = new Cancellable()
         slideshow()
-        slideshow_button.set_stock_id(STOCK_MEDIA_STOP)
+        slideshow_button.stock_id = STOCK_MEDIA_STOP
 
     def stop_slideshow()
         slideshow_cancellable.cancel()
         if slideshow_timeout != 0
             Source.remove(slideshow_timeout)
             Idle.add(slideshow_continuation)
-            slideshow_button.set_stock_id(STOCK_MEDIA_PLAY)
+            slideshow_button.stock_id = STOCK_MEDIA_PLAY
 
     def on_image_control_eos()
         image_control.state = Gst.State.READY
-        notebook.set_current_page(Tab.VIDEO)
+        notebook.page = Tab.VIDEO
         if slideshow_continuation != null
             slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 
@@ -226,7 +224,7 @@ class ImageViewWindow: MediaWindow
               and not slideshow_cancellable.is_cancelled()
         if not slideshow_cancellable.is_cancelled()
             close_image()
-        slideshow_button.set_stock_id(STOCK_MEDIA_PLAY)
+        slideshow_button.stock_id = STOCK_MEDIA_PLAY
         slideshow_continuation = null
         slideshow_cancellable = null
 

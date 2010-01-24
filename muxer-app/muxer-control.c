@@ -115,13 +115,13 @@ void muxer_control_load (MuxerControl* self, GError** error) {
 
 void muxer_control_start_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING);
+	media_control_set_state ((MediaControl*) self, GST_STATE_PLAYING);
 }
 
 
 void muxer_control_stop_preview (MuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
+	media_control_set_state ((MediaControl*) self, GST_STATE_NULL);
 	self->priv->_previewing = FALSE;
 	g_signal_emit_by_name (self, "preview-stopped");
 }
@@ -141,7 +141,7 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_NULL);
+	media_control_set_state ((MediaControl*) self, GST_STATE_NULL);
 	muxer_control_load_record_bin (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
@@ -152,7 +152,7 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	if (self->overlay != NULL) {
 		_dynamic_set_silent0 (self->overlay, FALSE);
 	}
-	gst_element_set_state ((GstElement*) self->preview_bin, GST_STATE_PLAYING);
+	media_control_set_state ((MediaControl*) self, GST_STATE_PLAYING);
 }
 
 

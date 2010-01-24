@@ -131,11 +131,12 @@ void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name)
 void media_window_toolbar_add_quit_button (MediaWindow* self);
 void media_window_toolbar_add_expander (MediaWindow* self);
 void media_window_toggle_fullscreen (MediaWindow* self);
-void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 void media_window_on_quit (MediaWindow* self);
 gboolean media_window_quit (MediaWindow* self);
 MediaWindow* media_window_new (void);
 MediaWindow* media_window_construct (GType object_type);
+gboolean media_window_get_fullscreen (MediaWindow* self);
+void media_window_set_fullscreen (MediaWindow* self, gboolean value);
 GType media_control_get_type (void);
 extern GQuark media_control_prepare_xwindow_q;
 void media_control_remove_signals (MediaControl* self);

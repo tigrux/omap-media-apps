@@ -23,6 +23,7 @@ class MediaWindow: Window
         return false
 
     init
+        lookup_and_set_icon_name(Environment.get_prgname())
         settings: Gtk.Settings = get_settings()
         settings.set("gtk-touchscreen-mode", true)
 
@@ -64,20 +65,23 @@ class MediaWindow: Window
         toolbar.add(expander_item)
 
     def toggle_fullscreen()
-        is_fullscreen = not is_fullscreen
-        set_fullscreen(is_fullscreen)
+        fullscreen = not fullscreen
 
-    def set_fullscreen(value: bool)
-        for child in main_box.get_children()
-            if child != notebook
-                if value
-                    child.hide()
-                else
-                    child.show()
-        if value
-            fullscreen()
-        else
-            unfullscreen()
+    prop new fullscreen: bool
+        set
+            is_fullscreen = value
+            for child in main_box.get_children()
+                if child != notebook
+                    if value
+                        child.hide()
+                    else
+                        child.show()
+            if value
+                super.fullscreen()
+            else
+                super.unfullscreen()
+        get
+            return is_fullscreen
 
     def on_quit()
         Idle.add(quit)

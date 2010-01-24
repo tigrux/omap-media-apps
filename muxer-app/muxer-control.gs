@@ -49,21 +49,21 @@ class MuxerControl: MediaControl
         load_preview_bin()
 
     def start_preview()
-        preview_bin.set_state(State.PLAYING)
+        state = State.PLAYING
 
     def stop_preview()
-        preview_bin.set_state(State.NULL)
+        state = State.NULL
         _previewing = false
         preview_stopped()
 
     def start_record() raises Error
-        preview_bin.set_state(State.NULL)
+        state = State.NULL
         load_record_bin()
         preview_bin.add(record_bin)
         tee.link(queue)
         if overlay != null
             overlay.silent = false
-        preview_bin.set_state(State.PLAYING)
+        state = State.PLAYING
 
     def stop_record()
         if not _recording
@@ -74,7 +74,7 @@ class MuxerControl: MediaControl
 
     def load_preview_bin() raises Error
         preview_bin = parse_launch(preview_desc) as Gst.Pipeline
-        preview_bin.set_name("preview_bin")
+        preview_bin.name = "preview_bin"
         pipeline = preview_bin
         overlay = preview_bin.get_by_name("overlay")
         videosrc = preview_bin.get_by_name("videosrc")
@@ -84,7 +84,7 @@ class MuxerControl: MediaControl
 
     def load_record_bin() raises Error
         record_bin = parse_launch(record_desc) as Gst.Pipeline
-        record_bin.set_name("record_bin")
+        record_bin.name = "record_bin"
         if (queue = record_bin.get_by_name("queue")) == null
             raise new CoreError.FAILED( \
                         "No element named queue in the record pipeline")

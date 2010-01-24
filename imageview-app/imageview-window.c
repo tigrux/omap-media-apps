@@ -109,7 +109,6 @@ struct _ImageViewWindowSlideshowData {
 static gpointer image_view_window_parent_class = NULL;
 
 #define TITLE "Omap4 ImageView"
-#define ICON "omap4-imageview-app"
 GType image_view_window_get_type (void);
 GType icon_list_control_get_type (void);
 GType image_control_get_type (void);
@@ -273,7 +272,6 @@ void image_view_window_setup_controls (ImageViewWindow* self, GError** error) {
 void image_view_window_setup_widgets (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	image_view_window_setup_toolbar (self);
 	image_view_window_setup_notebook (self);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
@@ -466,8 +464,9 @@ void image_view_window_setup_toolbar (ImageViewWindow* self) {
 
 
 void image_view_window_on_open_close (ImageViewWindow* self) {
+	gint _tmp0_;
 	g_return_if_fail (self != NULL);
-	if (gtk_notebook_get_current_page (((MediaWindow*) self)->notebook) == MEDIA_WINDOW_TAB_LIST) {
+	if ((g_object_get (((MediaWindow*) self)->notebook, "page", &_tmp0_, NULL), _tmp0_) == MEDIA_WINDOW_TAB_LIST) {
 		image_view_window_open_image (self);
 	} else {
 		image_view_window_close_image (self);
@@ -496,7 +495,7 @@ void image_view_window_close_image (ImageViewWindow* self) {
 	if (self->slideshow_cancellable != NULL) {
 		image_view_window_stop_slideshow (self);
 	}
-	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_LIST);
+	g_object_set (((MediaWindow*) self)->notebook, "page", (gint) MEDIA_WINDOW_TAB_LIST, NULL);
 }
 
 
@@ -526,8 +525,9 @@ void image_view_window_on_notebook_switch_page (ImageViewWindow* self, guint num
 
 
 void image_view_window_on_fullscreen (ImageViewWindow* self) {
+	gint _tmp0_;
 	g_return_if_fail (self != NULL);
-	if (gtk_notebook_get_current_page (((MediaWindow*) self)->notebook) == MEDIA_WINDOW_TAB_VIDEO) {
+	if ((g_object_get (((MediaWindow*) self)->notebook, "page", &_tmp0_, NULL), _tmp0_) == MEDIA_WINDOW_TAB_VIDEO) {
 		media_window_toggle_fullscreen ((MediaWindow*) self);
 	} else {
 		if (image_view_window_open_image (self)) {
@@ -560,7 +560,7 @@ void image_view_window_stop_slideshow (ImageViewWindow* self) {
 void image_view_window_on_image_control_eos (ImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	media_control_set_state ((MediaControl*) self->image_control, GST_STATE_READY);
-	gtk_notebook_set_current_page (((MediaWindow*) self)->notebook, (gint) MEDIA_WINDOW_TAB_VIDEO);
+	g_object_set (((MediaWindow*) self)->notebook, "page", (gint) MEDIA_WINDOW_TAB_VIDEO, NULL);
 	if (self->slideshow_continuation != NULL) {
 		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}

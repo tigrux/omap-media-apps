@@ -77,7 +77,6 @@ typedef enum  {
 static gpointer muxer_window_parent_class = NULL;
 
 #define TITLE "Omap4 Muxer"
-#define ICON "omap4-muxer-app"
 GType muxer_window_get_type (void);
 GType muxer_control_get_type (void);
 enum  {
@@ -152,7 +151,6 @@ GType muxer_window_combo_col_get_type (void) {
 void muxer_window_setup_widgets (MuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	media_window_lookup_and_set_icon_name ((MediaWindow*) self, ICON);
 	muxer_window_setup_toolbar (self);
 	muxer_window_setup_notebook (self);
 	gtk_widget_show_all ((GtkWidget*) ((MediaWindow*) self)->main_box);
