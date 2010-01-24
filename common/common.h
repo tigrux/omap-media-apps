@@ -122,7 +122,7 @@ OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* pare
 void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
 void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter);
 GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
-void error_dialog (GError* _error_);
+void omap_error_dialog (GError* _error_);
 GType omap_media_window_get_type (void);
 GType omap_media_window_tab_get_type (void);
 extern gboolean omap_media_window_style_applied;

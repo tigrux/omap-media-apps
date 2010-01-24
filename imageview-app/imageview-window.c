@@ -49,6 +49,7 @@ typedef struct _OmapImageControlClass OmapImageControlClass;
 #define OMAP_ICON_LIST_CONTROL_TYPE_COL (omap_icon_list_control_col_get_type ())
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 typedef struct _OmapImageViewWindowSlideshowData OmapImageViewWindowSlideshowData;
+#define __g_list_free_gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_gtk_tree_path_free (var), NULL)))
 
 struct _OmapImageViewWindow {
 	OmapMediaWindow parent_instance;
@@ -171,6 +172,7 @@ static void omap_image_view_window_slideshow_data_free (gpointer _data);
 static void omap_image_view_window_slideshow_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean _omap_image_view_window_slideshow_co_gsource_func (gpointer self);
 static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlideshowData* data);
+static void _g_list_free_gtk_tree_path_free (GList* self);
 void omap_image_view_window_change_folder (OmapImageViewWindow* self);
 void omap_icon_list_control_add_folder (OmapIconListControl* self, const char* dirname, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void omap_icon_list_control_add_folder_finish (OmapIconListControl* self, GAsyncResult* _res_);
@@ -677,6 +679,12 @@ static gpointer _gtk_tree_path_copy0 (gpointer self) {
 }
 
 
+static void _g_list_free_gtk_tree_path_free (GList* self) {
+	g_list_foreach (self, (GFunc) gtk_tree_path_free, NULL);
+	g_list_free (self);
+}
+
+
 gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, GtkTreeIter* iter) {
 	gboolean result;
 	GtkTreePath* path;
@@ -690,6 +698,7 @@ gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, 
 		gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, iter, path);
 		result = TRUE;
 		_gtk_tree_path_free0 (path);
+		__g_list_free_gtk_tree_path_free0 (selected);
 		return result;
 	} else {
 		if (gtk_tree_model_get_iter_first ((GtkTreeModel*) self->iconlist_store, iter)) {
@@ -698,11 +707,13 @@ gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, 
 			gtk_icon_view_select_path (self->icon_view, path);
 			result = TRUE;
 			_gtk_tree_path_free0 (path);
+			__g_list_free_gtk_tree_path_free0 (selected);
 			return result;
 		}
 	}
 	result = FALSE;
 	_gtk_tree_path_free0 (path);
+	__g_list_free_gtk_tree_path_free0 (selected);
 	return result;
 }
 

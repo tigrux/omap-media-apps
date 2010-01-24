@@ -8,14 +8,14 @@ class Omap.PlayerWindow: Omap.MediaWindow
     playlist_view: Gtk.TreeView
     playlist_store: Gtk.ListStore
     playlist_selection: Gtk.TreeSelection
-    playlist_control: PlayListControl
+    playlist_control: Omap.PlayListControl
 
     play_pause_button: Gtk.ToolButton
     add_button: Gtk.ToolButton
     next_button: Gtk.ToolButton
     fullscreen_button: Gtk.ToolButton
     remove_image: Gtk.Image
-    video_area: VideoArea
+    video_area: Omap.VideoArea
     seeking_scale: Gtk.Scale
     seeking_adjustment: Gtk.Adjustment
     volume_button: Gtk.VolumeButton
@@ -31,7 +31,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
     stream_duration: int64
     should_resume_playback: bool
 
-    debug_dialog: DebugDialog
+    debug_dialog: Omap.DebugDialog
 
     prop playing: bool
         get
@@ -43,10 +43,10 @@ class Omap.PlayerWindow: Omap.MediaWindow
         setup_widgets()
 
     def setup_model()
-        playlist_store = PlayListControl.model_new()
+        playlist_store = Omap.PlayListControl.model_new()
 
     def setup_controls()
-        playlist_control = new PlayListControl(playlist_store)
+        playlist_control = new Omap.PlayListControl(playlist_store)
         playlist_control.eos_message += playlist_control_eos
         playlist_control.error_message += playlist_control_error
         playlist_control.playing += playlist_control_playing
@@ -220,7 +220,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
     def new_video_box(): Gtk.Box
         var box = new Gtk.VBox(false, 0)
-        video_area = new VideoArea()
+        video_area = new Omap.VideoArea()
         box.pack_start(video_area, true, true, 0)
         video_area.activated += toggle_fullscreen
         return box
@@ -397,7 +397,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
             return
         seeking_scale.hide()
         toolbar.hide()
-        debug_dialog = new DebugDialog(this)
+        debug_dialog = new Omap.DebugDialog(this)
         debug_dialog.closed += on_debug_dialog_closed
         debug_dialog.show()
 

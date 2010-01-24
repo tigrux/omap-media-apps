@@ -9,5 +9,5 @@ init
         window.show()
         Gtk.main()
     except e: Error
-        error_dialog(e)
+        Omap.error_dialog(e)
 

@@ -55,7 +55,7 @@ static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_pr
 static void omap_debug_dialog_finalize (GObject* obj);
 static void _lambda3_ (GtkDialog* widget, gint response);
 static void __lambda3__gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
-void error_dialog (GError* _error_);
+void omap_error_dialog (GError* _error_);
 
 
 
@@ -235,7 +235,7 @@ static void __lambda3__gtk_dialog_response (GtkDialog* _sender, gint response_id
 }
 
 
-void error_dialog (GError* _error_) {
+void omap_error_dialog (GError* _error_) {
 	GtkDialog* dialog;
 	dialog = (GtkDialog*) g_object_ref_sink ((GtkMessageDialog*) gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", _error_->message));
 	gtk_window_set_title ((GtkWindow*) dialog, "Error");

@@ -7,10 +7,10 @@ const TITLE: string = "Omap4 ImageView"
 class Omap.ImageViewWindow: Omap.MediaWindow
     chooser_button: Gtk.FileChooserButton
     icon_view: Gtk.IconView
-    video_area: VideoArea
+    video_area: Omap.VideoArea
     iconlist_store: Gtk.ListStore
-    iconlist_control: IconListControl
-    image_control: ImageControl
+    iconlist_control: Omap.IconListControl
+    image_control: Omap.ImageControl
     current_folder: string
     image_button: Gtk.ToolButton
     slideshow_button: Gtk.ToolButton
@@ -35,13 +35,13 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         setup_controls()
 
     def setup_model()
-        iconlist_store = IconListControl.model_new()
+        iconlist_store = Omap.IconListControl.model_new()
 
     def setup_controls() raises Error
-        iconlist_control = new IconListControl(iconlist_store)
+        iconlist_control = new Omap.IconListControl(iconlist_store)
         iconlist_control.files_added += on_iconlist_files_added
         iconlist_control.icons_filled += on_iconlist_icons_filled
-        image_control = new ImageControl()
+        image_control = new Omap.ImageControl()
         image_control.eos_message += on_image_control_eos
         image_control.prepare_xwindow_id += on_xid_prepared
 
@@ -108,7 +108,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         var policy = Gtk.PolicyType.AUTOMATIC
         scrolled_window.set_policy(policy, policy)
         box.pack_start(scrolled_window, true, true, 0)
-        video_area = new VideoArea()
+        video_area = new Omap.VideoArea()
         video_area.activated += toggle_fullscreen
         scrolled_window.add_with_viewport(video_area)
         return box
@@ -226,7 +226,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def get_and_select_iter(out iter: Gtk.TreeIter): bool
         path: Gtk.TreePath
-        selected: unowned List of Gtk.TreePath = icon_view.get_selected_items()
+        var selected = icon_view.get_selected_items()
         if selected != null
             path = selected.data
             iconlist_store.get_iter(out iter, path)

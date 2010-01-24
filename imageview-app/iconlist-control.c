@@ -406,7 +406,7 @@ static gboolean omap_icon_list_control_add_folder_co (OmapIconListControlAddFold
 				data->e1 = data->_inner_error_;
 				data->_inner_error_ = NULL;
 				{
-					error_dialog (data->e1);
+					omap_error_dialog (data->e1);
 					_g_error_free0 (data->e1);
 				}
 			}

@@ -67,6 +67,6 @@ namespace Omap {
 		public Gst.XOverlay sink { get; set; }
 		public signal void activated ();
 	}
+	[CCode (cheader_filename = "common.h")]
+	public static void error_dialog (GLib.Error error);
 }
-[CCode (cheader_filename = "common.h")]
-public static void error_dialog (GLib.Error error);

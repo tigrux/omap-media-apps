@@ -17,10 +17,10 @@ class Omap.MuxerWindow: Omap.MediaWindow
     preview_button: Gtk.ToolButton
     record_button: Gtk.ToolButton
     stop_button: Gtk.ToolButton
-    muxer_control: MuxerControl
-    video_area: VideoArea
+    muxer_control: Omap.MuxerControl
+    video_area: Omap.VideoArea
 
-    debug_dialog: DebugDialog
+    debug_dialog: Omap.DebugDialog
 
     init
         setup_widgets()
@@ -81,11 +81,11 @@ class Omap.MuxerWindow: Omap.MediaWindow
         toolbar_add_quit_button()
 
     def setup_notebook()
-        video_area = new VideoArea()
+        video_area = new Omap.VideoArea()
         notebook.append_page(video_area, new Gtk.Label("Capture"))
 
     def setup_control(preview: string, record: string)
-        muxer_control = new MuxerControl(preview, record)
+        muxer_control = new Omap.MuxerControl(preview, record)
         muxer_control.error_message += on_control_error    
         muxer_control.preview_started += on_preview_started
         muxer_control.preview_stopped += on_preview_stopped
@@ -97,7 +97,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
         try
             muxer_control.load()
         except e: Error
-            error_dialog(e)
+            Omap.error_dialog(e)
             return
 
     def on_preview()
@@ -124,7 +124,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
         try
             muxer_control.start_record()
         except e: Error
-            error_dialog(e)
+            Omap.error_dialog(e)
 
     def on_stop()
         if muxer_control == null
@@ -145,13 +145,13 @@ class Omap.MuxerWindow: Omap.MediaWindow
                 var xml_parser = new MuxerConfigParser()
                 xml_parser.parse_file(config_file, ref key_file)
         except e1: FileError
-            error_dialog(e1)
+            Omap.error_dialog(e1)
             return
         except e2: KeyFileError
-            error_dialog(e2)
+            Omap.error_dialog(e2)
             return
         except e3: MarkupError
-            error_dialog(e3)
+            Omap.error_dialog(e3)
             return
 
         try
@@ -168,7 +168,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
                     ComboCol.RECORD, record, \
                     -1)
         except e4: KeyFileError
-            error_dialog(e4)
+            Omap.error_dialog(e4)
 
     def get_pipelines(out preview: string, out record: string): bool
         iter: Gtk.TreeIter
@@ -202,7 +202,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
 
     def setup_debug_dialog()
         if debug_dialog == null
-            debug_dialog = new DebugDialog(this)
+            debug_dialog = new Omap.DebugDialog(this)
             debug_dialog.closed += on_debug_dialog_closed
             debug_dialog.show_all()
 

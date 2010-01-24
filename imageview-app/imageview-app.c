@@ -55,7 +55,7 @@ void _main (char** args, int args_length1) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
+			omap_error_dialog (e);
 			_g_error_free0 (e);
 		}
 	}

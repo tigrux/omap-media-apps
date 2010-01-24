@@ -314,7 +314,7 @@ void omap_muxer_window_setup_control (OmapMuxerWindow* self, const char* preview
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
+			omap_error_dialog (e);
 			_g_error_free0 (e);
 			return;
 		}
@@ -391,7 +391,7 @@ void omap_muxer_window_on_record (OmapMuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e);
+			omap_error_dialog (e);
 			_g_error_free0 (e);
 		}
 	}
@@ -471,7 +471,7 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e1 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e1);
+			omap_error_dialog (e1);
 			_g_error_free0 (e1);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -485,7 +485,7 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e2 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e2);
+			omap_error_dialog (e2);
 			_g_error_free0 (e2);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -499,7 +499,7 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e3 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e3);
+			omap_error_dialog (e3);
 			_g_error_free0 (e3);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -576,7 +576,7 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e4 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			error_dialog (e4);
+			omap_error_dialog (e4);
 			_g_error_free0 (e4);
 		}
 	}
