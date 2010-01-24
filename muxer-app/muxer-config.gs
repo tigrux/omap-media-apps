@@ -69,7 +69,7 @@ class MuxerConfigParser: GLib.Object
                     current_key = name
                 else
                     raise new MarkupError.INVALID_CONTENT( \
-                        "Error on line %d char %d: Element '%s' was closed, but no outer element 'pipeline' was found", \
+                        "Error on line %d char %d: Element '%s' was opened, but no outer element 'pipeline' was found", \
                         line_n, char_n, name)
             else
                 raise new MarkupError.UNKNOWN_ELEMENT( \

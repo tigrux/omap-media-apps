@@ -243,7 +243,7 @@ void muxer_config_parser_start (MuxerConfigParser* self, GMarkupParseContext* co
 				char* _tmp4_;
 				self->current_key = (_tmp4_ = g_strdup (name), _g_free0 (self->current_key), _tmp4_);
 			} else {
-				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was closed, but no outer element 'pipeline' was found", line_n, char_n, name);
+				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was opened, but no outer element 'pipeline' was found", line_n, char_n, name);
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == G_MARKUP_ERROR) {
 						g_propagate_error (error, _inner_error_);
