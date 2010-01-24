@@ -15,7 +15,7 @@ class Omap.MediaControl: GLib.Object
     event segment_start_message(src: Gst.Object, format: Gst.Format, pos: int64)
     event segment_done_message(src: Gst.Object, format: Gst.Format, pos: int64)
     event tag_message(src: Gst.Object, tag_list: Gst.TagList)
-    event state_changed_message(src: Gst.Object, \
+    event state_changed_message(src: Gst.Object,
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
     final
@@ -110,10 +110,10 @@ class Omap.MediaControl: GLib.Object
             pipeline.query_position(ref format, out position)
             return position
         set
-            var seek_event = new Gst.Event.seek( \
-                1.0, Gst.Format.TIME, \
-                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, \
-                Gst.SeekType.SET, value, \
+            var seek_event = new Gst.Event.seek(
+                1.0, Gst.Format.TIME,
+                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
+                Gst.SeekType.SET, value,
                 Gst.SeekType.NONE, 0)
             pipeline.send_event(seek_event)
 

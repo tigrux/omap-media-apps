@@ -36,7 +36,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
         var chooser_item = new Gtk.ToolItem()
         toolbar.add(chooser_item)
         chooser_item.set_expand(true)
-        chooser_button = new Gtk.FileChooserButton( \
+        chooser_button = new Gtk.FileChooserButton(
             "Config file", Gtk.FileChooserAction.OPEN)
         chooser_item.add(chooser_button)
         chooser_button.file_set += on_chooser_file_set
@@ -161,11 +161,11 @@ class Omap.MuxerWindow: Omap.MediaWindow
                 var record = key_file.get_string(group, "record")
                 if preview == null or record == null
                     continue
-                combo_model.insert_with_values( \
-                    null, -1, \
-                    ComboCol.GROUP, group, \
-                    ComboCol.PREVIEW, preview, \
-                    ComboCol.RECORD, record, \
+                combo_model.insert_with_values(
+                    null, -1,
+                    ComboCol.GROUP, group,
+                    ComboCol.PREVIEW, preview,
+                    ComboCol.RECORD, record,
                     -1)
         except e4: KeyFileError
             Omap.error_dialog(e4)
@@ -174,9 +174,9 @@ class Omap.MuxerWindow: Omap.MediaWindow
         iter: Gtk.TreeIter
         if not combo_box.get_active_iter(out iter)
             return false
-        combo_model.get(iter, \
-            ComboCol.PREVIEW, out preview, \
-            ComboCol.RECORD, out record, \
+        combo_model.get(iter,
+            ComboCol.PREVIEW, out preview,
+            ComboCol.RECORD, out record,
             -1)
         return true
 

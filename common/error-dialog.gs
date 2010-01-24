@@ -33,7 +33,7 @@ class Omap.DebugDialog: Gtk.Dialog
         iter: Gtk.TextIter
         text_buffer.get_end_iter(out iter)
         text_insert_new_line(ref iter)
-        text_buffer.insert_with_tags_by_name(iter, \
+        text_buffer.insert_with_tags_by_name(iter,
             error.message, -1, "bold", null)
         text_insert_new_line(ref iter)
         if debug != null
@@ -46,7 +46,7 @@ class Omap.DebugDialog: Gtk.Dialog
     def new_error_box(): Gtk.Box
         var box = new Gtk.HBox(false, 0)
 
-        var image = new Gtk.Image.from_stock( \
+        var image = new Gtk.Image.from_stock(
                         Gtk.STOCK_DIALOG_ERROR, Gtk.IconSize.DIALOG)
         box.pack_start(image, false, false, 3)
 
@@ -70,9 +70,9 @@ class Omap.DebugDialog: Gtk.Dialog
 
 namespace Omap
     def error_dialog(error: Error)
-        dialog: Gtk.Dialog = new Gtk.MessageDialog( \
-            null, 0, \
-            Gtk.MessageType.ERROR,  Gtk.ButtonsType.CLOSE, \
+        dialog: Gtk.Dialog = new Gtk.MessageDialog(
+            null, 0,
+            Gtk.MessageType.ERROR,  Gtk.ButtonsType.CLOSE,
             "%s", error.message)
         dialog.title = "Error"
         dialog.response += def(widget, response)

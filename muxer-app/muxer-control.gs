@@ -77,19 +77,19 @@ class Omap.MuxerControl: MediaControl
         overlay = preview_bin.get_by_name("overlay")
         videosrc = preview_bin.get_by_name("videosrc")
         if (tee = preview_bin.get_by_name("tee")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named tee in the preview pipeline")
 
     def load_record_bin() raises Error
         record_bin = Gst.parse_launch(record_desc) as Gst.Pipeline
         record_bin.name = "record_bin"
         if (queue = record_bin.get_by_name("queue")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named queue in the record pipeline")
         audiosrc = record_bin.get_by_name("audiosrc")
         filesrc = record_bin.get_by_name("filesrc")
 
-    def on_state_changed(src: Gst.Object, \
+    def on_state_changed(src: Gst.Object,
                        old: Gst.State, current: Gst.State, pending: Gst.State)
         if src == preview_bin
             if old == Gst.State.PAUSED and current == Gst.State.PLAYING

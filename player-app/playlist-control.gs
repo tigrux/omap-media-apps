@@ -66,7 +66,7 @@ class Omap.PlayListControl: Omap.MediaControl
         if pipeline.set_state(Gst.State.PAUSED) != Gst.StateChangeReturn.FAILURE
             iter: Gtk.TreeIter
             if get_iter(out iter)
-                playlist_store.set(iter, \
+                playlist_store.set(iter,
                     Col.ICON, Gtk.STOCK_MEDIA_PAUSE, -1)
             paused(iter)
             return true
@@ -100,10 +100,10 @@ class Omap.PlayListControl: Omap.MediaControl
         return false
 
     def add_file(file: string)
-        playlist_store.insert_with_values( \
-            null, -1, \
-            Col.TITLE, Filename.display_basename(file), \
-            Col.FILE, file, \
+        playlist_store.insert_with_values(
+            null, -1,
+            Col.TITLE, Filename.display_basename(file),
+            Col.FILE, file,
             -1)
 
     def move_to(row: Gtk.TreePath): bool
@@ -141,9 +141,9 @@ class Omap.PlayListControl: Omap.MediaControl
                 return
         iter: Gtk.TreeIter
         playlist_store.get_iter(out iter,current_row)
-        playlist_store.set( \
-            iter, \
-            column, value.get_string(), \
+        playlist_store.set(
+            iter,
+            column, value.get_string(),
             -1)
 
     def on_row_inserted(row: Gtk.TreePath)

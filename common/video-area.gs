@@ -31,8 +31,8 @@ class Omap.VideoArea: Gtk.DrawingArea
         if _imagesink != null
             _imagesink.expose()
             return false
-        Gdk.draw_rectangle( \
-            e.window, get_style().black_gc, true, \
+        Gdk.draw_rectangle(
+            e.window, get_style().black_gc, true,
             e.area.x, e.area.y, e.area.width, e.area.height)
         return true
 

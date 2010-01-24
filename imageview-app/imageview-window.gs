@@ -118,7 +118,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         chooser_item.set_expand(true)
         toolbar.add(chooser_item)
 
-        chooser_button = new Gtk.FileChooserButton( \
+        chooser_button = new Gtk.FileChooserButton(
             "Select folder", Gtk.FileChooserAction.SELECT_FOLDER)
         chooser_item.add(chooser_button)
         chooser_button.current_folder_changed += on_chooser_folder_changed
@@ -203,8 +203,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def async slideshow()
         iter: Gtk.TreeIter
-        if not get_and_select_iter(out iter) \
-           or slideshow_cancellable.is_cancelled()
+        if not get_and_select_iter(out iter) or slideshow_cancellable.is_cancelled()
             return
         slideshow_continuation = slideshow.callback
         do
@@ -216,8 +215,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
             icon_view.item_activated(path)
             yield
             slideshow_timeout = 0
-        while iconlist_store.iter_next(ref iter) \
-              and not slideshow_cancellable.is_cancelled()
+        while iconlist_store.iter_next(ref iter) and not slideshow_cancellable.is_cancelled()
         if not slideshow_cancellable.is_cancelled()
             close_image()
         slideshow_button.stock_id = Gtk.STOCK_MEDIA_PLAY

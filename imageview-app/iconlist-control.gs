@@ -9,6 +9,7 @@ const IMAGE_FILE_ATTRIBUTES: string = \
 "standard::name,standard::display-name,standard::content-type"
 
 
+
 class Omap.IconListControl: Omap.MediaControl
     enum Col
         TEXT
@@ -53,12 +54,12 @@ class Omap.IconListControl: Omap.MediaControl
         var icon_theme = Gtk.IconTheme.get_default()
         icon_info: Gtk.IconInfo
 
-        icon_info = icon_theme.lookup_icon( \
+        icon_info = icon_theme.lookup_icon(
             Gtk.STOCK_MISSING_IMAGE, 96, Gtk.IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             missing_pixbuf = icon_info.load_icon()
 
-        icon_info = icon_theme.lookup_icon( \
+        icon_info = icon_theme.lookup_icon(
             "image-loading", 96, Gtk.IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             loading_pixbuf = icon_info.load_icon()
@@ -70,13 +71,13 @@ class Omap.IconListControl: Omap.MediaControl
         var icon_pipeline = Gst.parse_launch(ICON_PIPELINE_DESC) as Gst.Pipeline
         icon_pipeline.name = "icon_pipeline"
         if (filesrc = icon_pipeline.get_by_name("filesrc")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named filesrc in the icon_pipeline")
         if (imagesink = icon_pipeline.get_by_name("imagesink")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named imagesink in the icon_pipeline")
         if (imagedec = icon_pipeline.get_by_name("imagedec")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named imagedec in the icon_pipeline")
         imagedec_src = imagedec.get_static_pad("src")
 
@@ -85,12 +86,12 @@ class Omap.IconListControl: Omap.MediaControl
     def async add_folder(dirname: string, cancellable: Cancellable)
         var dir = File.new_for_path (dirname)
         try
-            var file_etor = yield dir.enumerate_children_async( \
-                                    IMAGE_FILE_ATTRIBUTES, \
-                                    FileQueryInfoFlags.NONE, \
+            var file_etor = yield dir.enumerate_children_async(
+                                    IMAGE_FILE_ATTRIBUTES,
+                                    FileQueryInfoFlags.NONE,
                                     Priority.DEFAULT, cancellable)
             while not cancellable.is_cancelled()
-                var next_files = yield file_etor.next_files_async( \
+                var next_files = yield file_etor.next_files_async(
                                     5, Priority.DEFAULT, cancellable)
                 if next_files == null
                     break
@@ -105,13 +106,13 @@ class Omap.IconListControl: Omap.MediaControl
             if info.get_content_type() == "image/jpeg"
                 var file = Path.build_filename(dirname, info.get_name())
                 var text = info.get_display_name()
-                iconlist_store.insert_with_values(null, -1, \
-                    Col.TEXT, text, \
-                    Col.FILE, file, \
-                    Col.PIXBUF, loading_pixbuf, \
+                iconlist_store.insert_with_values(null, -1,
+                    Col.TEXT, text,
+                    Col.FILE, file,
+                    Col.PIXBUF, loading_pixbuf,
                     -1)
 
-    def async fill_icons(path: Gtk.TreePath, end: Gtk.TreePath, \
+    def async fill_icons(path: Gtk.TreePath, end: Gtk.TreePath,
                          cancellable: Cancellable)
         if path != null and end != null
             continuation = fill_icons.callback
@@ -121,9 +122,9 @@ class Omap.IconListControl: Omap.MediaControl
                 iconlist_store.get_iter(out iter, path)
                 file: string
                 filled: bool
-                iconlist_store.get(iter, \
-                    Col.FILE, out file, \
-                    Col.FILLED, out filled, \
+                iconlist_store.get(iter,
+                    Col.FILE, out file,
+                    Col.FILLED, out filled,
                     -1)
                 if not filled
                     continuation_error = null
@@ -142,12 +143,12 @@ class Omap.IconListControl: Omap.MediaControl
                     else
                         pixbuf = missing_pixbuf
 
-                    iconlist_store.set(iter, \
-                        Col.PIXBUF, pixbuf, \
-                        Col.VALID, valid, \
-                        Col.FILLED, true, \
-                        Col.WIDTH, width, \
-                        Col.HEIGHT, height, \
+                    iconlist_store.set(iter,
+                        Col.PIXBUF, pixbuf,
+                        Col.VALID, valid,
+                        Col.FILLED, true,
+                        Col.WIDTH, width,
+                        Col.HEIGHT, height,
                         -1)
                 state = Gst.State.READY
                 path.next()
@@ -192,9 +193,9 @@ class Omap.IconListControl: Omap.MediaControl
         return file
 
     def iter_get_size(iter: Gtk.TreeIter, out width: int, out height: int)
-        iconlist_store.get(iter, \
-            Col.WIDTH, out width, \
-            Col.HEIGHT, out height, \
+        iconlist_store.get(iter,
+            Col.WIDTH, out width,
+            Col.HEIGHT, out height,
             -1)
 
     def static model_new(): Gtk.ListStore

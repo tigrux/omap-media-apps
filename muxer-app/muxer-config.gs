@@ -15,13 +15,13 @@ class Omap.MuxerConfigParser: GLib.Object
     init
         context = new MarkupParseContext(parser, 0, this, null)
 
-    def parse_data(data: string, \
-                   length: ssize_t, \
+    def parse_data(data: string,
+                   length: ssize_t,
                    ref key_file: KeyFile): bool raises MarkupError
         config_key_file = key_file
         return context.parse(data, length)
 
-    def parse_file(file: string, \
+    def parse_file(file: string,
                    ref key_file: KeyFile): bool raises MarkupError, FileError
         content: string
         length: size_t
@@ -29,9 +29,9 @@ class Omap.MuxerConfigParser: GLib.Object
             return parse_data(content, (ssize_t)length, ref key_file)
         return false
 
-    def start(context: MarkupParseContext, \
-              name: string, \
-              attr_names: array of string, \
+    def start(context: MarkupParseContext,
+              name: string,
+              attr_names: array of string,
               attr_values: array of string) raises MarkupError
         line_n: int
         char_n: int
@@ -49,13 +49,13 @@ class Omap.MuxerConfigParser: GLib.Object
                     if attr_value != null
                         current_group = attr_values[i]
                 else
-                    raise new MarkupError.UNKNOWN_ATTRIBUTE( \
-                        "Error on line %d char %d: Element '%s' has unknown attribute '%s'", \
+                    raise new MarkupError.UNKNOWN_ATTRIBUTE(
+                        "Error on line %d char %d: Element '%s' has unknown attribute '%s'",
                         line_n, char_n, name, attr_name)
                 i++
             if current_group == null
-                raise new MarkupError.MISSING_ATTRIBUTE( \
-                    "Error on line %d char %d: Element '%s' has no attribute 'name'", \
+                raise new MarkupError.MISSING_ATTRIBUTE(
+                    "Error on line %d char %d: Element '%s' has no attribute 'name'",
                     line_n, char_n, name)
         else
             if name == "preview"
@@ -68,12 +68,12 @@ class Omap.MuxerConfigParser: GLib.Object
                 if current_group != null
                     current_key = name
                 else
-                    raise new MarkupError.INVALID_CONTENT( \
-                        "Error on line %d char %d: Element '%s' was opened, but no outer element 'pipeline' was found", \
+                    raise new MarkupError.INVALID_CONTENT(
+                        "Error on line %d char %d: Element '%s' was opened, but no outer element 'pipeline' was found",
                         line_n, char_n, name)
             else
-                raise new MarkupError.UNKNOWN_ELEMENT( \
-                    "Error on line %d char %d: Element '%s' in unknown", \
+                raise new MarkupError.UNKNOWN_ELEMENT(
+                    "Error on line %d char %d: Element '%s' in unknown",
                     line_n, char_n, name)
 
     def end(context: MarkupParseContext, name: string ) raises MarkupError
@@ -91,18 +91,18 @@ class Omap.MuxerConfigParser: GLib.Object
             else
                 missing_tag = null
             if missing_tag != null
-                raise new MarkupError.INVALID_CONTENT( \
-                    "Error on line %d char %d: Element '%s' was closed, but no inner element '%s' was found", \
+                raise new MarkupError.INVALID_CONTENT(
+                    "Error on line %d char %d: Element '%s' was closed, but no inner element '%s' was found",
                     line_n, char_n, name, missing_tag)
         else
         if name == "preview" or name == "record"
             if normalize_value()
-                config_key_file.set_string( \
+                config_key_file.set_string(
                     current_group, current_key, current_value)
                 current_key = null
             else
-                raise new MarkupError.INVALID_CONTENT( \
-                    "Error on line %d char %d: Element '%s' has no text", \
+                raise new MarkupError.INVALID_CONTENT(
+                    "Error on line %d char %d: Element '%s' has no text",
                     line_n, char_n, name)
 
     def normalize_value(): bool
@@ -128,7 +128,7 @@ class Omap.MuxerConfigParser: GLib.Object
             return false
         return true
 
-    def text(context: MarkupParseContext, \
+    def text(context: MarkupParseContext,
              text: string, text_len: size_t) raises MarkupError
         if current_group != null and current_key != null
             current_value = text

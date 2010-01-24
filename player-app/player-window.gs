@@ -230,21 +230,21 @@ class Omap.PlayerWindow: Omap.MediaWindow
         view.headers_visible = false
         view.row_activated += on_row_activated
 
-        view.insert_column_with_attributes( \
-            -1, "Icon", new Gtk.CellRendererPixbuf(), \
-            "stock-id", playlist_control.get_icon_column(), \
+        view.insert_column_with_attributes(
+            -1, "Icon", new Gtk.CellRendererPixbuf(),
+            "stock-id", playlist_control.get_icon_column(),
             null)
-        view.insert_column_with_attributes( \
-            -1, "Title", new Gtk.CellRendererText(), \
-            "markup", playlist_control.get_title_column(), \
+        view.insert_column_with_attributes(
+            -1, "Title", new Gtk.CellRendererText(),
+            "markup", playlist_control.get_title_column(),
             null)
-        view.insert_column_with_attributes( \
-            -1, "Artist", new Gtk.CellRendererText(), \
-            "markup", playlist_control.get_artist_column(), \
+        view.insert_column_with_attributes(
+            -1, "Artist", new Gtk.CellRendererText(),
+            "markup", playlist_control.get_artist_column(),
             null)
-        view.insert_column_with_attributes( \
-            -1, "Album", new Gtk.CellRendererText(), \
-            "markup", playlist_control.get_album_column(), \
+        view.insert_column_with_attributes(
+            -1, "Album", new Gtk.CellRendererText(),
+            "markup", playlist_control.get_album_column(),
             null)
 
         for var column in view.get_columns()
@@ -308,12 +308,12 @@ class Omap.PlayerWindow: Omap.MediaWindow
     def setup_chooser()
         if chooser != null
             return
-        chooser = new Gtk.FileChooserDialog( \
-            "Add files to playlist", \
-            this, \
-            Gtk.FileChooserAction.OPEN, \
-            Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE, \
-            Gtk.STOCK_ADD, Gtk.ResponseType.OK, \
+        chooser = new Gtk.FileChooserDialog(
+            "Add files to playlist",
+            this,
+            Gtk.FileChooserAction.OPEN,
+            Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE,
+            Gtk.STOCK_ADD, Gtk.ResponseType.OK,
             null)
         chooser.response += on_chooser_response
 

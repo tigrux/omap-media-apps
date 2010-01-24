@@ -16,10 +16,11 @@ class Omap.ImageControl: Omap.MediaControl
         setup_pipeline()
 
     def setup_pipeline() raises Error
-        var image_pipeline = Gst.parse_launch(IMAGE_PIPELINE_DESC) as Gst.Pipeline
+        var image_pipeline = Gst.parse_launch(
+                                IMAGE_PIPELINE_DESC) as Gst.Pipeline
         image_pipeline.name = "image_pipeline"
         if (filesrc = image_pipeline.get_by_name("filesrc")) == null
-            raise new Gst.CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED(
                         "No element named filesrc in the image pipeline")
         pipeline = image_pipeline
 
