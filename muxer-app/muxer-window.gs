@@ -1,24 +1,22 @@
 [indent=4]
 
-uses Gtk
-
 
 const TITLE: string = "Omap4 Muxer"
 
 
-class MuxerWindow: MediaWindow
+class Omap.MuxerWindow: Omap.MediaWindow
 
     enum ComboCol
         GROUP
         PREVIEW
         RECORD
 
-    combo_box: ComboBox
-    combo_model: ListStore
-    chooser_button: FileChooserButton
-    preview_button: ToolButton
-    record_button: ToolButton
-    stop_button: ToolButton
+    combo_box: Gtk.ComboBox
+    combo_model: Gtk.ListStore
+    chooser_button: Gtk.FileChooserButton
+    preview_button: Gtk.ToolButton
+    record_button: Gtk.ToolButton
+    stop_button: Gtk.ToolButton
     muxer_control: MuxerControl
     video_area: VideoArea
 
@@ -35,46 +33,46 @@ class MuxerWindow: MediaWindow
         video_area.realize()
 
     def setup_toolbar()
-        var chooser_item = new ToolItem()
+        var chooser_item = new Gtk.ToolItem()
         toolbar.add(chooser_item)
         chooser_item.set_expand(true)
-        chooser_button = new FileChooserButton( \
-            "Config file", FileChooserAction.OPEN)
+        chooser_button = new Gtk.FileChooserButton( \
+            "Config file", Gtk.FileChooserAction.OPEN)
         chooser_item.add(chooser_button)
         chooser_button.file_set += on_chooser_file_set
 
-        var file_filter = new FileFilter()
+        var file_filter = new Gtk.FileFilter()
         file_filter.set_name("Config files")
         file_filter.add_pattern("*.ini")
         file_filter.add_pattern("*.xml")
         chooser_button.add_filter(file_filter)
 
-        var combo_item = new ToolItem()
+        var combo_item = new Gtk.ToolItem()
         toolbar.add(combo_item)
         var s = typeof(string)
-        combo_model = new ListStore(3, s, s, s)
-        combo_box = new ComboBox.with_model(combo_model)
+        combo_model = new Gtk.ListStore(3, s, s, s)
+        combo_box = new Gtk.ComboBox.with_model(combo_model)
         combo_item.add(combo_box)
 
-        var renderer = new CellRendererText()
+        var renderer = new Gtk.CellRendererText()
         combo_box.pack_start(renderer, true)
         combo_box.set_attributes(renderer, "text", ComboCol.GROUP, null)
 
         toolbar_add_expander()
 
-        preview_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        preview_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY)
         toolbar.add(preview_button)
         preview_button.clicked += on_preview
 
-        var pause_button = new ToolButton.from_stock(STOCK_MEDIA_PAUSE)
+        var pause_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PAUSE)
         toolbar.add(pause_button)
         pause_button.clicked += on_pause
 
-        record_button = new ToolButton.from_stock(STOCK_MEDIA_RECORD)
+        record_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_RECORD)
         toolbar.add(record_button)
         record_button.clicked += on_record
 
-        stop_button = new ToolButton.from_stock(STOCK_MEDIA_STOP)
+        stop_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
         stop_button.clicked += on_stop
 
@@ -84,7 +82,7 @@ class MuxerWindow: MediaWindow
 
     def setup_notebook()
         video_area = new VideoArea()
-        notebook.append_page(video_area, new Label("Capture"))
+        notebook.append_page(video_area, new Gtk.Label("Capture"))
 
     def setup_control(preview: string, record: string)
         muxer_control = new MuxerControl(preview, record)
@@ -173,7 +171,7 @@ class MuxerWindow: MediaWindow
             error_dialog(e4)
 
     def get_pipelines(out preview: string, out record: string): bool
-        iter: TreeIter
+        iter: Gtk.TreeIter
         if not combo_box.get_active_iter(out iter)
             return false
         combo_model.get(iter, \

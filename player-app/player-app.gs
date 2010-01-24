@@ -4,7 +4,7 @@
 init
     Gst.init(ref args)
     Gtk.init(ref args)
-    var window = new PlayerWindow()
+    var window = new Omap.PlayerWindow()
     window.show()
     Gtk.main()
 

@@ -13,101 +13,101 @@
 #include <math.h>
 
 
-#define TYPE_PLAY_LIST_CONTROL (play_list_control_get_type ())
-#define PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAY_LIST_CONTROL, PlayListControl))
-#define PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_PLAY_LIST_CONTROL, PlayListControlClass))
-#define IS_PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_PLAY_LIST_CONTROL))
-#define IS_PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_PLAY_LIST_CONTROL))
-#define PLAY_LIST_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_PLAY_LIST_CONTROL, PlayListControlClass))
+#define OMAP_TYPE_PLAY_LIST_CONTROL (omap_play_list_control_get_type ())
+#define OMAP_PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_PLAY_LIST_CONTROL, OmapPlayListControl))
+#define OMAP_PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_PLAY_LIST_CONTROL, OmapPlayListControlClass))
+#define OMAP_IS_PLAY_LIST_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_PLAY_LIST_CONTROL))
+#define OMAP_IS_PLAY_LIST_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_PLAY_LIST_CONTROL))
+#define OMAP_PLAY_LIST_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_PLAY_LIST_CONTROL, OmapPlayListControlClass))
 
-typedef struct _PlayListControl PlayListControl;
-typedef struct _PlayListControlClass PlayListControlClass;
-typedef struct _PlayListControlPrivate PlayListControlPrivate;
+typedef struct _OmapPlayListControl OmapPlayListControl;
+typedef struct _OmapPlayListControlClass OmapPlayListControlClass;
+typedef struct _OmapPlayListControlPrivate OmapPlayListControlPrivate;
 
-#define PLAY_LIST_CONTROL_TYPE_COL (play_list_control_col_get_type ())
+#define OMAP_PLAY_LIST_CONTROL_TYPE_COL (omap_play_list_control_col_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-struct _PlayListControl {
-	MediaControl parent_instance;
-	PlayListControlPrivate * priv;
+struct _OmapPlayListControl {
+	OmapMediaControl parent_instance;
+	OmapPlayListControlPrivate * priv;
 	GtkListStore* playlist_store;
 	GtkTreePath* current_row;
 	gint number_of_rows;
 	GstBin* player;
 };
 
-struct _PlayListControlClass {
-	MediaControlClass parent_class;
+struct _OmapPlayListControlClass {
+	OmapMediaControlClass parent_class;
 };
 
 typedef enum  {
-	PLAY_LIST_CONTROL_COL_ICON,
-	PLAY_LIST_CONTROL_COL_TITLE,
-	PLAY_LIST_CONTROL_COL_ARTIST,
-	PLAY_LIST_CONTROL_COL_ALBUM,
-	PLAY_LIST_CONTROL_COL_FILE
-} PlayListControlCol;
+	OMAP_PLAY_LIST_CONTROL_COL_ICON,
+	OMAP_PLAY_LIST_CONTROL_COL_TITLE,
+	OMAP_PLAY_LIST_CONTROL_COL_ARTIST,
+	OMAP_PLAY_LIST_CONTROL_COL_ALBUM,
+	OMAP_PLAY_LIST_CONTROL_COL_FILE
+} OmapPlayListControlCol;
 
 
-static gpointer play_list_control_parent_class = NULL;
+static gpointer omap_play_list_control_parent_class = NULL;
 
-GType play_list_control_get_type (void);
+GType omap_play_list_control_get_type (void);
 enum  {
-	PLAY_LIST_CONTROL_DUMMY_PROPERTY,
-	PLAY_LIST_CONTROL_VOLUME,
-	PLAY_LIST_CONTROL_N_ROWS,
-	PLAY_LIST_CONTROL_LOCATION
+	OMAP_PLAY_LIST_CONTROL_DUMMY_PROPERTY,
+	OMAP_PLAY_LIST_CONTROL_VOLUME,
+	OMAP_PLAY_LIST_CONTROL_N_ROWS,
+	OMAP_PLAY_LIST_CONTROL_LOCATION
 };
-GType play_list_control_col_get_type (void);
-void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row);
-static void _play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
-void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row);
-static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self);
-PlayListControl* play_list_control_new (GtkListStore* store);
-PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
-gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
-void play_list_control_set_location (PlayListControl* self, const char* value);
-gboolean play_list_control_play (PlayListControl* self);
-gboolean play_list_control_pause (PlayListControl* self);
-gboolean play_list_control_stop (PlayListControl* self);
-gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
-gboolean play_list_control_prev (PlayListControl* self);
-gboolean play_list_control_next (PlayListControl* self);
-void play_list_control_add_file (PlayListControl* self, const char* file);
-void play_list_control_on_tag_found (PlayListControl* self, const char* name, GValue* value);
-gint play_list_control_get_icon_column (void);
-gint play_list_control_get_title_column (void);
-gint play_list_control_get_artist_column (void);
-gint play_list_control_get_album_column (void);
-char* play_list_control_iter_get_title (PlayListControl* self, GtkTreeIter* iter);
-char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
-GtkListStore* play_list_control_model_new (void);
+GType omap_play_list_control_col_get_type (void);
+void omap_play_list_control_on_row_inserted (OmapPlayListControl* self, GtkTreePath* row);
+static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
+void omap_play_list_control_on_row_deleted (OmapPlayListControl* self, GtkTreePath* row);
+static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self);
+OmapPlayListControl* omap_play_list_control_new (GtkListStore* store);
+OmapPlayListControl* omap_play_list_control_construct (GType object_type, GtkListStore* store);
+gboolean omap_play_list_control_get_iter (OmapPlayListControl* self, GtkTreeIter* iter);
+void omap_play_list_control_set_location (OmapPlayListControl* self, const char* value);
+gboolean omap_play_list_control_play (OmapPlayListControl* self);
+gboolean omap_play_list_control_pause (OmapPlayListControl* self);
+gboolean omap_play_list_control_stop (OmapPlayListControl* self);
+gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath* row);
+gboolean omap_play_list_control_prev (OmapPlayListControl* self);
+gboolean omap_play_list_control_next (OmapPlayListControl* self);
+void omap_play_list_control_add_file (OmapPlayListControl* self, const char* file);
+void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* name, GValue* value);
+gint omap_play_list_control_get_icon_column (void);
+gint omap_play_list_control_get_title_column (void);
+gint omap_play_list_control_get_artist_column (void);
+gint omap_play_list_control_get_album_column (void);
+char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter);
+char* omap_play_list_control_iter_get_file (OmapPlayListControl* self, GtkTreeIter* iter);
+GtkListStore* omap_play_list_control_model_new (void);
 static inline double _dynamic_get_volume0 (GstBin* obj);
-double play_list_control_get_volume (PlayListControl* self);
+double omap_play_list_control_get_volume (OmapPlayListControl* self);
 static inline void _dynamic_set_volume1 (GstBin* obj, double value);
-void play_list_control_set_volume (PlayListControl* self, double value);
-guint play_list_control_get_n_rows (PlayListControl* self);
+void omap_play_list_control_set_volume (OmapPlayListControl* self, double value);
+guint omap_play_list_control_get_n_rows (OmapPlayListControl* self);
 static inline void _dynamic_set_uri2 (GstBin* obj, char* value);
-static void _play_list_control_on_tag_found_media_control_tag_found (PlayListControl* _sender, const char* name, GValue* tag_value, gpointer self);
-static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void play_list_control_finalize (GObject* obj);
-static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void play_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapPlayListControl* _sender, const char* name, GValue* tag_value, gpointer self);
+static GObject * omap_play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_play_list_control_finalize (GObject* obj);
+static void omap_play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void omap_play_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 
-GType play_list_control_col_get_type (void) {
-	static GType play_list_control_col_type_id = 0;
-	if (G_UNLIKELY (play_list_control_col_type_id == 0)) {
-		static const GEnumValue values[] = {{PLAY_LIST_CONTROL_COL_ICON, "PLAY_LIST_CONTROL_COL_ICON", "icon"}, {PLAY_LIST_CONTROL_COL_TITLE, "PLAY_LIST_CONTROL_COL_TITLE", "title"}, {PLAY_LIST_CONTROL_COL_ARTIST, "PLAY_LIST_CONTROL_COL_ARTIST", "artist"}, {PLAY_LIST_CONTROL_COL_ALBUM, "PLAY_LIST_CONTROL_COL_ALBUM", "album"}, {PLAY_LIST_CONTROL_COL_FILE, "PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
-		play_list_control_col_type_id = g_enum_register_static ("PlayListControlCol", values);
+GType omap_play_list_control_col_get_type (void) {
+	static GType omap_play_list_control_col_type_id = 0;
+	if (G_UNLIKELY (omap_play_list_control_col_type_id == 0)) {
+		static const GEnumValue values[] = {{OMAP_PLAY_LIST_CONTROL_COL_ICON, "OMAP_PLAY_LIST_CONTROL_COL_ICON", "icon"}, {OMAP_PLAY_LIST_CONTROL_COL_TITLE, "OMAP_PLAY_LIST_CONTROL_COL_TITLE", "title"}, {OMAP_PLAY_LIST_CONTROL_COL_ARTIST, "OMAP_PLAY_LIST_CONTROL_COL_ARTIST", "artist"}, {OMAP_PLAY_LIST_CONTROL_COL_ALBUM, "OMAP_PLAY_LIST_CONTROL_COL_ALBUM", "album"}, {OMAP_PLAY_LIST_CONTROL_COL_FILE, "OMAP_PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
+		omap_play_list_control_col_type_id = g_enum_register_static ("OmapPlayListControlCol", values);
 	}
-	return play_list_control_col_type_id;
+	return omap_play_list_control_col_type_id;
 }
 
 
@@ -116,49 +116,49 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self) {
-	play_list_control_on_row_inserted (self, path);
+static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self) {
+	omap_play_list_control_on_row_inserted (self, path);
 }
 
 
-static void _play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self) {
-	play_list_control_on_row_deleted (self, path);
+static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self) {
+	omap_play_list_control_on_row_deleted (self, path);
 }
 
 
-PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store) {
-	PlayListControl * self;
+OmapPlayListControl* omap_play_list_control_construct (GType object_type, GtkListStore* store) {
+	OmapPlayListControl * self;
 	GtkListStore* _tmp0_;
 	g_return_val_if_fail (store != NULL, NULL);
 	self = g_object_newv (object_type, 0, NULL);
 	self->playlist_store = (_tmp0_ = _g_object_ref0 (store), _g_object_unref0 (self->playlist_store), _tmp0_);
-	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-inserted", (GCallback) _play_list_control_on_row_inserted_gtk_tree_model_row_inserted, self, 0);
-	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-deleted", (GCallback) _play_list_control_on_row_deleted_gtk_tree_model_row_deleted, self, 0);
+	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-inserted", (GCallback) _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted, self, 0);
+	g_signal_connect_object ((GtkTreeModel*) self->playlist_store, "row-deleted", (GCallback) _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted, self, 0);
 	return self;
 }
 
 
-PlayListControl* play_list_control_new (GtkListStore* store) {
-	return play_list_control_construct (TYPE_PLAY_LIST_CONTROL, store);
+OmapPlayListControl* omap_play_list_control_new (GtkListStore* store) {
+	return omap_play_list_control_construct (OMAP_TYPE_PLAY_LIST_CONTROL, store);
 }
 
 
-gboolean play_list_control_play (PlayListControl* self) {
+gboolean omap_play_list_control_play (OmapPlayListControl* self) {
 	gboolean result;
 	GtkTreeIter iter = {0};
 	char* filename;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (!play_list_control_get_iter (self, &iter)) {
+	if (!omap_play_list_control_get_iter (self, &iter)) {
 		result = FALSE;
 		return result;
 	}
 	filename = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_FILE, &filename, -1, -1);
-	if (media_control_get_state ((MediaControl*) self) == GST_STATE_NULL) {
-		play_list_control_set_location (self, filename);
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, &iter, OMAP_PLAY_LIST_CONTROL_COL_FILE, &filename, -1, -1);
+	if (omap_media_control_get_state ((OmapMediaControl*) self) == GST_STATE_NULL) {
+		omap_play_list_control_set_location (self, filename);
 	}
-	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
-		gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
+	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+		gtk_list_store_set (self->playlist_store, &iter, OMAP_PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
 		g_signal_emit_by_name (self, "playing", &iter);
 		result = TRUE;
 		_g_free0 (filename);
@@ -170,13 +170,13 @@ gboolean play_list_control_play (PlayListControl* self) {
 }
 
 
-gboolean play_list_control_pause (PlayListControl* self) {
+gboolean omap_play_list_control_pause (OmapPlayListControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
-		if (play_list_control_get_iter (self, &iter)) {
-			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PAUSE, -1, -1);
+		if (omap_play_list_control_get_iter (self, &iter)) {
+			gtk_list_store_set (self->playlist_store, &iter, OMAP_PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PAUSE, -1, -1);
 		}
 		g_signal_emit_by_name (self, "paused", &iter);
 		result = TRUE;
@@ -187,13 +187,13 @@ gboolean play_list_control_pause (PlayListControl* self) {
 }
 
 
-gboolean play_list_control_stop (PlayListControl* self) {
+gboolean omap_play_list_control_stop (OmapPlayListControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (gst_element_set_state ((GstElement*) media_control_get_pipeline ((MediaControl*) self), GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
+	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
-		if (play_list_control_get_iter (self, &iter)) {
-			gtk_list_store_set (self->playlist_store, &iter, PLAY_LIST_CONTROL_COL_ICON, NULL, -1, -1);
+		if (omap_play_list_control_get_iter (self, &iter)) {
+			gtk_list_store_set (self->playlist_store, &iter, OMAP_PLAY_LIST_CONTROL_COL_ICON, NULL, -1, -1);
 		}
 		g_signal_emit_by_name (self, "stopped", &iter);
 		result = TRUE;
@@ -204,16 +204,16 @@ gboolean play_list_control_stop (PlayListControl* self) {
 }
 
 
-gboolean play_list_control_prev (PlayListControl* self) {
+gboolean omap_play_list_control_prev (OmapPlayListControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->current_row == NULL) {
 		result = FALSE;
 		return result;
 	}
-	play_list_control_stop (self);
+	omap_play_list_control_stop (self);
 	if (gtk_tree_path_prev (self->current_row)) {
-		result = play_list_control_move_to (self, self->current_row);
+		result = omap_play_list_control_move_to (self, self->current_row);
 		return result;
 	}
 	result = FALSE;
@@ -221,7 +221,7 @@ gboolean play_list_control_prev (PlayListControl* self) {
 }
 
 
-gboolean play_list_control_next (PlayListControl* self) {
+gboolean omap_play_list_control_next (OmapPlayListControl* self) {
 	gboolean result;
 	gint row_index;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -229,11 +229,11 @@ gboolean play_list_control_next (PlayListControl* self) {
 		result = FALSE;
 		return result;
 	}
-	play_list_control_stop (self);
+	omap_play_list_control_stop (self);
 	row_index = gtk_tree_path_get_indices (self->current_row)[0];
 	if (row_index < (self->number_of_rows - 1)) {
 		gtk_tree_path_next (self->current_row);
-		result = play_list_control_move_to (self, self->current_row);
+		result = omap_play_list_control_move_to (self, self->current_row);
 		return result;
 	}
 	result = FALSE;
@@ -241,11 +241,11 @@ gboolean play_list_control_next (PlayListControl* self) {
 }
 
 
-void play_list_control_add_file (PlayListControl* self, const char* file) {
+void omap_play_list_control_add_file (OmapPlayListControl* self, const char* file) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (file != NULL);
-	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, PLAY_LIST_CONTROL_COL_TITLE, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_CONTROL_COL_FILE, file, -1, -1);
+	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, OMAP_PLAY_LIST_CONTROL_COL_TITLE, _tmp0_ = g_filename_display_basename (file), OMAP_PLAY_LIST_CONTROL_COL_FILE, file, -1, -1);
 	_g_free0 (_tmp0_);
 }
 
@@ -255,7 +255,7 @@ static gpointer _gtk_tree_path_copy0 (gpointer self) {
 }
 
 
-gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row) {
+gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath* row) {
 	gboolean result;
 	GtkTreeIter iter = {0};
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -272,7 +272,7 @@ gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row) {
 }
 
 
-gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter) {
+gboolean omap_play_list_control_get_iter (OmapPlayListControl* self, GtkTreeIter* iter) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->current_row == NULL) {
@@ -288,7 +288,7 @@ gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter) {
 }
 
 
-void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row) {
+void omap_play_list_control_on_row_deleted (OmapPlayListControl* self, GtkTreePath* row) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (row != NULL);
 	self->number_of_rows--;
@@ -296,13 +296,13 @@ void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row) 
 		return;
 	}
 	if (gtk_tree_path_compare (self->current_row, row) == 0) {
-		play_list_control_stop (self);
+		omap_play_list_control_stop (self);
 	}
 }
 
 
-void play_list_control_on_tag_found (PlayListControl* self, const char* name, GValue* value) {
-	PlayListControlCol column = 0;
+void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* name, GValue* value) {
+	OmapPlayListControlCol column = 0;
 	GQuark _tmp1_;
 	const char* _tmp0_;
 	GtkTreeIter iter = {0};
@@ -313,19 +313,19 @@ void play_list_control_on_tag_found (PlayListControl* self, const char* name, GV
 	if (_tmp1_ == g_quark_from_string (GST_TAG_TITLE))
 	do {
 		{
-			column = PLAY_LIST_CONTROL_COL_TITLE;
+			column = OMAP_PLAY_LIST_CONTROL_COL_TITLE;
 		}
 		break;
 	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ARTIST))
 	do {
 		{
-			column = PLAY_LIST_CONTROL_COL_ARTIST;
+			column = OMAP_PLAY_LIST_CONTROL_COL_ARTIST;
 		}
 		break;
 	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ALBUM))
 	do {
 		{
-			column = PLAY_LIST_CONTROL_COL_ALBUM;
+			column = OMAP_PLAY_LIST_CONTROL_COL_ALBUM;
 		}
 		break;
 	} while (0); else
@@ -340,64 +340,64 @@ void play_list_control_on_tag_found (PlayListControl* self, const char* name, GV
 }
 
 
-void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row) {
+void omap_play_list_control_on_row_inserted (OmapPlayListControl* self, GtkTreePath* row) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (row != NULL);
 	self->number_of_rows++;
 }
 
 
-gint play_list_control_get_icon_column (void) {
+gint omap_play_list_control_get_icon_column (void) {
 	gint result;
-	result = (gint) PLAY_LIST_CONTROL_COL_ICON;
+	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ICON;
 	return result;
 }
 
 
-gint play_list_control_get_title_column (void) {
+gint omap_play_list_control_get_title_column (void) {
 	gint result;
-	result = (gint) PLAY_LIST_CONTROL_COL_TITLE;
+	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_TITLE;
 	return result;
 }
 
 
-gint play_list_control_get_artist_column (void) {
+gint omap_play_list_control_get_artist_column (void) {
 	gint result;
-	result = (gint) PLAY_LIST_CONTROL_COL_ARTIST;
+	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ARTIST;
 	return result;
 }
 
 
-gint play_list_control_get_album_column (void) {
+gint omap_play_list_control_get_album_column (void) {
 	gint result;
-	result = (gint) PLAY_LIST_CONTROL_COL_ALBUM;
+	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ALBUM;
 	return result;
 }
 
 
-char* play_list_control_iter_get_title (PlayListControl* self, GtkTreeIter* iter) {
+char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter) {
 	char* result;
 	char* name;
 	g_return_val_if_fail (self != NULL, NULL);
 	name = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_TITLE, &name, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, OMAP_PLAY_LIST_CONTROL_COL_TITLE, &name, -1, -1);
 	result = name;
 	return result;
 }
 
 
-char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter) {
+char* omap_play_list_control_iter_get_file (OmapPlayListControl* self, GtkTreeIter* iter) {
 	char* result;
 	char* file;
 	g_return_val_if_fail (self != NULL, NULL);
 	file = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_FILE, &file, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, OMAP_PLAY_LIST_CONTROL_COL_FILE, &file, -1, -1);
 	result = file;
 	return result;
 }
 
 
-GtkListStore* play_list_control_model_new (void) {
+GtkListStore* omap_play_list_control_model_new (void) {
 	GtkListStore* result;
 	GType s;
 	s = G_TYPE_STRING;
@@ -413,7 +413,7 @@ static inline double _dynamic_get_volume0 (GstBin* obj) {
 }
 
 
-double play_list_control_get_volume (PlayListControl* self) {
+double omap_play_list_control_get_volume (OmapPlayListControl* self) {
 	double result;
 	g_return_val_if_fail (self != NULL, 0.0);
 	result = _dynamic_get_volume0 (self->player);
@@ -426,14 +426,14 @@ static inline void _dynamic_set_volume1 (GstBin* obj, double value) {
 }
 
 
-void play_list_control_set_volume (PlayListControl* self, double value) {
+void omap_play_list_control_set_volume (OmapPlayListControl* self, double value) {
 	g_return_if_fail (self != NULL);
 	_dynamic_set_volume1 (self->player, value);
 	g_object_notify ((GObject *) self, "volume");
 }
 
 
-guint play_list_control_get_n_rows (PlayListControl* self) {
+guint omap_play_list_control_get_n_rows (OmapPlayListControl* self) {
 	guint result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = (guint) self->number_of_rows;
@@ -446,7 +446,7 @@ static inline void _dynamic_set_uri2 (GstBin* obj, char* value) {
 }
 
 
-void play_list_control_set_location (PlayListControl* self, const char* value) {
+void omap_play_list_control_set_location (OmapPlayListControl* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	_dynamic_set_uri2 (self->player, _tmp0_ = g_strdup_printf ("file://%s", value));
@@ -455,83 +455,83 @@ void play_list_control_set_location (PlayListControl* self, const char* value) {
 }
 
 
-static void _play_list_control_on_tag_found_media_control_tag_found (PlayListControl* _sender, const char* name, GValue* tag_value, gpointer self) {
-	play_list_control_on_tag_found (self, name, tag_value);
+static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapPlayListControl* _sender, const char* name, GValue* tag_value, gpointer self) {
+	omap_play_list_control_on_tag_found (self, name, tag_value);
 }
 
 
-static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	PlayListControl * self;
-	parent_class = G_OBJECT_CLASS (play_list_control_parent_class);
+	OmapPlayListControl * self;
+	parent_class = G_OBJECT_CLASS (omap_play_list_control_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = PLAY_LIST_CONTROL (obj);
+	self = OMAP_PLAY_LIST_CONTROL (obj);
 	{
 		GstBin* _tmp1_;
 		GstElement* _tmp0_;
-		g_signal_connect_object ((MediaControl*) self, "tag-found", (GCallback) _play_list_control_on_tag_found_media_control_tag_found, self, 0);
+		g_signal_connect_object ((OmapMediaControl*) self, "tag-found", (GCallback) _omap_play_list_control_on_tag_found_omap_media_control_tag_found, self, 0);
 		self->player = (_tmp1_ = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), GST_IS_BIN (_tmp0_) ? ((GstBin*) _tmp0_) : NULL), _gst_object_unref0 (self->player), _tmp1_);
 		if (self->player == NULL) {
 			GstBin* _tmp3_;
 			GstElement* _tmp2_;
 			self->player = (_tmp3_ = (_tmp2_ = gst_element_factory_make ("playbin", "player"), GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL), _gst_object_unref0 (self->player), _tmp3_);
 		}
-		media_control_set_pipeline ((MediaControl*) self, self->player);
+		omap_media_control_set_pipeline ((OmapMediaControl*) self, self->player);
 	}
 	return obj;
 }
 
 
-static void play_list_control_class_init (PlayListControlClass * klass) {
-	play_list_control_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->get_property = play_list_control_get_property;
-	G_OBJECT_CLASS (klass)->set_property = play_list_control_set_property;
-	G_OBJECT_CLASS (klass)->constructor = play_list_control_constructor;
-	G_OBJECT_CLASS (klass)->finalize = play_list_control_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_VOLUME, g_param_spec_double ("volume", "volume", "volume", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_N_ROWS, g_param_spec_uint ("n-rows", "n-rows", "n-rows", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), PLAY_LIST_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
-	g_signal_new ("playing", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
-	g_signal_new ("paused", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
-	g_signal_new ("stopped", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
-	g_signal_new ("moved", TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+static void omap_play_list_control_class_init (OmapPlayListControlClass * klass) {
+	omap_play_list_control_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->get_property = omap_play_list_control_get_property;
+	G_OBJECT_CLASS (klass)->set_property = omap_play_list_control_set_property;
+	G_OBJECT_CLASS (klass)->constructor = omap_play_list_control_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_play_list_control_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_PLAY_LIST_CONTROL_VOLUME, g_param_spec_double ("volume", "volume", "volume", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_PLAY_LIST_CONTROL_N_ROWS, g_param_spec_uint ("n-rows", "n-rows", "n-rows", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_PLAY_LIST_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
+	g_signal_new ("playing", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+	g_signal_new ("paused", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+	g_signal_new ("stopped", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+	g_signal_new ("moved", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 }
 
 
-static void play_list_control_instance_init (PlayListControl * self) {
+static void omap_play_list_control_instance_init (OmapPlayListControl * self) {
 }
 
 
-static void play_list_control_finalize (GObject* obj) {
-	PlayListControl * self;
-	self = PLAY_LIST_CONTROL (obj);
+static void omap_play_list_control_finalize (GObject* obj) {
+	OmapPlayListControl * self;
+	self = OMAP_PLAY_LIST_CONTROL (obj);
 	_g_object_unref0 (self->playlist_store);
 	_gtk_tree_path_free0 (self->current_row);
 	_gst_object_unref0 (self->player);
-	G_OBJECT_CLASS (play_list_control_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_play_list_control_parent_class)->finalize (obj);
 }
 
 
-GType play_list_control_get_type (void) {
-	static GType play_list_control_type_id = 0;
-	if (play_list_control_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (PlayListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) play_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (PlayListControl), 0, (GInstanceInitFunc) play_list_control_instance_init, NULL };
-		play_list_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "PlayListControl", &g_define_type_info, 0);
+GType omap_play_list_control_get_type (void) {
+	static GType omap_play_list_control_type_id = 0;
+	if (omap_play_list_control_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapPlayListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_play_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapPlayListControl), 0, (GInstanceInitFunc) omap_play_list_control_instance_init, NULL };
+		omap_play_list_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapPlayListControl", &g_define_type_info, 0);
 	}
-	return play_list_control_type_id;
+	return omap_play_list_control_type_id;
 }
 
 
-static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	PlayListControl * self;
-	self = PLAY_LIST_CONTROL (object);
+static void omap_play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	OmapPlayListControl * self;
+	self = OMAP_PLAY_LIST_CONTROL (object);
 	switch (property_id) {
-		case PLAY_LIST_CONTROL_VOLUME:
-		g_value_set_double (value, play_list_control_get_volume (self));
+		case OMAP_PLAY_LIST_CONTROL_VOLUME:
+		g_value_set_double (value, omap_play_list_control_get_volume (self));
 		break;
-		case PLAY_LIST_CONTROL_N_ROWS:
-		g_value_set_uint (value, play_list_control_get_n_rows (self));
+		case OMAP_PLAY_LIST_CONTROL_N_ROWS:
+		g_value_set_uint (value, omap_play_list_control_get_n_rows (self));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -540,15 +540,15 @@ static void play_list_control_get_property (GObject * object, guint property_id,
 }
 
 
-static void play_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	PlayListControl * self;
-	self = PLAY_LIST_CONTROL (object);
+static void omap_play_list_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	OmapPlayListControl * self;
+	self = OMAP_PLAY_LIST_CONTROL (object);
 	switch (property_id) {
-		case PLAY_LIST_CONTROL_VOLUME:
-		play_list_control_set_volume (self, g_value_get_double (value));
+		case OMAP_PLAY_LIST_CONTROL_VOLUME:
+		omap_play_list_control_set_volume (self, g_value_get_double (value));
 		break;
-		case PLAY_LIST_CONTROL_LOCATION:
-		play_list_control_set_location (self, g_value_get_string (value));
+		case OMAP_PLAY_LIST_CONTROL_LOCATION:
+		omap_play_list_control_set_location (self, g_value_get_string (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

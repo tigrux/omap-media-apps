@@ -12,178 +12,178 @@
 #include <gst/interfaces/xoverlay.h>
 
 
-#define TYPE_MUXER_WINDOW (muxer_window_get_type ())
-#define MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_WINDOW, MuxerWindow))
-#define MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_WINDOW, MuxerWindowClass))
-#define IS_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_WINDOW))
-#define IS_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_WINDOW))
-#define MUXER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_WINDOW, MuxerWindowClass))
+#define OMAP_TYPE_MUXER_WINDOW (omap_muxer_window_get_type ())
+#define OMAP_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindow))
+#define OMAP_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindowClass))
+#define OMAP_IS_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_WINDOW))
+#define OMAP_IS_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_WINDOW))
+#define OMAP_MUXER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindowClass))
 
-typedef struct _MuxerWindow MuxerWindow;
-typedef struct _MuxerWindowClass MuxerWindowClass;
-typedef struct _MuxerWindowPrivate MuxerWindowPrivate;
+typedef struct _OmapMuxerWindow OmapMuxerWindow;
+typedef struct _OmapMuxerWindowClass OmapMuxerWindowClass;
+typedef struct _OmapMuxerWindowPrivate OmapMuxerWindowPrivate;
 
-#define TYPE_MUXER_CONTROL (muxer_control_get_type ())
-#define MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONTROL, MuxerControl))
-#define MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_CONTROL, MuxerControlClass))
-#define IS_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_CONTROL))
-#define IS_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_CONTROL))
-#define MUXER_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_CONTROL, MuxerControlClass))
+#define OMAP_TYPE_MUXER_CONTROL (omap_muxer_control_get_type ())
+#define OMAP_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControl))
+#define OMAP_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlClass))
+#define OMAP_IS_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_CONTROL))
+#define OMAP_IS_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_CONTROL))
+#define OMAP_MUXER_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlClass))
 
-typedef struct _MuxerControl MuxerControl;
-typedef struct _MuxerControlClass MuxerControlClass;
+typedef struct _OmapMuxerControl OmapMuxerControl;
+typedef struct _OmapMuxerControlClass OmapMuxerControlClass;
 
-#define MUXER_WINDOW_TYPE_COMBO_COL (muxer_window_combo_col_get_type ())
+#define OMAP_MUXER_WINDOW_TYPE_COMBO_COL (omap_muxer_window_combo_col_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define TYPE_MUXER_CONFIG_PARSER (muxer_config_parser_get_type ())
-#define MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParser))
-#define MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParserClass))
-#define IS_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_CONFIG_PARSER))
-#define IS_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_CONFIG_PARSER))
-#define MUXER_CONFIG_PARSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParserClass))
+#define OMAP_TYPE_MUXER_CONFIG_PARSER (omap_muxer_config_parser_get_type ())
+#define OMAP_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParser))
+#define OMAP_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParserClass))
+#define OMAP_IS_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER))
+#define OMAP_IS_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_CONFIG_PARSER))
+#define OMAP_MUXER_CONFIG_PARSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParserClass))
 
-typedef struct _MuxerConfigParser MuxerConfigParser;
-typedef struct _MuxerConfigParserClass MuxerConfigParserClass;
+typedef struct _OmapMuxerConfigParser OmapMuxerConfigParser;
+typedef struct _OmapMuxerConfigParserClass OmapMuxerConfigParserClass;
 #define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
 
-struct _MuxerWindow {
-	MediaWindow parent_instance;
-	MuxerWindowPrivate * priv;
+struct _OmapMuxerWindow {
+	OmapMediaWindow parent_instance;
+	OmapMuxerWindowPrivate * priv;
 	GtkComboBox* combo_box;
 	GtkListStore* combo_model;
 	GtkFileChooserButton* chooser_button;
 	GtkToolButton* preview_button;
 	GtkToolButton* record_button;
 	GtkToolButton* stop_button;
-	MuxerControl* muxer_control;
-	VideoArea* video_area;
-	DebugDialog* debug_dialog;
+	OmapMuxerControl* muxer_control;
+	OmapVideoArea* video_area;
+	OmapDebugDialog* debug_dialog;
 };
 
-struct _MuxerWindowClass {
-	MediaWindowClass parent_class;
+struct _OmapMuxerWindowClass {
+	OmapMediaWindowClass parent_class;
 };
 
 typedef enum  {
-	MUXER_WINDOW_COMBO_COL_GROUP,
-	MUXER_WINDOW_COMBO_COL_PREVIEW,
-	MUXER_WINDOW_COMBO_COL_RECORD
-} MuxerWindowComboCol;
+	OMAP_MUXER_WINDOW_COMBO_COL_GROUP,
+	OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW,
+	OMAP_MUXER_WINDOW_COMBO_COL_RECORD
+} OmapMuxerWindowComboCol;
 
 
-static gpointer muxer_window_parent_class = NULL;
+static gpointer omap_muxer_window_parent_class = NULL;
 
 #define TITLE "Omap4 Muxer"
-GType muxer_window_get_type (void);
-GType muxer_control_get_type (void);
+GType omap_muxer_window_get_type (void);
+GType omap_muxer_control_get_type (void);
 enum  {
-	MUXER_WINDOW_DUMMY_PROPERTY
+	OMAP_MUXER_WINDOW_DUMMY_PROPERTY
 };
-GType muxer_window_combo_col_get_type (void);
-void muxer_window_setup_toolbar (MuxerWindow* self);
-void muxer_window_setup_notebook (MuxerWindow* self);
-void muxer_window_setup_widgets (MuxerWindow* self);
-void muxer_window_on_chooser_file_set (MuxerWindow* self);
-static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self);
-void muxer_window_on_preview (MuxerWindow* self);
-static void _muxer_window_on_preview_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void muxer_window_on_pause (MuxerWindow* self);
-static void _muxer_window_on_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void muxer_window_on_record (MuxerWindow* self);
-static void _muxer_window_on_record_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void muxer_window_on_stop (MuxerWindow* self);
-static void _muxer_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-MuxerControl* muxer_control_new (const char* preview, const char* record);
-MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
-void muxer_window_on_control_error (MuxerWindow* self, GstObject* src, GError* _error_, const char* debug);
-static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
-void muxer_window_on_preview_started (MuxerWindow* self);
-static void _muxer_window_on_preview_started_muxer_control_preview_started (MuxerControl* _sender, gpointer self);
-void muxer_window_on_preview_stopped (MuxerWindow* self);
-static void _muxer_window_on_preview_stopped_muxer_control_preview_stopped (MuxerControl* _sender, gpointer self);
-void muxer_window_on_record_started (MuxerWindow* self);
-static void _muxer_window_on_record_started_muxer_control_record_started (MuxerControl* _sender, gpointer self);
-void muxer_window_on_record_stopped (MuxerWindow* self);
-static void _muxer_window_on_record_stopped_muxer_control_record_stopped (MuxerControl* _sender, gpointer self);
-static void _lambda0_ (GstXOverlay* imagesink, MuxerWindow* self);
-static void __lambda0__media_control_prepare_xwindow_id (MuxerControl* _sender, GstXOverlay* imagesink, gpointer self);
-void muxer_control_load (MuxerControl* self, GError** error);
-void muxer_window_setup_control (MuxerWindow* self, const char* preview, const char* record);
-gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** record);
-void muxer_control_start_preview (MuxerControl* self);
-gboolean muxer_control_get_previewing (MuxerControl* self);
-gboolean muxer_control_get_recording (MuxerControl* self);
-void muxer_control_start_record (MuxerControl* self, GError** error);
-void muxer_control_stop_record (MuxerControl* self);
-void muxer_control_stop_preview (MuxerControl* self);
-MuxerConfigParser* muxer_config_parser_new (void);
-MuxerConfigParser* muxer_config_parser_construct (GType object_type);
-GType muxer_config_parser_get_type (void);
-gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
-void muxer_control_stop (MuxerControl* self);
-void muxer_window_show_debug (MuxerWindow* self, GError* _error_, const char* debug);
-void muxer_window_setup_debug_dialog (MuxerWindow* self);
-void muxer_window_on_debug_dialog_closed (MuxerWindow* self);
-static void _muxer_window_on_debug_dialog_closed_debug_dialog_closed (DebugDialog* _sender, gpointer self);
-MuxerWindow* muxer_window_new (void);
-MuxerWindow* muxer_window_construct (GType object_type);
-static GObject * muxer_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void muxer_window_finalize (GObject* obj);
+GType omap_muxer_window_combo_col_get_type (void);
+void omap_muxer_window_setup_toolbar (OmapMuxerWindow* self);
+void omap_muxer_window_setup_notebook (OmapMuxerWindow* self);
+void omap_muxer_window_setup_widgets (OmapMuxerWindow* self);
+void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self);
+void omap_muxer_window_on_preview (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_preview_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void omap_muxer_window_on_pause (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void omap_muxer_window_on_record (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_record_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+void omap_muxer_window_on_stop (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
+OmapMuxerControl* omap_muxer_control_new (const char* preview, const char* record);
+OmapMuxerControl* omap_muxer_control_construct (GType object_type, const char* preview, const char* record);
+void omap_muxer_window_on_control_error (OmapMuxerWindow* self, GstObject* src, GError* _error_, const char* debug);
+static void _omap_muxer_window_on_control_error_omap_media_control_error_message (OmapMuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+void omap_muxer_window_on_preview_started (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_preview_started_omap_muxer_control_preview_started (OmapMuxerControl* _sender, gpointer self);
+void omap_muxer_window_on_preview_stopped (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_preview_stopped_omap_muxer_control_preview_stopped (OmapMuxerControl* _sender, gpointer self);
+void omap_muxer_window_on_record_started (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_record_started_omap_muxer_control_record_started (OmapMuxerControl* _sender, gpointer self);
+void omap_muxer_window_on_record_stopped (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_record_stopped_omap_muxer_control_record_stopped (OmapMuxerControl* _sender, gpointer self);
+static void _lambda0_ (GstXOverlay* imagesink, OmapMuxerWindow* self);
+static void __lambda0__omap_media_control_prepare_xwindow_id (OmapMuxerControl* _sender, GstXOverlay* imagesink, gpointer self);
+void omap_muxer_control_load (OmapMuxerControl* self, GError** error);
+void omap_muxer_window_setup_control (OmapMuxerWindow* self, const char* preview, const char* record);
+gboolean omap_muxer_window_get_pipelines (OmapMuxerWindow* self, char** preview, char** record);
+void omap_muxer_control_start_preview (OmapMuxerControl* self);
+gboolean omap_muxer_control_get_previewing (OmapMuxerControl* self);
+gboolean omap_muxer_control_get_recording (OmapMuxerControl* self);
+void omap_muxer_control_start_record (OmapMuxerControl* self, GError** error);
+void omap_muxer_control_stop_record (OmapMuxerControl* self);
+void omap_muxer_control_stop_preview (OmapMuxerControl* self);
+OmapMuxerConfigParser* omap_muxer_config_parser_new (void);
+OmapMuxerConfigParser* omap_muxer_config_parser_construct (GType object_type);
+GType omap_muxer_config_parser_get_type (void);
+gboolean omap_muxer_config_parser_parse_file (OmapMuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
+void omap_muxer_control_stop (OmapMuxerControl* self);
+void omap_muxer_window_show_debug (OmapMuxerWindow* self, GError* _error_, const char* debug);
+void omap_muxer_window_setup_debug_dialog (OmapMuxerWindow* self);
+void omap_muxer_window_on_debug_dialog_closed (OmapMuxerWindow* self);
+static void _omap_muxer_window_on_debug_dialog_closed_omap_debug_dialog_closed (OmapDebugDialog* _sender, gpointer self);
+OmapMuxerWindow* omap_muxer_window_new (void);
+OmapMuxerWindow* omap_muxer_window_construct (GType object_type);
+static GObject * omap_muxer_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_muxer_window_finalize (GObject* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 
 
 
 
-GType muxer_window_combo_col_get_type (void) {
-	static GType muxer_window_combo_col_type_id = 0;
-	if (G_UNLIKELY (muxer_window_combo_col_type_id == 0)) {
-		static const GEnumValue values[] = {{MUXER_WINDOW_COMBO_COL_GROUP, "MUXER_WINDOW_COMBO_COL_GROUP", "group"}, {MUXER_WINDOW_COMBO_COL_PREVIEW, "MUXER_WINDOW_COMBO_COL_PREVIEW", "preview"}, {MUXER_WINDOW_COMBO_COL_RECORD, "MUXER_WINDOW_COMBO_COL_RECORD", "record"}, {0, NULL, NULL}};
-		muxer_window_combo_col_type_id = g_enum_register_static ("MuxerWindowComboCol", values);
+GType omap_muxer_window_combo_col_get_type (void) {
+	static GType omap_muxer_window_combo_col_type_id = 0;
+	if (G_UNLIKELY (omap_muxer_window_combo_col_type_id == 0)) {
+		static const GEnumValue values[] = {{OMAP_MUXER_WINDOW_COMBO_COL_GROUP, "OMAP_MUXER_WINDOW_COMBO_COL_GROUP", "group"}, {OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW, "OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW", "preview"}, {OMAP_MUXER_WINDOW_COMBO_COL_RECORD, "OMAP_MUXER_WINDOW_COMBO_COL_RECORD", "record"}, {0, NULL, NULL}};
+		omap_muxer_window_combo_col_type_id = g_enum_register_static ("OmapMuxerWindowComboCol", values);
 	}
-	return muxer_window_combo_col_type_id;
+	return omap_muxer_window_combo_col_type_id;
 }
 
 
-void muxer_window_setup_widgets (MuxerWindow* self) {
+void omap_muxer_window_setup_widgets (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
-	muxer_window_setup_toolbar (self);
-	muxer_window_setup_notebook (self);
-	gtk_widget_show_all ((GtkWidget*) ((MediaWindow*) self)->main_box);
+	omap_muxer_window_setup_toolbar (self);
+	omap_muxer_window_setup_notebook (self);
+	gtk_widget_show_all ((GtkWidget*) ((OmapMediaWindow*) self)->main_box);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
 }
 
 
-static void _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self) {
-	muxer_window_on_chooser_file_set (self);
+static void _omap_muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set (GtkFileChooserButton* _sender, gpointer self) {
+	omap_muxer_window_on_chooser_file_set (self);
 }
 
 
-static void _muxer_window_on_preview_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	muxer_window_on_preview (self);
+static void _omap_muxer_window_on_preview_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	omap_muxer_window_on_preview (self);
 }
 
 
-static void _muxer_window_on_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	muxer_window_on_pause (self);
+static void _omap_muxer_window_on_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	omap_muxer_window_on_pause (self);
 }
 
 
-static void _muxer_window_on_record_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	muxer_window_on_record (self);
+static void _omap_muxer_window_on_record_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	omap_muxer_window_on_record (self);
 }
 
 
-static void _muxer_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
-	muxer_window_on_stop (self);
+static void _omap_muxer_window_on_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self) {
+	omap_muxer_window_on_stop (self);
 }
 
 
-void muxer_window_setup_toolbar (MuxerWindow* self) {
+void omap_muxer_window_setup_toolbar (OmapMuxerWindow* self) {
 	GtkToolItem* chooser_item;
 	GtkFileChooserButton* _tmp0_;
 	GtkFileFilter* file_filter;
@@ -198,40 +198,40 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 	GtkToolButton* _tmp5_;
 	g_return_if_fail (self != NULL);
 	chooser_item = g_object_ref_sink (gtk_tool_item_new ());
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) chooser_item);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) chooser_item);
 	gtk_tool_item_set_expand (chooser_item, TRUE);
 	self->chooser_button = (_tmp0_ = g_object_ref_sink ((GtkFileChooserButton*) gtk_file_chooser_button_new ("Config file", GTK_FILE_CHOOSER_ACTION_OPEN)), _g_object_unref0 (self->chooser_button), _tmp0_);
 	gtk_container_add ((GtkContainer*) chooser_item, (GtkWidget*) self->chooser_button);
-	g_signal_connect_object (self->chooser_button, "file-set", (GCallback) _muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set, self, 0);
+	g_signal_connect_object (self->chooser_button, "file-set", (GCallback) _omap_muxer_window_on_chooser_file_set_gtk_file_chooser_button_file_set, self, 0);
 	file_filter = g_object_ref_sink (gtk_file_filter_new ());
 	gtk_file_filter_set_name (file_filter, "Config files");
 	gtk_file_filter_add_pattern (file_filter, "*.ini");
 	gtk_file_filter_add_pattern (file_filter, "*.xml");
 	gtk_file_chooser_add_filter ((GtkFileChooser*) self->chooser_button, file_filter);
 	combo_item = g_object_ref_sink (gtk_tool_item_new ());
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) combo_item);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) combo_item);
 	s = G_TYPE_STRING;
 	self->combo_model = (_tmp1_ = gtk_list_store_new (3, s, s, s, NULL), _g_object_unref0 (self->combo_model), _tmp1_);
 	self->combo_box = (_tmp2_ = g_object_ref_sink ((GtkComboBox*) gtk_combo_box_new_with_model ((GtkTreeModel*) self->combo_model)), _g_object_unref0 (self->combo_box), _tmp2_);
 	gtk_container_add ((GtkContainer*) combo_item, (GtkWidget*) self->combo_box);
 	renderer = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ());
 	gtk_cell_layout_pack_start ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, TRUE);
-	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", MUXER_WINDOW_COMBO_COL_GROUP, NULL, NULL);
-	media_window_toolbar_add_expander ((MediaWindow*) self);
+	gtk_cell_layout_set_attributes ((GtkCellLayout*) self->combo_box, (GtkCellRenderer*) renderer, "text", OMAP_MUXER_WINDOW_COMBO_COL_GROUP, NULL, NULL);
+	omap_media_window_toolbar_add_expander ((OmapMediaWindow*) self);
 	self->preview_button = (_tmp3_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY)), _g_object_unref0 (self->preview_button), _tmp3_);
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->preview_button);
-	g_signal_connect_object (self->preview_button, "clicked", (GCallback) _muxer_window_on_preview_gtk_tool_button_clicked, self, 0);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) self->preview_button);
+	g_signal_connect_object (self->preview_button, "clicked", (GCallback) _omap_muxer_window_on_preview_gtk_tool_button_clicked, self, 0);
 	pause_button = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PAUSE));
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) pause_button);
-	g_signal_connect_object (pause_button, "clicked", (GCallback) _muxer_window_on_pause_gtk_tool_button_clicked, self, 0);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) pause_button);
+	g_signal_connect_object (pause_button, "clicked", (GCallback) _omap_muxer_window_on_pause_gtk_tool_button_clicked, self, 0);
 	self->record_button = (_tmp4_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_RECORD)), _g_object_unref0 (self->record_button), _tmp4_);
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->record_button);
-	g_signal_connect_object (self->record_button, "clicked", (GCallback) _muxer_window_on_record_gtk_tool_button_clicked, self, 0);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) self->record_button);
+	g_signal_connect_object (self->record_button, "clicked", (GCallback) _omap_muxer_window_on_record_gtk_tool_button_clicked, self, 0);
 	self->stop_button = (_tmp5_ = g_object_ref_sink ((GtkToolButton*) gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP)), _g_object_unref0 (self->stop_button), _tmp5_);
-	gtk_container_add ((GtkContainer*) ((MediaWindow*) self)->toolbar, (GtkWidget*) self->stop_button);
-	g_signal_connect_object (self->stop_button, "clicked", (GCallback) _muxer_window_on_stop_gtk_tool_button_clicked, self, 0);
-	media_window_toolbar_add_expander ((MediaWindow*) self);
-	media_window_toolbar_add_quit_button ((MediaWindow*) self);
+	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) self->stop_button);
+	g_signal_connect_object (self->stop_button, "clicked", (GCallback) _omap_muxer_window_on_stop_gtk_tool_button_clicked, self, 0);
+	omap_media_window_toolbar_add_expander ((OmapMediaWindow*) self);
+	omap_media_window_toolbar_add_quit_button ((OmapMediaWindow*) self);
 	_g_object_unref0 (chooser_item);
 	_g_object_unref0 (file_filter);
 	_g_object_unref0 (combo_item);
@@ -240,68 +240,68 @@ void muxer_window_setup_toolbar (MuxerWindow* self) {
 }
 
 
-void muxer_window_setup_notebook (MuxerWindow* self) {
-	VideoArea* _tmp0_;
+void omap_muxer_window_setup_notebook (OmapMuxerWindow* self) {
+	OmapVideoArea* _tmp0_;
 	GtkLabel* _tmp1_;
 	g_return_if_fail (self != NULL);
-	self->video_area = (_tmp0_ = g_object_ref_sink (video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
-	gtk_notebook_append_page (((MediaWindow*) self)->notebook, (GtkWidget*) self->video_area, (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Capture"))));
+	self->video_area = (_tmp0_ = g_object_ref_sink (omap_video_area_new ()), _g_object_unref0 (self->video_area), _tmp0_);
+	gtk_notebook_append_page (((OmapMediaWindow*) self)->notebook, (GtkWidget*) self->video_area, (GtkWidget*) (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Capture"))));
 	_g_object_unref0 (_tmp1_);
 }
 
 
-static void _muxer_window_on_control_error_media_control_error_message (MuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
-	muxer_window_on_control_error (self, src, _error_, debug);
+static void _omap_muxer_window_on_control_error_omap_media_control_error_message (OmapMuxerControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+	omap_muxer_window_on_control_error (self, src, _error_, debug);
 }
 
 
-static void _muxer_window_on_preview_started_muxer_control_preview_started (MuxerControl* _sender, gpointer self) {
-	muxer_window_on_preview_started (self);
+static void _omap_muxer_window_on_preview_started_omap_muxer_control_preview_started (OmapMuxerControl* _sender, gpointer self) {
+	omap_muxer_window_on_preview_started (self);
 }
 
 
-static void _muxer_window_on_preview_stopped_muxer_control_preview_stopped (MuxerControl* _sender, gpointer self) {
-	muxer_window_on_preview_stopped (self);
+static void _omap_muxer_window_on_preview_stopped_omap_muxer_control_preview_stopped (OmapMuxerControl* _sender, gpointer self) {
+	omap_muxer_window_on_preview_stopped (self);
 }
 
 
-static void _muxer_window_on_record_started_muxer_control_record_started (MuxerControl* _sender, gpointer self) {
-	muxer_window_on_record_started (self);
+static void _omap_muxer_window_on_record_started_omap_muxer_control_record_started (OmapMuxerControl* _sender, gpointer self) {
+	omap_muxer_window_on_record_started (self);
 }
 
 
-static void _muxer_window_on_record_stopped_muxer_control_record_stopped (MuxerControl* _sender, gpointer self) {
-	muxer_window_on_record_stopped (self);
+static void _omap_muxer_window_on_record_stopped_omap_muxer_control_record_stopped (OmapMuxerControl* _sender, gpointer self) {
+	omap_muxer_window_on_record_stopped (self);
 }
 
 
-static void _lambda0_ (GstXOverlay* imagesink, MuxerWindow* self) {
+static void _lambda0_ (GstXOverlay* imagesink, OmapMuxerWindow* self) {
 	g_return_if_fail (imagesink != NULL);
-	video_area_set_sink (self->video_area, imagesink);
+	omap_video_area_set_sink (self->video_area, imagesink);
 }
 
 
-static void __lambda0__media_control_prepare_xwindow_id (MuxerControl* _sender, GstXOverlay* imagesink, gpointer self) {
+static void __lambda0__omap_media_control_prepare_xwindow_id (OmapMuxerControl* _sender, GstXOverlay* imagesink, gpointer self) {
 	_lambda0_ (imagesink, self);
 }
 
 
-void muxer_window_setup_control (MuxerWindow* self, const char* preview, const char* record) {
+void omap_muxer_window_setup_control (OmapMuxerWindow* self, const char* preview, const char* record) {
 	GError * _inner_error_;
-	MuxerControl* _tmp0_;
+	OmapMuxerControl* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (preview != NULL);
 	g_return_if_fail (record != NULL);
 	_inner_error_ = NULL;
-	self->muxer_control = (_tmp0_ = muxer_control_new (preview, record), _g_object_unref0 (self->muxer_control), _tmp0_);
-	g_signal_connect_object ((MediaControl*) self->muxer_control, "error-message", (GCallback) _muxer_window_on_control_error_media_control_error_message, self, 0);
-	g_signal_connect_object (self->muxer_control, "preview-started", (GCallback) _muxer_window_on_preview_started_muxer_control_preview_started, self, 0);
-	g_signal_connect_object (self->muxer_control, "preview-stopped", (GCallback) _muxer_window_on_preview_stopped_muxer_control_preview_stopped, self, 0);
-	g_signal_connect_object (self->muxer_control, "record-started", (GCallback) _muxer_window_on_record_started_muxer_control_record_started, self, 0);
-	g_signal_connect_object (self->muxer_control, "record-stopped", (GCallback) _muxer_window_on_record_stopped_muxer_control_record_stopped, self, 0);
-	g_signal_connect_object ((MediaControl*) self->muxer_control, "prepare-xwindow-id", (GCallback) __lambda0__media_control_prepare_xwindow_id, self, 0);
+	self->muxer_control = (_tmp0_ = omap_muxer_control_new (preview, record), _g_object_unref0 (self->muxer_control), _tmp0_);
+	g_signal_connect_object ((OmapMediaControl*) self->muxer_control, "error-message", (GCallback) _omap_muxer_window_on_control_error_omap_media_control_error_message, self, 0);
+	g_signal_connect_object (self->muxer_control, "preview-started", (GCallback) _omap_muxer_window_on_preview_started_omap_muxer_control_preview_started, self, 0);
+	g_signal_connect_object (self->muxer_control, "preview-stopped", (GCallback) _omap_muxer_window_on_preview_stopped_omap_muxer_control_preview_stopped, self, 0);
+	g_signal_connect_object (self->muxer_control, "record-started", (GCallback) _omap_muxer_window_on_record_started_omap_muxer_control_record_started, self, 0);
+	g_signal_connect_object (self->muxer_control, "record-stopped", (GCallback) _omap_muxer_window_on_record_stopped_omap_muxer_control_record_stopped, self, 0);
+	g_signal_connect_object ((OmapMediaControl*) self->muxer_control, "prepare-xwindow-id", (GCallback) __lambda0__omap_media_control_prepare_xwindow_id, self, 0);
 	{
-		muxer_control_load (self->muxer_control, &_inner_error_);
+		omap_muxer_control_load (self->muxer_control, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 			goto __finally0;
@@ -328,7 +328,7 @@ void muxer_window_setup_control (MuxerWindow* self, const char* preview, const c
 }
 
 
-void muxer_window_on_preview (MuxerWindow* self) {
+void omap_muxer_window_on_preview (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->muxer_control == NULL) {
 		char* preview;
@@ -341,44 +341,44 @@ void muxer_window_on_preview (MuxerWindow* self) {
 		char* _tmp0_ = NULL;
 		preview = NULL;
 		record = NULL;
-		if (!(_tmp4_ = (_tmp1_ = muxer_window_get_pipelines (self, &_tmp0_, &_tmp3_), preview = (_tmp2_ = _tmp0_, _g_free0 (preview), _tmp2_), _tmp1_), record = (_tmp5_ = _tmp3_, _g_free0 (record), _tmp5_), _tmp4_)) {
+		if (!(_tmp4_ = (_tmp1_ = omap_muxer_window_get_pipelines (self, &_tmp0_, &_tmp3_), preview = (_tmp2_ = _tmp0_, _g_free0 (preview), _tmp2_), _tmp1_), record = (_tmp5_ = _tmp3_, _g_free0 (record), _tmp5_), _tmp4_)) {
 			g_print ("Could not get the pipelines\n");
 			_g_free0 (preview);
 			_g_free0 (record);
 			return;
 		}
-		muxer_window_setup_control (self, preview, record);
+		omap_muxer_window_setup_control (self, preview, record);
 		_g_free0 (preview);
 		_g_free0 (record);
 	}
-	muxer_control_start_preview (self->muxer_control);
+	omap_muxer_control_start_preview (self->muxer_control);
 }
 
 
-void muxer_window_on_pause (MuxerWindow* self) {
+void omap_muxer_window_on_pause (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->muxer_control == NULL) {
 		return;
 	}
-	media_control_set_state ((MediaControl*) self->muxer_control, GST_STATE_PAUSED);
+	omap_media_control_set_state ((OmapMediaControl*) self->muxer_control, GST_STATE_PAUSED);
 }
 
 
-void muxer_window_on_record (MuxerWindow* self) {
+void omap_muxer_window_on_record (OmapMuxerWindow* self) {
 	GError * _inner_error_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	if (self->muxer_control == NULL) {
 		return;
 	}
-	if (!muxer_control_get_previewing (self->muxer_control)) {
+	if (!omap_muxer_control_get_previewing (self->muxer_control)) {
 		return;
 	}
-	if (muxer_control_get_recording (self->muxer_control)) {
+	if (omap_muxer_control_get_recording (self->muxer_control)) {
 		return;
 	}
 	{
-		muxer_control_start_record (self->muxer_control, &_inner_error_);
+		omap_muxer_control_start_record (self->muxer_control, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch1_g_error;
 			goto __finally1;
@@ -404,24 +404,24 @@ void muxer_window_on_record (MuxerWindow* self) {
 }
 
 
-void muxer_window_on_stop (MuxerWindow* self) {
+void omap_muxer_window_on_stop (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->muxer_control == NULL) {
 		return;
 	}
-	if (muxer_control_get_recording (self->muxer_control)) {
-		muxer_control_stop_record (self->muxer_control);
+	if (omap_muxer_control_get_recording (self->muxer_control)) {
+		omap_muxer_control_stop_record (self->muxer_control);
 	} else {
-		if (muxer_control_get_previewing (self->muxer_control)) {
-			MuxerControl* _tmp0_;
-			muxer_control_stop_preview (self->muxer_control);
+		if (omap_muxer_control_get_previewing (self->muxer_control)) {
+			OmapMuxerControl* _tmp0_;
+			omap_muxer_control_stop_preview (self->muxer_control);
 			self->muxer_control = (_tmp0_ = NULL, _g_object_unref0 (self->muxer_control), _tmp0_);
 		}
 	}
 }
 
 
-void muxer_window_on_chooser_file_set (MuxerWindow* self) {
+void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 	GError * _inner_error_;
 	char* config_file;
 	GKeyFile* key_file;
@@ -445,9 +445,9 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 				goto __finally2;
 			}
 		} else {
-			MuxerConfigParser* xml_parser;
-			xml_parser = muxer_config_parser_new ();
-			muxer_config_parser_parse_file (xml_parser, config_file, &key_file, &_inner_error_);
+			OmapMuxerConfigParser* xml_parser;
+			xml_parser = omap_muxer_config_parser_new ();
+			omap_muxer_config_parser_parse_file (xml_parser, config_file, &key_file, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (xml_parser);
 				if (_inner_error_->domain == G_FILE_ERROR) {
@@ -560,7 +560,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 						_g_free0 (record);
 						continue;
 					}
-					gtk_list_store_insert_with_values (self->combo_model, NULL, -1, MUXER_WINDOW_COMBO_COL_GROUP, group, MUXER_WINDOW_COMBO_COL_PREVIEW, preview, MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
+					gtk_list_store_insert_with_values (self->combo_model, NULL, -1, OMAP_MUXER_WINDOW_COMBO_COL_GROUP, group, OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW, preview, OMAP_MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
 					_g_free0 (group);
 					_g_free0 (preview);
 					_g_free0 (record);
@@ -593,7 +593,7 @@ void muxer_window_on_chooser_file_set (MuxerWindow* self) {
 }
 
 
-gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** record) {
+gboolean omap_muxer_window_get_pipelines (OmapMuxerWindow* self, char** preview, char** record) {
 	gboolean result;
 	GtkTreeIter iter = {0};
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -607,118 +607,118 @@ gboolean muxer_window_get_pipelines (MuxerWindow* self, char** preview, char** r
 		result = FALSE;
 		return result;
 	}
-	gtk_tree_model_get ((GtkTreeModel*) self->combo_model, &iter, MUXER_WINDOW_COMBO_COL_PREVIEW, preview, MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->combo_model, &iter, OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW, preview, OMAP_MUXER_WINDOW_COMBO_COL_RECORD, record, -1, -1);
 	result = TRUE;
 	return result;
 }
 
 
-void muxer_window_on_preview_started (MuxerWindow* self) {
+void omap_muxer_window_on_preview_started (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_print ("preview started\n");
 }
 
 
-void muxer_window_on_preview_stopped (MuxerWindow* self) {
+void omap_muxer_window_on_preview_stopped (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_print ("preview stopped\n");
 }
 
 
-void muxer_window_on_record_started (MuxerWindow* self) {
+void omap_muxer_window_on_record_started (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_print ("record started\n");
 }
 
 
-void muxer_window_on_record_stopped (MuxerWindow* self) {
+void omap_muxer_window_on_record_stopped (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_print ("record stopped\n");
 }
 
 
-void muxer_window_on_control_error (MuxerWindow* self, GstObject* src, GError* _error_, const char* debug) {
+void omap_muxer_window_on_control_error (OmapMuxerWindow* self, GstObject* src, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	g_return_if_fail (debug != NULL);
-	muxer_control_stop (self->muxer_control);
-	muxer_window_show_debug (self, _error_, debug);
+	omap_muxer_control_stop (self->muxer_control);
+	omap_muxer_window_show_debug (self, _error_, debug);
 }
 
 
-void muxer_window_show_debug (MuxerWindow* self, GError* _error_, const char* debug) {
+void omap_muxer_window_show_debug (OmapMuxerWindow* self, GError* _error_, const char* debug) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (debug != NULL);
-	muxer_window_setup_debug_dialog (self);
-	debug_dialog_add_error_debug (self->debug_dialog, _error_, debug);
+	omap_muxer_window_setup_debug_dialog (self);
+	omap_debug_dialog_add_error_debug (self->debug_dialog, _error_, debug);
 }
 
 
-static void _muxer_window_on_debug_dialog_closed_debug_dialog_closed (DebugDialog* _sender, gpointer self) {
-	muxer_window_on_debug_dialog_closed (self);
+static void _omap_muxer_window_on_debug_dialog_closed_omap_debug_dialog_closed (OmapDebugDialog* _sender, gpointer self) {
+	omap_muxer_window_on_debug_dialog_closed (self);
 }
 
 
-void muxer_window_setup_debug_dialog (MuxerWindow* self) {
+void omap_muxer_window_setup_debug_dialog (OmapMuxerWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->debug_dialog == NULL) {
-		DebugDialog* _tmp0_;
-		self->debug_dialog = (_tmp0_ = g_object_ref_sink (debug_dialog_new ((GtkWindow*) self)), _g_object_unref0 (self->debug_dialog), _tmp0_);
-		g_signal_connect_object (self->debug_dialog, "closed", (GCallback) _muxer_window_on_debug_dialog_closed_debug_dialog_closed, self, 0);
+		OmapDebugDialog* _tmp0_;
+		self->debug_dialog = (_tmp0_ = g_object_ref_sink (omap_debug_dialog_new ((GtkWindow*) self)), _g_object_unref0 (self->debug_dialog), _tmp0_);
+		g_signal_connect_object (self->debug_dialog, "closed", (GCallback) _omap_muxer_window_on_debug_dialog_closed_omap_debug_dialog_closed, self, 0);
 		gtk_widget_show_all ((GtkWidget*) self->debug_dialog);
 	}
 }
 
 
-void muxer_window_on_debug_dialog_closed (MuxerWindow* self) {
-	MuxerControl* _tmp0_;
-	DebugDialog* _tmp1_;
+void omap_muxer_window_on_debug_dialog_closed (OmapMuxerWindow* self) {
+	OmapMuxerControl* _tmp0_;
+	OmapDebugDialog* _tmp1_;
 	g_return_if_fail (self != NULL);
 	self->muxer_control = (_tmp0_ = NULL, _g_object_unref0 (self->muxer_control), _tmp0_);
 	self->debug_dialog = (_tmp1_ = NULL, _g_object_unref0 (self->debug_dialog), _tmp1_);
 }
 
 
-MuxerWindow* muxer_window_construct (GType object_type) {
-	MuxerWindow * self;
+OmapMuxerWindow* omap_muxer_window_construct (GType object_type) {
+	OmapMuxerWindow * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-MuxerWindow* muxer_window_new (void) {
-	return muxer_window_construct (TYPE_MUXER_WINDOW);
+OmapMuxerWindow* omap_muxer_window_new (void) {
+	return omap_muxer_window_construct (OMAP_TYPE_MUXER_WINDOW);
 }
 
 
-static GObject * muxer_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_muxer_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	MuxerWindow * self;
-	parent_class = G_OBJECT_CLASS (muxer_window_parent_class);
+	OmapMuxerWindow * self;
+	parent_class = G_OBJECT_CLASS (omap_muxer_window_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = MUXER_WINDOW (obj);
+	self = OMAP_MUXER_WINDOW (obj);
 	{
-		muxer_window_setup_widgets (self);
+		omap_muxer_window_setup_widgets (self);
 	}
 	return obj;
 }
 
 
-static void muxer_window_class_init (MuxerWindowClass * klass) {
-	muxer_window_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->constructor = muxer_window_constructor;
-	G_OBJECT_CLASS (klass)->finalize = muxer_window_finalize;
+static void omap_muxer_window_class_init (OmapMuxerWindowClass * klass) {
+	omap_muxer_window_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->constructor = omap_muxer_window_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_muxer_window_finalize;
 }
 
 
-static void muxer_window_instance_init (MuxerWindow * self) {
+static void omap_muxer_window_instance_init (OmapMuxerWindow * self) {
 }
 
 
-static void muxer_window_finalize (GObject* obj) {
-	MuxerWindow * self;
-	self = MUXER_WINDOW (obj);
+static void omap_muxer_window_finalize (GObject* obj) {
+	OmapMuxerWindow * self;
+	self = OMAP_MUXER_WINDOW (obj);
 	_g_object_unref0 (self->combo_box);
 	_g_object_unref0 (self->combo_model);
 	_g_object_unref0 (self->chooser_button);
@@ -728,17 +728,17 @@ static void muxer_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->muxer_control);
 	_g_object_unref0 (self->video_area);
 	_g_object_unref0 (self->debug_dialog);
-	G_OBJECT_CLASS (muxer_window_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_muxer_window_parent_class)->finalize (obj);
 }
 
 
-GType muxer_window_get_type (void) {
-	static GType muxer_window_type_id = 0;
-	if (muxer_window_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (MuxerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerWindow), 0, (GInstanceInitFunc) muxer_window_instance_init, NULL };
-		muxer_window_type_id = g_type_register_static (TYPE_MEDIA_WINDOW, "MuxerWindow", &g_define_type_info, 0);
+GType omap_muxer_window_get_type (void) {
+	static GType omap_muxer_window_type_id = 0;
+	if (omap_muxer_window_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerWindow), 0, (GInstanceInitFunc) omap_muxer_window_instance_init, NULL };
+		omap_muxer_window_type_id = g_type_register_static (OMAP_TYPE_MEDIA_WINDOW, "OmapMuxerWindow", &g_define_type_info, 0);
 	}
-	return muxer_window_type_id;
+	return omap_muxer_window_type_id;
 }
 
 

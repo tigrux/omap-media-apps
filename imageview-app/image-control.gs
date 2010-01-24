@@ -1,14 +1,12 @@
 [indent=4]
 
-uses Gst
-uses Gtk
-
 
 const IMAGE_PIPELINE_DESC: string = \
 "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! ximagesink"
 
-class ImageControl: MediaControl
-    filesrc: dynamic Element
+
+class Omap.ImageControl: Omap.MediaControl
+    filesrc: dynamic Gst.Element
 
     prop location: string
         set
@@ -18,10 +16,10 @@ class ImageControl: MediaControl
         setup_pipeline()
 
     def setup_pipeline() raises Error
-        var image_pipeline = parse_launch(IMAGE_PIPELINE_DESC) as Pipeline
+        var image_pipeline = Gst.parse_launch(IMAGE_PIPELINE_DESC) as Gst.Pipeline
         image_pipeline.name = "image_pipeline"
         if (filesrc = image_pipeline.get_by_name("filesrc")) == null
-            raise new CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED( \
                         "No element named filesrc in the image pipeline")
         pipeline = image_pipeline
 

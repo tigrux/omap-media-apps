@@ -1,10 +1,7 @@
 [indent=4]
 
-uses Gtk
-uses Gst
 
-
-class VideoArea: DrawingArea
+class Omap.VideoArea: Gtk.DrawingArea
     xid: uint32
     _imagesink: dynamic Gst.XOverlay
 

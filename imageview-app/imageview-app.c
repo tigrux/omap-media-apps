@@ -11,23 +11,23 @@
 #include <string.h>
 
 
-#define TYPE_IMAGE_VIEW_WINDOW (image_view_window_get_type ())
-#define IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindow))
-#define IMAGE_VIEW_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindowClass))
-#define IS_IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_IMAGE_VIEW_WINDOW))
-#define IS_IMAGE_VIEW_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_IMAGE_VIEW_WINDOW))
-#define IMAGE_VIEW_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_IMAGE_VIEW_WINDOW, ImageViewWindowClass))
+#define OMAP_TYPE_IMAGE_VIEW_WINDOW (omap_image_view_window_get_type ())
+#define OMAP_IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_IMAGE_VIEW_WINDOW, OmapImageViewWindow))
+#define OMAP_IMAGE_VIEW_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_IMAGE_VIEW_WINDOW, OmapImageViewWindowClass))
+#define OMAP_IS_IMAGE_VIEW_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_IMAGE_VIEW_WINDOW))
+#define OMAP_IS_IMAGE_VIEW_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_IMAGE_VIEW_WINDOW))
+#define OMAP_IMAGE_VIEW_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_IMAGE_VIEW_WINDOW, OmapImageViewWindowClass))
 
-typedef struct _ImageViewWindow ImageViewWindow;
-typedef struct _ImageViewWindowClass ImageViewWindowClass;
+typedef struct _OmapImageViewWindow OmapImageViewWindow;
+typedef struct _OmapImageViewWindowClass OmapImageViewWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 
 
-ImageViewWindow* image_view_window_new (GError** error);
-ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
-GType image_view_window_get_type (void);
+OmapImageViewWindow* omap_image_view_window_new (GError** error);
+OmapImageViewWindow* omap_image_view_window_construct (GType object_type, GError** error);
+GType omap_image_view_window_get_type (void);
 void _main (char** args, int args_length1);
 
 
@@ -38,8 +38,8 @@ void _main (char** args, int args_length1) {
 	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
 	{
-		ImageViewWindow* window;
-		window = g_object_ref_sink (image_view_window_new (&_inner_error_));
+		OmapImageViewWindow* window;
+		window = g_object_ref_sink (omap_image_view_window_new (&_inner_error_));
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 			goto __finally0;

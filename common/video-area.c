@@ -10,61 +10,61 @@
 #include <gdk/gdkx.h>
 
 
-#define TYPE_VIDEO_AREA (video_area_get_type ())
-#define VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_VIDEO_AREA, VideoArea))
-#define VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_VIDEO_AREA, VideoAreaClass))
-#define IS_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_VIDEO_AREA))
-#define IS_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_VIDEO_AREA))
-#define VIDEO_AREA_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_VIDEO_AREA, VideoAreaClass))
+#define OMAP_TYPE_VIDEO_AREA (omap_video_area_get_type ())
+#define OMAP_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_VIDEO_AREA, OmapVideoArea))
+#define OMAP_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaClass))
+#define OMAP_IS_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_VIDEO_AREA))
+#define OMAP_IS_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_VIDEO_AREA))
+#define OMAP_VIDEO_AREA_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaClass))
 
-typedef struct _VideoArea VideoArea;
-typedef struct _VideoAreaClass VideoAreaClass;
-typedef struct _VideoAreaPrivate VideoAreaPrivate;
+typedef struct _OmapVideoArea OmapVideoArea;
+typedef struct _OmapVideoAreaClass OmapVideoAreaClass;
+typedef struct _OmapVideoAreaPrivate OmapVideoAreaPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 
-struct _VideoArea {
+struct _OmapVideoArea {
 	GtkDrawingArea parent_instance;
-	VideoAreaPrivate * priv;
+	OmapVideoAreaPrivate * priv;
 	guint32 xid;
 };
 
-struct _VideoAreaClass {
+struct _OmapVideoAreaClass {
 	GtkDrawingAreaClass parent_class;
 };
 
-struct _VideoAreaPrivate {
+struct _OmapVideoAreaPrivate {
 	GstXOverlay* _imagesink;
 };
 
 
-static gpointer video_area_parent_class = NULL;
+static gpointer omap_video_area_parent_class = NULL;
 
-GType video_area_get_type (void);
-#define VIDEO_AREA_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_VIDEO_AREA, VideoAreaPrivate))
+GType omap_video_area_get_type (void);
+#define OMAP_VIDEO_AREA_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaPrivate))
 enum  {
-	VIDEO_AREA_DUMMY_PROPERTY,
-	VIDEO_AREA_SINK
+	OMAP_VIDEO_AREA_DUMMY_PROPERTY,
+	OMAP_VIDEO_AREA_SINK
 };
-static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
-static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e);
-VideoArea* video_area_new (void);
-VideoArea* video_area_construct (GType object_type);
-GstXOverlay* video_area_get_sink (VideoArea* self);
+static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
+static gboolean omap_video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e);
+OmapVideoArea* omap_video_area_new (void);
+OmapVideoArea* omap_video_area_construct (GType object_type);
+GstXOverlay* omap_video_area_get_sink (OmapVideoArea* self);
 static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean value);
-void video_area_set_sink (VideoArea* self, GstXOverlay* value);
-static void _lambda0_ (VideoArea* self);
-static void __lambda0__gtk_widget_realize (VideoArea* _sender, gpointer self);
-static GObject * video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void video_area_finalize (GObject* obj);
-static void video_area_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void video_area_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+void omap_video_area_set_sink (OmapVideoArea* self, GstXOverlay* value);
+static void _lambda0_ (OmapVideoArea* self);
+static void __lambda0__gtk_widget_realize (OmapVideoArea* _sender, gpointer self);
+static GObject * omap_video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_video_area_finalize (GObject* obj);
+static void omap_video_area_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void omap_video_area_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
 
-static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event) {
-	VideoArea * self;
+static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event) {
+	OmapVideoArea * self;
 	gboolean result;
-	self = (VideoArea*) base;
+	self = (OmapVideoArea*) base;
 	if ((*event).type == GDK_2BUTTON_PRESS) {
 		g_signal_emit_by_name (self, "activated");
 	}
@@ -73,10 +73,10 @@ static gboolean video_area_real_button_press_event (GtkWidget* base, GdkEventBut
 }
 
 
-static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e) {
-	VideoArea * self;
+static gboolean omap_video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e) {
+	OmapVideoArea * self;
 	gboolean result;
-	self = (VideoArea*) base;
+	self = (OmapVideoArea*) base;
 	if (self->priv->_imagesink != NULL) {
 		gst_x_overlay_expose (self->priv->_imagesink);
 		result = FALSE;
@@ -88,19 +88,19 @@ static gboolean video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e
 }
 
 
-VideoArea* video_area_construct (GType object_type) {
-	VideoArea * self;
+OmapVideoArea* omap_video_area_construct (GType object_type) {
+	OmapVideoArea * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-VideoArea* video_area_new (void) {
-	return video_area_construct (TYPE_VIDEO_AREA);
+OmapVideoArea* omap_video_area_new (void) {
+	return omap_video_area_construct (OMAP_TYPE_VIDEO_AREA);
 }
 
 
-GstXOverlay* video_area_get_sink (VideoArea* self) {
+GstXOverlay* omap_video_area_get_sink (OmapVideoArea* self) {
 	GstXOverlay* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_imagesink;
@@ -118,7 +118,7 @@ static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean 
 }
 
 
-void video_area_set_sink (VideoArea* self, GstXOverlay* value) {
+void omap_video_area_set_sink (OmapVideoArea* self, GstXOverlay* value) {
 	GstXOverlay* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_imagesink = (_tmp0_ = _gst_object_ref0 (value), _gst_object_unref0 (self->priv->_imagesink), _tmp0_);
@@ -128,23 +128,23 @@ void video_area_set_sink (VideoArea* self, GstXOverlay* value) {
 }
 
 
-static void _lambda0_ (VideoArea* self) {
+static void _lambda0_ (OmapVideoArea* self) {
 	self->xid = gdk_x11_drawable_get_xid ((GdkDrawable*) ((GtkWidget*) self)->window);
 }
 
 
-static void __lambda0__gtk_widget_realize (VideoArea* _sender, gpointer self) {
+static void __lambda0__gtk_widget_realize (OmapVideoArea* _sender, gpointer self) {
 	_lambda0_ (self);
 }
 
 
-static GObject * video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	VideoArea * self;
-	parent_class = G_OBJECT_CLASS (video_area_parent_class);
+	OmapVideoArea * self;
+	parent_class = G_OBJECT_CLASS (omap_video_area_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = VIDEO_AREA (obj);
+	self = OMAP_VIDEO_AREA (obj);
 	{
 		gtk_widget_set_double_buffered ((GtkWidget*) self, FALSE);
 		gtk_widget_add_events ((GtkWidget*) self, (gint) GDK_BUTTON_PRESS_MASK);
@@ -155,49 +155,49 @@ static GObject * video_area_constructor (GType type, guint n_construct_propertie
 }
 
 
-static void video_area_class_init (VideoAreaClass * klass) {
-	video_area_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (VideoAreaPrivate));
-	GTK_WIDGET_CLASS (klass)->button_press_event = video_area_real_button_press_event;
-	GTK_WIDGET_CLASS (klass)->expose_event = video_area_real_expose_event;
-	G_OBJECT_CLASS (klass)->get_property = video_area_get_property;
-	G_OBJECT_CLASS (klass)->set_property = video_area_set_property;
-	G_OBJECT_CLASS (klass)->constructor = video_area_constructor;
-	G_OBJECT_CLASS (klass)->finalize = video_area_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), VIDEO_AREA_SINK, g_param_spec_object ("sink", "sink", "sink", GST_TYPE_X_OVERLAY, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_signal_new ("activated", TYPE_VIDEO_AREA, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+static void omap_video_area_class_init (OmapVideoAreaClass * klass) {
+	omap_video_area_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (OmapVideoAreaPrivate));
+	GTK_WIDGET_CLASS (klass)->button_press_event = omap_video_area_real_button_press_event;
+	GTK_WIDGET_CLASS (klass)->expose_event = omap_video_area_real_expose_event;
+	G_OBJECT_CLASS (klass)->get_property = omap_video_area_get_property;
+	G_OBJECT_CLASS (klass)->set_property = omap_video_area_set_property;
+	G_OBJECT_CLASS (klass)->constructor = omap_video_area_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_video_area_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_VIDEO_AREA_SINK, g_param_spec_object ("sink", "sink", "sink", GST_TYPE_X_OVERLAY, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_signal_new ("activated", OMAP_TYPE_VIDEO_AREA, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 
-static void video_area_instance_init (VideoArea * self) {
-	self->priv = VIDEO_AREA_GET_PRIVATE (self);
+static void omap_video_area_instance_init (OmapVideoArea * self) {
+	self->priv = OMAP_VIDEO_AREA_GET_PRIVATE (self);
 }
 
 
-static void video_area_finalize (GObject* obj) {
-	VideoArea * self;
-	self = VIDEO_AREA (obj);
+static void omap_video_area_finalize (GObject* obj) {
+	OmapVideoArea * self;
+	self = OMAP_VIDEO_AREA (obj);
 	_gst_object_unref0 (self->priv->_imagesink);
-	G_OBJECT_CLASS (video_area_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_video_area_parent_class)->finalize (obj);
 }
 
 
-GType video_area_get_type (void) {
-	static GType video_area_type_id = 0;
-	if (video_area_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (VideoAreaClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) video_area_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (VideoArea), 0, (GInstanceInitFunc) video_area_instance_init, NULL };
-		video_area_type_id = g_type_register_static (GTK_TYPE_DRAWING_AREA, "VideoArea", &g_define_type_info, 0);
+GType omap_video_area_get_type (void) {
+	static GType omap_video_area_type_id = 0;
+	if (omap_video_area_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapVideoAreaClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_video_area_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapVideoArea), 0, (GInstanceInitFunc) omap_video_area_instance_init, NULL };
+		omap_video_area_type_id = g_type_register_static (GTK_TYPE_DRAWING_AREA, "OmapVideoArea", &g_define_type_info, 0);
 	}
-	return video_area_type_id;
+	return omap_video_area_type_id;
 }
 
 
-static void video_area_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	VideoArea * self;
-	self = VIDEO_AREA (object);
+static void omap_video_area_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	OmapVideoArea * self;
+	self = OMAP_VIDEO_AREA (object);
 	switch (property_id) {
-		case VIDEO_AREA_SINK:
-		g_value_set_object (value, video_area_get_sink (self));
+		case OMAP_VIDEO_AREA_SINK:
+		g_value_set_object (value, omap_video_area_get_sink (self));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -206,12 +206,12 @@ static void video_area_get_property (GObject * object, guint property_id, GValue
 }
 
 
-static void video_area_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	VideoArea * self;
-	self = VIDEO_AREA (object);
+static void omap_video_area_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	OmapVideoArea * self;
+	self = OMAP_VIDEO_AREA (object);
 	switch (property_id) {
-		case VIDEO_AREA_SINK:
-		video_area_set_sink (self, g_value_get_object (value));
+		case OMAP_VIDEO_AREA_SINK:
+		omap_video_area_set_sink (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

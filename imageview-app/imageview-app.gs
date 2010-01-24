@@ -5,7 +5,7 @@ init
     Gst.init(ref args)
     Gtk.init(ref args)
     try
-        var window = new ImageViewWindow()
+        var window = new Omap.ImageViewWindow()
         window.show()
         Gtk.main()
     except e: Error

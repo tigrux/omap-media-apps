@@ -15,144 +15,144 @@
 G_BEGIN_DECLS
 
 
-#define TYPE_VIDEO_AREA (video_area_get_type ())
-#define VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_VIDEO_AREA, VideoArea))
-#define VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_VIDEO_AREA, VideoAreaClass))
-#define IS_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_VIDEO_AREA))
-#define IS_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_VIDEO_AREA))
-#define VIDEO_AREA_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_VIDEO_AREA, VideoAreaClass))
+#define OMAP_TYPE_VIDEO_AREA (omap_video_area_get_type ())
+#define OMAP_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_VIDEO_AREA, OmapVideoArea))
+#define OMAP_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaClass))
+#define OMAP_IS_VIDEO_AREA(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_VIDEO_AREA))
+#define OMAP_IS_VIDEO_AREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_VIDEO_AREA))
+#define OMAP_VIDEO_AREA_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaClass))
 
-typedef struct _VideoArea VideoArea;
-typedef struct _VideoAreaClass VideoAreaClass;
-typedef struct _VideoAreaPrivate VideoAreaPrivate;
+typedef struct _OmapVideoArea OmapVideoArea;
+typedef struct _OmapVideoAreaClass OmapVideoAreaClass;
+typedef struct _OmapVideoAreaPrivate OmapVideoAreaPrivate;
 
-#define TYPE_DEBUG_DIALOG (debug_dialog_get_type ())
-#define DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_DEBUG_DIALOG, DebugDialog))
-#define DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_DEBUG_DIALOG, DebugDialogClass))
-#define IS_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_DEBUG_DIALOG))
-#define IS_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_DEBUG_DIALOG))
-#define DEBUG_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_DEBUG_DIALOG, DebugDialogClass))
+#define OMAP_TYPE_DEBUG_DIALOG (omap_debug_dialog_get_type ())
+#define OMAP_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialog))
+#define OMAP_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialogClass))
+#define OMAP_IS_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_DEBUG_DIALOG))
+#define OMAP_IS_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_DEBUG_DIALOG))
+#define OMAP_DEBUG_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialogClass))
 
-typedef struct _DebugDialog DebugDialog;
-typedef struct _DebugDialogClass DebugDialogClass;
-typedef struct _DebugDialogPrivate DebugDialogPrivate;
+typedef struct _OmapDebugDialog OmapDebugDialog;
+typedef struct _OmapDebugDialogClass OmapDebugDialogClass;
+typedef struct _OmapDebugDialogPrivate OmapDebugDialogPrivate;
 
-#define TYPE_MEDIA_WINDOW (media_window_get_type ())
-#define MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_WINDOW, MediaWindow))
-#define MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_WINDOW, MediaWindowClass))
-#define IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_WINDOW))
-#define IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_WINDOW))
-#define MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_WINDOW, MediaWindowClass))
+#define OMAP_TYPE_MEDIA_WINDOW (omap_media_window_get_type ())
+#define OMAP_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MEDIA_WINDOW, OmapMediaWindow))
+#define OMAP_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MEDIA_WINDOW, OmapMediaWindowClass))
+#define OMAP_IS_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MEDIA_WINDOW))
+#define OMAP_IS_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MEDIA_WINDOW))
+#define OMAP_MEDIA_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MEDIA_WINDOW, OmapMediaWindowClass))
 
-typedef struct _MediaWindow MediaWindow;
-typedef struct _MediaWindowClass MediaWindowClass;
-typedef struct _MediaWindowPrivate MediaWindowPrivate;
+typedef struct _OmapMediaWindow OmapMediaWindow;
+typedef struct _OmapMediaWindowClass OmapMediaWindowClass;
+typedef struct _OmapMediaWindowPrivate OmapMediaWindowPrivate;
 
-#define MEDIA_WINDOW_TYPE_TAB (media_window_tab_get_type ())
+#define OMAP_MEDIA_WINDOW_TYPE_TAB (omap_media_window_tab_get_type ())
 
-#define TYPE_MEDIA_CONTROL (media_control_get_type ())
-#define MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MEDIA_CONTROL, MediaControl))
-#define MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MEDIA_CONTROL, MediaControlClass))
-#define IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MEDIA_CONTROL))
-#define IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MEDIA_CONTROL))
-#define MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MEDIA_CONTROL, MediaControlClass))
+#define OMAP_TYPE_MEDIA_CONTROL (omap_media_control_get_type ())
+#define OMAP_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MEDIA_CONTROL, OmapMediaControl))
+#define OMAP_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MEDIA_CONTROL, OmapMediaControlClass))
+#define OMAP_IS_MEDIA_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MEDIA_CONTROL))
+#define OMAP_IS_MEDIA_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MEDIA_CONTROL))
+#define OMAP_MEDIA_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MEDIA_CONTROL, OmapMediaControlClass))
 
-typedef struct _MediaControl MediaControl;
-typedef struct _MediaControlClass MediaControlClass;
-typedef struct _MediaControlPrivate MediaControlPrivate;
+typedef struct _OmapMediaControl OmapMediaControl;
+typedef struct _OmapMediaControlClass OmapMediaControlClass;
+typedef struct _OmapMediaControlPrivate OmapMediaControlPrivate;
 
-struct _VideoArea {
+struct _OmapVideoArea {
 	GtkDrawingArea parent_instance;
-	VideoAreaPrivate * priv;
+	OmapVideoAreaPrivate * priv;
 	guint32 xid;
 };
 
-struct _VideoAreaClass {
+struct _OmapVideoAreaClass {
 	GtkDrawingAreaClass parent_class;
 };
 
-struct _DebugDialog {
+struct _OmapDebugDialog {
 	GtkDialog parent_instance;
-	DebugDialogPrivate * priv;
+	OmapDebugDialogPrivate * priv;
 	GtkTextBuffer* text_buffer;
 	gint errors_n;
 };
 
-struct _DebugDialogClass {
+struct _OmapDebugDialogClass {
 	GtkDialogClass parent_class;
 };
 
-struct _MediaWindow {
+struct _OmapMediaWindow {
 	GtkWindow parent_instance;
-	MediaWindowPrivate * priv;
+	OmapMediaWindowPrivate * priv;
 	GtkNotebook* notebook;
 	GtkToolbar* toolbar;
 	GtkVBox* main_box;
 	gboolean is_fullscreen;
 };
 
-struct _MediaWindowClass {
+struct _OmapMediaWindowClass {
 	GtkWindowClass parent_class;
 };
 
 typedef enum  {
-	MEDIA_WINDOW_TAB_LIST,
-	MEDIA_WINDOW_TAB_VIDEO
-} MediaWindowTab;
+	OMAP_MEDIA_WINDOW_TAB_LIST,
+	OMAP_MEDIA_WINDOW_TAB_VIDEO
+} OmapMediaWindowTab;
 
-struct _MediaControl {
+struct _OmapMediaControl {
 	GObject parent_instance;
-	MediaControlPrivate * priv;
+	OmapMediaControlPrivate * priv;
 	GstXOverlay* xoverlay;
 };
 
-struct _MediaControlClass {
+struct _OmapMediaControlClass {
 	GObjectClass parent_class;
 };
 
 
-GType video_area_get_type (void);
-VideoArea* video_area_new (void);
-VideoArea* video_area_construct (GType object_type);
-GstXOverlay* video_area_get_sink (VideoArea* self);
-void video_area_set_sink (VideoArea* self, GstXOverlay* value);
-GType debug_dialog_get_type (void);
-DebugDialog* debug_dialog_new (GtkWindow* parent);
-DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
-void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const char* debug);
-void debug_dialog_text_insert_new_line (DebugDialog* self, GtkTextIter* iter);
-GtkBox* debug_dialog_new_error_box (DebugDialog* self);
+GType omap_video_area_get_type (void);
+OmapVideoArea* omap_video_area_new (void);
+OmapVideoArea* omap_video_area_construct (GType object_type);
+GstXOverlay* omap_video_area_get_sink (OmapVideoArea* self);
+void omap_video_area_set_sink (OmapVideoArea* self, GstXOverlay* value);
+GType omap_debug_dialog_get_type (void);
+OmapDebugDialog* omap_debug_dialog_new (GtkWindow* parent);
+OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* parent);
+void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
+void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter);
+GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
 void error_dialog (GError* _error_);
-GType media_window_get_type (void);
-GType media_window_tab_get_type (void);
-extern gboolean media_window_style_applied;
-gboolean media_window_apply_style (void);
-void media_window_lookup_and_set_icon_name (MediaWindow* self, const char* name);
-void media_window_toolbar_add_quit_button (MediaWindow* self);
-void media_window_toolbar_add_expander (MediaWindow* self);
-void media_window_toggle_fullscreen (MediaWindow* self);
-void media_window_on_quit (MediaWindow* self);
-gboolean media_window_quit (MediaWindow* self);
-MediaWindow* media_window_new (void);
-MediaWindow* media_window_construct (GType object_type);
-gboolean media_window_get_fullscreen (MediaWindow* self);
-void media_window_set_fullscreen (MediaWindow* self, gboolean value);
-GType media_control_get_type (void);
-extern GQuark media_control_prepare_xwindow_q;
-void media_control_remove_signals (MediaControl* self);
-void media_control_add_signals (MediaControl* self);
-void media_control_on_bus_message (MediaControl* self, GstMessage* message);
-void media_control_tag_foreach_func (MediaControl* self, GstTagList* tag_list, const char* tag_name);
-void media_control_on_bus_sync_message (MediaControl* self, GstMessage* message);
-MediaControl* media_control_new (void);
-MediaControl* media_control_construct (GType object_type);
-GstBin* media_control_get_pipeline (MediaControl* self);
-void media_control_set_pipeline (MediaControl* self, GstBin* value);
-GstState media_control_get_state (MediaControl* self);
-void media_control_set_state (MediaControl* self, GstState value);
-gint64 media_control_get_position (MediaControl* self);
-void media_control_set_position (MediaControl* self, gint64 value);
-gint64 media_control_get_duration (MediaControl* self);
+GType omap_media_window_get_type (void);
+GType omap_media_window_tab_get_type (void);
+extern gboolean omap_media_window_style_applied;
+gboolean omap_media_window_apply_style (void);
+void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const char* name);
+void omap_media_window_toolbar_add_quit_button (OmapMediaWindow* self);
+void omap_media_window_toolbar_add_expander (OmapMediaWindow* self);
+void omap_media_window_toggle_fullscreen (OmapMediaWindow* self);
+void omap_media_window_on_quit (OmapMediaWindow* self);
+gboolean omap_media_window_quit (OmapMediaWindow* self);
+OmapMediaWindow* omap_media_window_new (void);
+OmapMediaWindow* omap_media_window_construct (GType object_type);
+gboolean omap_media_window_get_fullscreen (OmapMediaWindow* self);
+void omap_media_window_set_fullscreen (OmapMediaWindow* self, gboolean value);
+GType omap_media_control_get_type (void);
+extern GQuark omap_media_control_prepare_xwindow_q;
+void omap_media_control_remove_signals (OmapMediaControl* self);
+void omap_media_control_add_signals (OmapMediaControl* self);
+void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* message);
+void omap_media_control_tag_foreach_func (OmapMediaControl* self, GstTagList* tag_list, const char* tag_name);
+void omap_media_control_on_bus_sync_message (OmapMediaControl* self, GstMessage* message);
+OmapMediaControl* omap_media_control_new (void);
+OmapMediaControl* omap_media_control_construct (GType object_type);
+GstBin* omap_media_control_get_pipeline (OmapMediaControl* self);
+void omap_media_control_set_pipeline (OmapMediaControl* self, GstBin* value);
+GstState omap_media_control_get_state (OmapMediaControl* self);
+void omap_media_control_set_state (OmapMediaControl* self, GstState value);
+gint64 omap_media_control_get_position (OmapMediaControl* self);
+void omap_media_control_set_position (OmapMediaControl* self, gint64 value);
+gint64 omap_media_control_get_duration (OmapMediaControl* self);
 
 
 G_END_DECLS

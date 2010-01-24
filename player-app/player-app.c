@@ -11,31 +11,31 @@
 #include <string.h>
 
 
-#define TYPE_PLAYER_WINDOW (player_window_get_type ())
-#define PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_PLAYER_WINDOW, PlayerWindow))
-#define PLAYER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_PLAYER_WINDOW, PlayerWindowClass))
-#define IS_PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_PLAYER_WINDOW))
-#define IS_PLAYER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_PLAYER_WINDOW))
-#define PLAYER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_PLAYER_WINDOW, PlayerWindowClass))
+#define OMAP_TYPE_PLAYER_WINDOW (omap_player_window_get_type ())
+#define OMAP_PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_PLAYER_WINDOW, OmapPlayerWindow))
+#define OMAP_PLAYER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_PLAYER_WINDOW, OmapPlayerWindowClass))
+#define OMAP_IS_PLAYER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_PLAYER_WINDOW))
+#define OMAP_IS_PLAYER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_PLAYER_WINDOW))
+#define OMAP_PLAYER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_PLAYER_WINDOW, OmapPlayerWindowClass))
 
-typedef struct _PlayerWindow PlayerWindow;
-typedef struct _PlayerWindowClass PlayerWindowClass;
+typedef struct _OmapPlayerWindow OmapPlayerWindow;
+typedef struct _OmapPlayerWindowClass OmapPlayerWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 
 
-PlayerWindow* player_window_new (void);
-PlayerWindow* player_window_construct (GType object_type);
-GType player_window_get_type (void);
+OmapPlayerWindow* omap_player_window_new (void);
+OmapPlayerWindow* omap_player_window_construct (GType object_type);
+GType omap_player_window_get_type (void);
 void _main (char** args, int args_length1);
 
 
 
 void _main (char** args, int args_length1) {
-	PlayerWindow* window;
+	OmapPlayerWindow* window;
 	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
-	window = g_object_ref_sink (player_window_new ());
+	window = g_object_ref_sink (omap_player_window_new ());
 	gtk_widget_show ((GtkWidget*) window);
 	gtk_main ();
 	_g_object_unref0 (window);

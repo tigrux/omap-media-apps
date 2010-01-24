@@ -10,22 +10,22 @@
 #include <gst/gst.h>
 
 
-#define TYPE_MUXER_CONTROL (muxer_control_get_type ())
-#define MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONTROL, MuxerControl))
-#define MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_CONTROL, MuxerControlClass))
-#define IS_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_CONTROL))
-#define IS_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_CONTROL))
-#define MUXER_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_CONTROL, MuxerControlClass))
+#define OMAP_TYPE_MUXER_CONTROL (omap_muxer_control_get_type ())
+#define OMAP_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControl))
+#define OMAP_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlClass))
+#define OMAP_IS_MUXER_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_CONTROL))
+#define OMAP_IS_MUXER_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_CONTROL))
+#define OMAP_MUXER_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlClass))
 
-typedef struct _MuxerControl MuxerControl;
-typedef struct _MuxerControlClass MuxerControlClass;
-typedef struct _MuxerControlPrivate MuxerControlPrivate;
+typedef struct _OmapMuxerControl OmapMuxerControl;
+typedef struct _OmapMuxerControlClass OmapMuxerControlClass;
+typedef struct _OmapMuxerControlPrivate OmapMuxerControlPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 
-struct _MuxerControl {
-	MediaControl parent_instance;
-	MuxerControlPrivate * priv;
+struct _OmapMuxerControl {
+	OmapMediaControl parent_instance;
+	OmapMuxerControlPrivate * priv;
 	char* preview_desc;
 	char* record_desc;
 	GstElement* overlay;
@@ -40,51 +40,51 @@ struct _MuxerControl {
 	GstClockTime adjust_ts_audio;
 };
 
-struct _MuxerControlClass {
-	MediaControlClass parent_class;
+struct _OmapMuxerControlClass {
+	OmapMediaControlClass parent_class;
 };
 
-struct _MuxerControlPrivate {
+struct _OmapMuxerControlPrivate {
 	gboolean _recording;
 	gboolean _previewing;
 };
 
 
-static gpointer muxer_control_parent_class = NULL;
+static gpointer omap_muxer_control_parent_class = NULL;
 
-GType muxer_control_get_type (void);
-#define MUXER_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_MUXER_CONTROL, MuxerControlPrivate))
+GType omap_muxer_control_get_type (void);
+#define OMAP_MUXER_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlPrivate))
 enum  {
-	MUXER_CONTROL_DUMMY_PROPERTY,
-	MUXER_CONTROL_PREVIEWING,
-	MUXER_CONTROL_RECORDING
+	OMAP_MUXER_CONTROL_DUMMY_PROPERTY,
+	OMAP_MUXER_CONTROL_PREVIEWING,
+	OMAP_MUXER_CONTROL_RECORDING
 };
-MuxerControl* muxer_control_new (const char* preview, const char* record);
-MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record);
-void muxer_control_load_preview_bin (MuxerControl* self, GError** error);
-void muxer_control_load (MuxerControl* self, GError** error);
-void muxer_control_start_preview (MuxerControl* self);
-void muxer_control_stop_preview (MuxerControl* self);
-void muxer_control_load_record_bin (MuxerControl* self, GError** error);
+OmapMuxerControl* omap_muxer_control_new (const char* preview, const char* record);
+OmapMuxerControl* omap_muxer_control_construct (GType object_type, const char* preview, const char* record);
+void omap_muxer_control_load_preview_bin (OmapMuxerControl* self, GError** error);
+void omap_muxer_control_load (OmapMuxerControl* self, GError** error);
+void omap_muxer_control_start_preview (OmapMuxerControl* self);
+void omap_muxer_control_stop_preview (OmapMuxerControl* self);
+void omap_muxer_control_load_record_bin (OmapMuxerControl* self, GError** error);
 static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value);
-void muxer_control_start_record (MuxerControl* self, GError** error);
-void muxer_control_stop_record (MuxerControl* self);
-void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending);
+void omap_muxer_control_start_record (OmapMuxerControl* self, GError** error);
+void omap_muxer_control_stop_record (OmapMuxerControl* self);
+void omap_muxer_control_on_state_changed (OmapMuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending);
 static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
-void muxer_control_on_eos (MuxerControl* self, GstObject* src);
-void muxer_control_stop (MuxerControl* self);
-gboolean muxer_control_get_previewing (MuxerControl* self);
-gboolean muxer_control_get_recording (MuxerControl* self);
-static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self);
-static void _muxer_control_on_state_changed_media_control_state_changed_message (MuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self);
-static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void muxer_control_finalize (GObject* obj);
-static void muxer_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+void omap_muxer_control_on_eos (OmapMuxerControl* self, GstObject* src);
+void omap_muxer_control_stop (OmapMuxerControl* self);
+gboolean omap_muxer_control_get_previewing (OmapMuxerControl* self);
+gboolean omap_muxer_control_get_recording (OmapMuxerControl* self);
+static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMuxerControl* _sender, GstObject* src, gpointer self);
+static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self);
+static GObject * omap_muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_muxer_control_finalize (GObject* obj);
+static void omap_muxer_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 
 
 
-MuxerControl* muxer_control_construct (GType object_type, const char* preview, const char* record) {
-	MuxerControl * self;
+OmapMuxerControl* omap_muxer_control_construct (GType object_type, const char* preview, const char* record) {
+	OmapMuxerControl * self;
 	char* _tmp0_;
 	char* _tmp1_;
 	g_return_val_if_fail (preview != NULL, NULL);
@@ -96,16 +96,16 @@ MuxerControl* muxer_control_construct (GType object_type, const char* preview, c
 }
 
 
-MuxerControl* muxer_control_new (const char* preview, const char* record) {
-	return muxer_control_construct (TYPE_MUXER_CONTROL, preview, record);
+OmapMuxerControl* omap_muxer_control_new (const char* preview, const char* record) {
+	return omap_muxer_control_construct (OMAP_TYPE_MUXER_CONTROL, preview, record);
 }
 
 
-void muxer_control_load (MuxerControl* self, GError** error) {
+void omap_muxer_control_load (OmapMuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	muxer_control_load_preview_bin (self, &_inner_error_);
+	omap_muxer_control_load_preview_bin (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return;
@@ -113,15 +113,15 @@ void muxer_control_load (MuxerControl* self, GError** error) {
 }
 
 
-void muxer_control_start_preview (MuxerControl* self) {
+void omap_muxer_control_start_preview (OmapMuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	media_control_set_state ((MediaControl*) self, GST_STATE_PLAYING);
+	omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_PLAYING);
 }
 
 
-void muxer_control_stop_preview (MuxerControl* self) {
+void omap_muxer_control_stop_preview (OmapMuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	media_control_set_state ((MediaControl*) self, GST_STATE_NULL);
+	omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_NULL);
 	self->priv->_previewing = FALSE;
 	g_signal_emit_by_name (self, "preview-stopped");
 }
@@ -137,12 +137,12 @@ static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value) {
 }
 
 
-void muxer_control_start_record (MuxerControl* self, GError** error) {
+void omap_muxer_control_start_record (OmapMuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
-	media_control_set_state ((MediaControl*) self, GST_STATE_NULL);
-	muxer_control_load_record_bin (self, &_inner_error_);
+	omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_NULL);
+	omap_muxer_control_load_record_bin (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return;
@@ -152,11 +152,11 @@ void muxer_control_start_record (MuxerControl* self, GError** error) {
 	if (self->overlay != NULL) {
 		_dynamic_set_silent0 (self->overlay, FALSE);
 	}
-	media_control_set_state ((MediaControl*) self, GST_STATE_PLAYING);
+	omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_PLAYING);
 }
 
 
-void muxer_control_stop_record (MuxerControl* self) {
+void omap_muxer_control_stop_record (OmapMuxerControl* self) {
 	g_return_if_fail (self != NULL);
 	if (!self->priv->_recording) {
 		return;
@@ -168,7 +168,7 @@ void muxer_control_stop_record (MuxerControl* self) {
 }
 
 
-void muxer_control_load_preview_bin (MuxerControl* self, GError** error) {
+void omap_muxer_control_load_preview_bin (OmapMuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	GstElement* _tmp0_;
 	GstBin* _tmp2_;
@@ -185,7 +185,7 @@ void muxer_control_load_preview_bin (MuxerControl* self, GError** error) {
 	}
 	self->preview_bin = (_tmp2_ = (GstBin*) (_tmp1_ = _tmp0_, GST_IS_PIPELINE (_tmp1_) ? ((GstPipeline*) _tmp1_) : NULL), _gst_object_unref0 (self->preview_bin), _tmp2_);
 	gst_object_set_name ((GstObject*) self->preview_bin, "preview_bin");
-	media_control_set_pipeline ((MediaControl*) self, self->preview_bin);
+	omap_media_control_set_pipeline ((OmapMediaControl*) self, self->preview_bin);
 	self->overlay = (_tmp3_ = gst_bin_get_by_name (self->preview_bin, "overlay"), _gst_object_unref0 (self->overlay), _tmp3_);
 	self->videosrc = (_tmp4_ = gst_bin_get_by_name (self->preview_bin, "videosrc"), _gst_object_unref0 (self->videosrc), _tmp4_);
 	if ((self->tee = (_tmp5_ = gst_bin_get_by_name (self->preview_bin, "tee"), _gst_object_unref0 (self->tee), _tmp5_)) == NULL) {
@@ -198,7 +198,7 @@ void muxer_control_load_preview_bin (MuxerControl* self, GError** error) {
 }
 
 
-void muxer_control_load_record_bin (MuxerControl* self, GError** error) {
+void omap_muxer_control_load_record_bin (OmapMuxerControl* self, GError** error) {
 	GError * _inner_error_;
 	GstElement* _tmp0_;
 	GstBin* _tmp2_;
@@ -227,7 +227,7 @@ void muxer_control_load_record_bin (MuxerControl* self, GError** error) {
 }
 
 
-void muxer_control_on_state_changed (MuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending) {
+void omap_muxer_control_on_state_changed (OmapMuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	if (src == GST_OBJECT (self->preview_bin)) {
@@ -263,7 +263,7 @@ static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value) {
 }
 
 
-void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
+void omap_muxer_control_on_eos (OmapMuxerControl* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
 	if (self->overlay != NULL) {
@@ -271,21 +271,21 @@ void muxer_control_on_eos (MuxerControl* self, GstObject* src) {
 	}
 	self->priv->_recording = FALSE;
 	g_signal_emit_by_name (self, "record-stopped");
-	muxer_control_stop_preview (self);
+	omap_muxer_control_stop_preview (self);
 	gst_element_unlink (self->tee, self->queue);
 	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
-	g_signal_emit_by_name ((MediaControl*) self, "prepare-xwindow-id", ((MediaControl*) self)->xoverlay);
-	muxer_control_start_preview (self);
+	g_signal_emit_by_name ((OmapMediaControl*) self, "prepare-xwindow-id", ((OmapMediaControl*) self)->xoverlay);
+	omap_muxer_control_start_preview (self);
 }
 
 
-void muxer_control_stop (MuxerControl* self) {
+void omap_muxer_control_stop (OmapMuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	muxer_control_stop_preview (self);
+	omap_muxer_control_stop_preview (self);
 }
 
 
-gboolean muxer_control_get_previewing (MuxerControl* self) {
+gboolean omap_muxer_control_get_previewing (OmapMuxerControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_previewing;
@@ -293,7 +293,7 @@ gboolean muxer_control_get_previewing (MuxerControl* self) {
 }
 
 
-gboolean muxer_control_get_recording (MuxerControl* self) {
+gboolean omap_muxer_control_get_recording (OmapMuxerControl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_recording;
@@ -301,56 +301,56 @@ gboolean muxer_control_get_recording (MuxerControl* self) {
 }
 
 
-static void _muxer_control_on_eos_media_control_eos_message (MuxerControl* _sender, GstObject* src, gpointer self) {
-	muxer_control_on_eos (self, src);
+static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMuxerControl* _sender, GstObject* src, gpointer self) {
+	omap_muxer_control_on_eos (self, src);
 }
 
 
-static void _muxer_control_on_state_changed_media_control_state_changed_message (MuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self) {
-	muxer_control_on_state_changed (self, src, old, current, pending);
+static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self) {
+	omap_muxer_control_on_state_changed (self, src, old, current, pending);
 }
 
 
-static GObject * muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	MuxerControl * self;
-	parent_class = G_OBJECT_CLASS (muxer_control_parent_class);
+	OmapMuxerControl * self;
+	parent_class = G_OBJECT_CLASS (omap_muxer_control_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = MUXER_CONTROL (obj);
+	self = OMAP_MUXER_CONTROL (obj);
 	{
-		g_signal_connect_object ((MediaControl*) self, "eos-message", (GCallback) _muxer_control_on_eos_media_control_eos_message, self, 0);
-		g_signal_connect_object ((MediaControl*) self, "state-changed-message", (GCallback) _muxer_control_on_state_changed_media_control_state_changed_message, self, 0);
+		g_signal_connect_object ((OmapMediaControl*) self, "eos-message", (GCallback) _omap_muxer_control_on_eos_omap_media_control_eos_message, self, 0);
+		g_signal_connect_object ((OmapMediaControl*) self, "state-changed-message", (GCallback) _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message, self, 0);
 	}
 	return obj;
 }
 
 
-static void muxer_control_class_init (MuxerControlClass * klass) {
-	muxer_control_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (MuxerControlPrivate));
-	G_OBJECT_CLASS (klass)->get_property = muxer_control_get_property;
-	G_OBJECT_CLASS (klass)->constructor = muxer_control_constructor;
-	G_OBJECT_CLASS (klass)->finalize = muxer_control_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), MUXER_CONTROL_PREVIEWING, g_param_spec_boolean ("previewing", "previewing", "previewing", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), MUXER_CONTROL_RECORDING, g_param_spec_boolean ("recording", "recording", "recording", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
-	g_signal_new ("preview_started", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("preview_stopped", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("record_started", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("record_stopped", TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+static void omap_muxer_control_class_init (OmapMuxerControlClass * klass) {
+	omap_muxer_control_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (OmapMuxerControlPrivate));
+	G_OBJECT_CLASS (klass)->get_property = omap_muxer_control_get_property;
+	G_OBJECT_CLASS (klass)->constructor = omap_muxer_control_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_muxer_control_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_MUXER_CONTROL_PREVIEWING, g_param_spec_boolean ("previewing", "previewing", "previewing", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_MUXER_CONTROL_RECORDING, g_param_spec_boolean ("recording", "recording", "recording", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_signal_new ("preview_started", OMAP_TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	g_signal_new ("preview_stopped", OMAP_TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	g_signal_new ("record_started", OMAP_TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	g_signal_new ("record_stopped", OMAP_TYPE_MUXER_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 
-static void muxer_control_instance_init (MuxerControl * self) {
-	self->priv = MUXER_CONTROL_GET_PRIVATE (self);
+static void omap_muxer_control_instance_init (OmapMuxerControl * self) {
+	self->priv = OMAP_MUXER_CONTROL_GET_PRIVATE (self);
 }
 
 
-static void muxer_control_finalize (GObject* obj) {
-	MuxerControl * self;
-	self = MUXER_CONTROL (obj);
+static void omap_muxer_control_finalize (GObject* obj) {
+	OmapMuxerControl * self;
+	self = OMAP_MUXER_CONTROL (obj);
 	{
-		muxer_control_stop (self);
+		omap_muxer_control_stop (self);
 	}
 	_g_free0 (self->preview_desc);
 	_g_free0 (self->record_desc);
@@ -362,29 +362,29 @@ static void muxer_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->preview_bin);
 	_gst_object_unref0 (self->record_bin);
 	_gst_object_unref0 (self->queue);
-	G_OBJECT_CLASS (muxer_control_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_muxer_control_parent_class)->finalize (obj);
 }
 
 
-GType muxer_control_get_type (void) {
-	static GType muxer_control_type_id = 0;
-	if (muxer_control_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (MuxerControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerControl), 0, (GInstanceInitFunc) muxer_control_instance_init, NULL };
-		muxer_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "MuxerControl", &g_define_type_info, 0);
+GType omap_muxer_control_get_type (void) {
+	static GType omap_muxer_control_type_id = 0;
+	if (omap_muxer_control_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerControl), 0, (GInstanceInitFunc) omap_muxer_control_instance_init, NULL };
+		omap_muxer_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapMuxerControl", &g_define_type_info, 0);
 	}
-	return muxer_control_type_id;
+	return omap_muxer_control_type_id;
 }
 
 
-static void muxer_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	MuxerControl * self;
-	self = MUXER_CONTROL (object);
+static void omap_muxer_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	OmapMuxerControl * self;
+	self = OMAP_MUXER_CONTROL (object);
 	switch (property_id) {
-		case MUXER_CONTROL_PREVIEWING:
-		g_value_set_boolean (value, muxer_control_get_previewing (self));
+		case OMAP_MUXER_CONTROL_PREVIEWING:
+		g_value_set_boolean (value, omap_muxer_control_get_previewing (self));
 		break;
-		case MUXER_CONTROL_RECORDING:
-		g_value_set_boolean (value, muxer_control_get_recording (self));
+		case OMAP_MUXER_CONTROL_RECORDING:
+		g_value_set_boolean (value, omap_muxer_control_get_recording (self));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

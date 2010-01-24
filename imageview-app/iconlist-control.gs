@@ -1,19 +1,15 @@
 [indent=4]
 
-uses Gst
-uses Gtk
-
 
 const ICON_PIPELINE_DESC: string = \
 """filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! videoscale !
 video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"""
 
-
 const IMAGE_FILE_ATTRIBUTES: string = \
 "standard::name,standard::display-name,standard::content-type"
 
 
-class IconListControl: MediaControl
+class Omap.IconListControl: Omap.MediaControl
     enum Col
         TEXT
         FILE
@@ -23,10 +19,10 @@ class IconListControl: MediaControl
         WIDTH
         HEIGHT
 
-    filesrc: dynamic Element
-    imagesink: dynamic Element
-    imagedec: dynamic Element
-    imagedec_src: Pad
+    filesrc: dynamic Gst.Element
+    imagesink: dynamic Gst.Element
+    imagedec: dynamic Gst.Element
+    imagedec_src: Gst.Pad
 
     missing_pixbuf: Gdk.Pixbuf
     loading_pixbuf: static Gdk.Pixbuf
@@ -34,7 +30,7 @@ class IconListControl: MediaControl
     pixbuf_q: static Quark = Quark.from_string("pixbuf")
     pixbufs_loaded: static bool
 
-    prop iconlist_store: ListStore
+    prop iconlist_store: Gtk.ListStore
     continuation: SourceFunc
     continuation_error: Error
 
@@ -46,7 +42,7 @@ class IconListControl: MediaControl
         error_message += on_error
         element_message += on_element
 
-    construct(model: ListStore) raises Error
+    construct(model: Gtk.ListStore) raises Error
         iconlist_store = model
         if not pixbufs_loaded
             setup_icons()
@@ -54,16 +50,16 @@ class IconListControl: MediaControl
         setup_elements()
 
     def setup_icons() raises Error
-        var icon_theme = IconTheme.get_default()
-        icon_info: IconInfo
+        var icon_theme = Gtk.IconTheme.get_default()
+        icon_info: Gtk.IconInfo
 
         icon_info = icon_theme.lookup_icon( \
-            STOCK_MISSING_IMAGE, 96, IconLookupFlags.FORCE_SIZE)
+            Gtk.STOCK_MISSING_IMAGE, 96, Gtk.IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             missing_pixbuf = icon_info.load_icon()
 
         icon_info = icon_theme.lookup_icon( \
-            "image-loading", 96, IconLookupFlags.FORCE_SIZE)
+            "image-loading", 96, Gtk.IconLookupFlags.FORCE_SIZE)
         if icon_info != null
             loading_pixbuf = icon_info.load_icon()
 
@@ -71,16 +67,16 @@ class IconListControl: MediaControl
         setup_pipeline()
 
     def setup_pipeline() raises Error
-        var icon_pipeline = parse_launch(ICON_PIPELINE_DESC) as Pipeline
+        var icon_pipeline = Gst.parse_launch(ICON_PIPELINE_DESC) as Gst.Pipeline
         icon_pipeline.name = "icon_pipeline"
         if (filesrc = icon_pipeline.get_by_name("filesrc")) == null
-            raise new CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED( \
                         "No element named filesrc in the icon_pipeline")
         if (imagesink = icon_pipeline.get_by_name("imagesink")) == null
-            raise new CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED( \
                         "No element named imagesink in the icon_pipeline")
         if (imagedec = icon_pipeline.get_by_name("imagedec")) == null
-            raise new CoreError.FAILED( \
+            raise new Gst.CoreError.FAILED( \
                         "No element named imagedec in the icon_pipeline")
         imagedec_src = imagedec.get_static_pad("src")
 
@@ -115,13 +111,13 @@ class IconListControl: MediaControl
                     Col.PIXBUF, loading_pixbuf, \
                     -1)
 
-    def async fill_icons(path: TreePath, end: TreePath, \
+    def async fill_icons(path: Gtk.TreePath, end: Gtk.TreePath, \
                          cancellable: Cancellable)
         if path != null and end != null
             continuation = fill_icons.callback
-            state = State.READY
+            state = Gst.State.READY
             while not(path.compare(end) > 0 or cancellable.is_cancelled())
-                iter: TreeIter
+                iter: Gtk.TreeIter
                 iconlist_store.get_iter(out iter, path)
                 file: string
                 filled: bool
@@ -133,7 +129,7 @@ class IconListControl: MediaControl
                     continuation_error = null
                     last_pixbuf = null
                     filesrc.location = file
-                    state = State.PLAYING
+                    state = Gst.State.PLAYING
                     yield
                     width: int = 0
                     height: int = 0
@@ -153,9 +149,9 @@ class IconListControl: MediaControl
                         Col.WIDTH, width, \
                         Col.HEIGHT, height, \
                         -1)
-                state = State.READY
+                state = Gst.State.READY
                 path.next()
-            state = State.NULL
+            state = Gst.State.NULL
         icons_filled()
 
     def get_playing_image_size(out width: int, out height: int)
@@ -163,7 +159,7 @@ class IconListControl: MediaControl
         st.get_int("width", out width)
         st.get_int("height", out height)
 
-    def on_element(src: Gst.Object, structure: Structure)
+    def on_element(src: Gst.Object, structure: Gst.Structure)
         if src == imagesink and structure.name == pixbuf_q
             last_pixbuf = imagesink.last_pixbuf
 
@@ -180,31 +176,31 @@ class IconListControl: MediaControl
     def static get_pixbuf_column(): Col
         return Col.PIXBUF
 
-    def iter_is_valid(iter: TreeIter): bool
+    def iter_is_valid(iter: Gtk.TreeIter): bool
         valid: bool
         iconlist_store.get(iter, Col.VALID, out valid, -1)
         return valid
 
-    def iter_is_filled(iter: TreeIter): bool
+    def iter_is_filled(iter: Gtk.TreeIter): bool
         filled: bool
         iconlist_store.get(iter, Col.FILLED, out filled, -1)
         return filled
 
-    def iter_get_file(iter: TreeIter): string
+    def iter_get_file(iter: Gtk.TreeIter): string
         file: string
         iconlist_store.get(iter, Col.FILE, out file, -1)
         return file
 
-    def iter_get_size(iter: TreeIter, out width: int, out height: int)
+    def iter_get_size(iter: Gtk.TreeIter, out width: int, out height: int)
         iconlist_store.get(iter, \
             Col.WIDTH, out width, \
             Col.HEIGHT, out height, \
             -1)
 
-    def static model_new(): ListStore
+    def static model_new(): Gtk.ListStore
         var s = typeof(string)
         var p = typeof(Gdk.Pixbuf)
         var b = typeof(bool)
         var i = typeof(int)
-        return new ListStore(7, s, s, p, b, b, i, i)
+        return new Gtk.ListStore(7, s, s, p, b, b, i, i)
 

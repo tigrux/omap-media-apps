@@ -1,12 +1,10 @@
 [indent=4]
 
-uses Gtk
 
-
-class MediaWindow: Window
-    notebook: Notebook
-    toolbar: Toolbar
-    main_box: VBox
+class Omap.MediaWindow: Gtk.Window
+    notebook: Gtk.Notebook
+    toolbar: Gtk.Toolbar
+    main_box: Gtk.VBox
     style_applied: static bool = apply_style()
     is_fullscreen: bool
 
@@ -18,7 +16,7 @@ class MediaWindow: Window
         for dir in Environment.get_system_data_dirs()
             var rc_file = Path.build_filename(dir, "omap4-apps", "style.rc")
             if FileUtils.test(rc_file, FileTest.IS_REGULAR)
-                rc_parse(rc_file)
+                Gtk.rc_parse(rc_file)
                     return true
         return false
 
@@ -30,20 +28,20 @@ class MediaWindow: Window
         set_default_size(800, 480)
         destroy += on_quit
 
-        main_box = new VBox(false, 0)
+        main_box = new Gtk.VBox(false, 0)
         add(main_box)
 
-        toolbar = new Toolbar()
-        toolbar.icon_size = IconSize.DND
+        toolbar = new Gtk.Toolbar()
+        toolbar.icon_size = Gtk.IconSize.DND
         main_box.pack_start(toolbar, false, false, 0)
 
-        notebook = new Notebook()
+        notebook = new Gtk.Notebook()
         notebook.show_tabs = false
         main_box.pack_start(notebook, true, true, 0)
         main_box.show_all()
 
     def lookup_and_set_icon_name(name: string)
-        var theme = IconTheme.get_default()
+        var theme = Gtk.IconTheme.get_default()
         var icon_info = theme.lookup_icon(name, 48, 0)
         if icon_info != null
             try
@@ -54,12 +52,12 @@ class MediaWindow: Window
     def toolbar_add_quit_button()
         toolbar_add_expander()
 
-        var quit_button = new ToolButton.from_stock(STOCK_QUIT)
+        var quit_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_QUIT)
         toolbar.add(quit_button)
         quit_button.clicked += on_quit
 
     def toolbar_add_expander()
-        var expander_item = new SeparatorToolItem()
+        var expander_item = new Gtk.SeparatorToolItem()
         expander_item.set_expand(true)
         expander_item.set_draw(false)
         toolbar.add(expander_item)

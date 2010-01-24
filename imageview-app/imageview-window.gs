@@ -1,22 +1,20 @@
 [indent=4]
 
-uses Gtk
-
 
 const TITLE: string = "Omap4 ImageView"
 
 
-class ImageViewWindow: MediaWindow
-    chooser_button: FileChooserButton
-    icon_view: IconView
+class Omap.ImageViewWindow: Omap.MediaWindow
+    chooser_button: Gtk.FileChooserButton
+    icon_view: Gtk.IconView
     video_area: VideoArea
-    iconlist_store: ListStore
+    iconlist_store: Gtk.ListStore
     iconlist_control: IconListControl
     image_control: ImageControl
     current_folder: string
-    image_button: ToolButton
-    slideshow_button: ToolButton
-    fullscreen_button: ToolButton
+    image_button: Gtk.ToolButton
+    slideshow_button: Gtk.ToolButton
+    fullscreen_button: Gtk.ToolButton
     slideshow_timeout: uint
     slideshow_continuation: SourceFunc
     slideshow_cancellable: Cancellable
@@ -55,18 +53,19 @@ class ImageViewWindow: MediaWindow
         main_box.show_all()
 
     def setup_notebook()
-        notebook.append_page(new_iconlist_box(), new Label("List"))
-        notebook.append_page(new_video_box(), new Label("Video"))
+        notebook.append_page(new_iconlist_box(), new Gtk.Label("List"))
+        notebook.append_page(new_video_box(), new Gtk.Label("Video"))
         notebook.switch_page += def(page, num_page)
             on_notebook_switch_page(num_page)
 
-    def new_iconlist_box(): Box
-        var box = new VBox(false, 0)
-        var scrolled_window = new ScrolledWindow(null, null)
+    def new_iconlist_box(): Gtk.Box
+        var box = new Gtk.VBox(false, 0)
+        var scrolled_window = new Gtk.ScrolledWindow(null, null)
         box.pack_start(scrolled_window, true, true, 0)
-        scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
+        var policy = Gtk.PolicyType.AUTOMATIC
+        scrolled_window.set_policy(policy, policy)
 
-        adjustment: Adjustment
+        adjustment: Gtk.Adjustment
 
         adjustment = scrolled_window.vadjustment
         adjustment.value_changed += do_fill_visible_icons
@@ -74,10 +73,10 @@ class ImageViewWindow: MediaWindow
         adjustment = scrolled_window.hadjustment
         adjustment.value_changed += do_fill_visible_icons
 
-        icon_view = new IconView()
+        icon_view = new Gtk.IconView()
         scrolled_window.add(icon_view)
         icon_view.size_request += do_fill_visible_icons
-        icon_view.selection_mode = SelectionMode.BROWSE
+        icon_view.selection_mode = Gtk.SelectionMode.BROWSE
         icon_view.model = iconlist_store
         icon_view.text_column = iconlist_control.get_text_column()
         icon_view.pixbuf_column = iconlist_control.get_pixbuf_column()
@@ -89,8 +88,8 @@ class ImageViewWindow: MediaWindow
 
         return box
 
-    def on_icon_activated(path: TreePath)
-        iter: TreeIter
+    def on_icon_activated(path: Gtk.TreePath)
+        iter: Gtk.TreeIter
         iconlist_store.get_iter(out iter, path)
         if iconlist_control.iter_is_valid(iter)
             width, height: int
@@ -103,10 +102,11 @@ class ImageViewWindow: MediaWindow
     def on_xid_prepared(imagesink: Gst.XOverlay)
         video_area.sink = imagesink
 
-    def new_video_box(): Box
-        var box = new VBox(false, 0)
-        var scrolled_window = new ScrolledWindow(null, null)
-        scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
+    def new_video_box(): Gtk.Box
+        var box = new Gtk.VBox(false, 0)
+        var scrolled_window = new Gtk.ScrolledWindow(null, null)
+        var policy = Gtk.PolicyType.AUTOMATIC
+        scrolled_window.set_policy(policy, policy)
         box.pack_start(scrolled_window, true, true, 0)
         video_area = new VideoArea()
         video_area.activated += toggle_fullscreen
@@ -114,30 +114,30 @@ class ImageViewWindow: MediaWindow
         return box
 
     def setup_toolbar()
-        var chooser_item = new ToolItem()
+        var chooser_item = new Gtk.ToolItem()
         chooser_item.set_expand(true)
         toolbar.add(chooser_item)
 
-        chooser_button = new FileChooserButton( \
-            "Select folder", FileChooserAction.SELECT_FOLDER)
+        chooser_button = new Gtk.FileChooserButton( \
+            "Select folder", Gtk.FileChooserAction.SELECT_FOLDER)
         chooser_item.add(chooser_button)
         chooser_button.current_folder_changed += on_chooser_folder_changed
 
         toolbar_add_expander()
 
-        image_button = new ToolButton.from_stock(STOCK_ZOOM_100)
+        image_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_ZOOM_100)
         toolbar.add(image_button)
         image_button.clicked += on_open_close
 
         toolbar_add_expander()
 
-        slideshow_button = new ToolButton.from_stock(STOCK_MEDIA_PLAY)
+        slideshow_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY)
         toolbar.add(slideshow_button)
         slideshow_button.clicked += on_slideshow
 
         toolbar_add_expander()
 
-        fullscreen_button = new ToolButton.from_stock(STOCK_FULLSCREEN)
+        fullscreen_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_FULLSCREEN)
         toolbar.add(fullscreen_button)
         fullscreen_button.clicked += on_fullscreen
 
@@ -150,7 +150,7 @@ class ImageViewWindow: MediaWindow
             close_image()
 
     def open_image(): bool
-        iter: TreeIter
+        iter: Gtk.TreeIter
         if get_and_select_iter(out iter)
             icon_view.item_activated(iconlist_store.get_path(iter))
             return true
@@ -162,7 +162,7 @@ class ImageViewWindow: MediaWindow
         notebook.page = Tab.LIST
 
     def on_slideshow()
-        iter: TreeIter
+        iter: Gtk.TreeIter
         if not iconlist_store.get_iter_first(out iter)            
             return
         else if slideshow_continuation == null
@@ -172,9 +172,9 @@ class ImageViewWindow: MediaWindow
 
     def on_notebook_switch_page(num_page: uint)
         if num_page == Tab.LIST
-            image_button.stock_id = STOCK_ZOOM_100
+            image_button.stock_id = Gtk.STOCK_ZOOM_100
         else
-            image_button.stock_id = STOCK_CLOSE
+            image_button.stock_id = Gtk.STOCK_CLOSE
 
     def on_fullscreen()
         if notebook.page == Tab.VIDEO
@@ -186,14 +186,14 @@ class ImageViewWindow: MediaWindow
     def start_slideshow()
         slideshow_cancellable = new Cancellable()
         slideshow()
-        slideshow_button.stock_id = STOCK_MEDIA_STOP
+        slideshow_button.stock_id = Gtk.STOCK_MEDIA_STOP
 
     def stop_slideshow()
         slideshow_cancellable.cancel()
         if slideshow_timeout != 0
             Source.remove(slideshow_timeout)
             Idle.add(slideshow_continuation)
-            slideshow_button.stock_id = STOCK_MEDIA_PLAY
+            slideshow_button.stock_id = Gtk.STOCK_MEDIA_PLAY
 
     def on_image_control_eos()
         image_control.state = Gst.State.READY
@@ -202,7 +202,7 @@ class ImageViewWindow: MediaWindow
             slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 
     def async slideshow()
-        iter: TreeIter
+        iter: Gtk.TreeIter
         if not get_and_select_iter(out iter) \
            or slideshow_cancellable.is_cancelled()
             return
@@ -220,13 +220,13 @@ class ImageViewWindow: MediaWindow
               and not slideshow_cancellable.is_cancelled()
         if not slideshow_cancellable.is_cancelled()
             close_image()
-        slideshow_button.stock_id = STOCK_MEDIA_PLAY
+        slideshow_button.stock_id = Gtk.STOCK_MEDIA_PLAY
         slideshow_continuation = null
         slideshow_cancellable = null
 
-    def get_and_select_iter(out iter: TreeIter): bool
-        path: TreePath
-        selected: unowned List of TreePath = icon_view.get_selected_items()
+    def get_and_select_iter(out iter: Gtk.TreeIter): bool
+        path: Gtk.TreePath
+        selected: unowned List of Gtk.TreePath = icon_view.get_selected_items()
         if selected != null
             path = selected.data
             iconlist_store.get_iter(out iter, path)
@@ -280,8 +280,8 @@ class ImageViewWindow: MediaWindow
         return true
 
     def fill_visible_icons(): bool
-        start: TreePath
-        end: TreePath
+        start: Gtk.TreePath
+        end: Gtk.TreePath
         icon_view.get_visible_range(out start, out end)
         is_filling_icons = true
         iconlist_control.fill_icons(start, end, fill_icons_cancellable)

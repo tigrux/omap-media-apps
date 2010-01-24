@@ -11,56 +11,56 @@
 #include <gdk/gdk.h>
 
 
-#define TYPE_DEBUG_DIALOG (debug_dialog_get_type ())
-#define DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_DEBUG_DIALOG, DebugDialog))
-#define DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_DEBUG_DIALOG, DebugDialogClass))
-#define IS_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_DEBUG_DIALOG))
-#define IS_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_DEBUG_DIALOG))
-#define DEBUG_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_DEBUG_DIALOG, DebugDialogClass))
+#define OMAP_TYPE_DEBUG_DIALOG (omap_debug_dialog_get_type ())
+#define OMAP_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialog))
+#define OMAP_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialogClass))
+#define OMAP_IS_DEBUG_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_DEBUG_DIALOG))
+#define OMAP_IS_DEBUG_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_DEBUG_DIALOG))
+#define OMAP_DEBUG_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_DEBUG_DIALOG, OmapDebugDialogClass))
 
-typedef struct _DebugDialog DebugDialog;
-typedef struct _DebugDialogClass DebugDialogClass;
-typedef struct _DebugDialogPrivate DebugDialogPrivate;
+typedef struct _OmapDebugDialog OmapDebugDialog;
+typedef struct _OmapDebugDialogClass OmapDebugDialogClass;
+typedef struct _OmapDebugDialogPrivate OmapDebugDialogPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-struct _DebugDialog {
+struct _OmapDebugDialog {
 	GtkDialog parent_instance;
-	DebugDialogPrivate * priv;
+	OmapDebugDialogPrivate * priv;
 	GtkTextBuffer* text_buffer;
 	gint errors_n;
 };
 
-struct _DebugDialogClass {
+struct _OmapDebugDialogClass {
 	GtkDialogClass parent_class;
 };
 
 
-static gpointer debug_dialog_parent_class = NULL;
+static gpointer omap_debug_dialog_parent_class = NULL;
 
-GType debug_dialog_get_type (void);
+GType omap_debug_dialog_get_type (void);
 enum  {
-	DEBUG_DIALOG_DUMMY_PROPERTY
+	OMAP_DEBUG_DIALOG_DUMMY_PROPERTY
 };
-DebugDialog* debug_dialog_new (GtkWindow* parent);
-DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent);
-void debug_dialog_text_insert_new_line (DebugDialog* self, GtkTextIter* iter);
-void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const char* debug);
-GtkBox* debug_dialog_new_error_box (DebugDialog* self);
-static void _lambda1_ (DebugDialog* self);
-static void __lambda1__gtk_dialog_response (DebugDialog* _sender, gint response_id, gpointer self);
-static gboolean _lambda2_ (DebugDialog* self);
-static gboolean __lambda2__gtk_widget_delete_event (DebugDialog* _sender, GdkEvent* event, gpointer self);
-static GObject * debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void debug_dialog_finalize (GObject* obj);
+OmapDebugDialog* omap_debug_dialog_new (GtkWindow* parent);
+OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* parent);
+void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter);
+void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
+GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
+static void _lambda1_ (OmapDebugDialog* self);
+static void __lambda1__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self);
+static gboolean _lambda2_ (OmapDebugDialog* self);
+static gboolean __lambda2__gtk_widget_delete_event (OmapDebugDialog* _sender, GdkEvent* event, gpointer self);
+static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_debug_dialog_finalize (GObject* obj);
 static void _lambda3_ (GtkDialog* widget, gint response);
 static void __lambda3__gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
 void error_dialog (GError* _error_);
 
 
 
-DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent) {
-	DebugDialog * self;
+OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* parent) {
+	OmapDebugDialog * self;
 	gint width = 0;
 	gint height = 0;
 	g_return_val_if_fail (parent != NULL, NULL);
@@ -72,12 +72,12 @@ DebugDialog* debug_dialog_construct (GType object_type, GtkWindow* parent) {
 }
 
 
-DebugDialog* debug_dialog_new (GtkWindow* parent) {
-	return debug_dialog_construct (TYPE_DEBUG_DIALOG, parent);
+OmapDebugDialog* omap_debug_dialog_new (GtkWindow* parent) {
+	return omap_debug_dialog_construct (OMAP_TYPE_DEBUG_DIALOG, parent);
 }
 
 
-void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const char* debug) {
+void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug) {
 	GtkTextIter iter = {0};
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (debug != NULL);
@@ -88,17 +88,17 @@ void debug_dialog_add_error_debug (DebugDialog* self, GError* _error_, const cha
 		_g_free0 (_tmp0_);
 	}
 	gtk_text_buffer_get_end_iter (self->text_buffer, &iter);
-	debug_dialog_text_insert_new_line (self, &iter);
+	omap_debug_dialog_text_insert_new_line (self, &iter);
 	gtk_text_buffer_insert_with_tags_by_name (self->text_buffer, &iter, _error_->message, -1, "bold", NULL, NULL);
-	debug_dialog_text_insert_new_line (self, &iter);
+	omap_debug_dialog_text_insert_new_line (self, &iter);
 	if (debug != NULL) {
 		gtk_text_buffer_insert (self->text_buffer, &iter, debug, -1);
-		debug_dialog_text_insert_new_line (self, &iter);
+		omap_debug_dialog_text_insert_new_line (self, &iter);
 	}
 }
 
 
-void debug_dialog_text_insert_new_line (DebugDialog* self, GtkTextIter* iter) {
+void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter) {
 	g_return_if_fail (self != NULL);
 	gtk_text_buffer_insert (self->text_buffer, iter, "\n", -1);
 }
@@ -109,12 +109,13 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-GtkBox* debug_dialog_new_error_box (DebugDialog* self) {
+GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self) {
 	GtkBox* result;
 	GtkHBox* box;
 	GtkImage* image;
 	GtkVSeparator* separator;
 	GtkScrolledWindow* scrolled_window;
+	GtkPolicyType policy;
 	GtkTextView* text_view;
 	GtkTextBuffer* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -125,7 +126,8 @@ GtkBox* debug_dialog_new_error_box (DebugDialog* self) {
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) separator, FALSE, FALSE, (guint) 0);
 	scrolled_window = g_object_ref_sink ((GtkScrolledWindow*) gtk_scrolled_window_new (NULL, NULL));
 	gtk_box_pack_start ((GtkBox*) box, (GtkWidget*) scrolled_window, TRUE, TRUE, (guint) 0);
-	gtk_scrolled_window_set_policy (scrolled_window, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	policy = GTK_POLICY_AUTOMATIC;
+	gtk_scrolled_window_set_policy (scrolled_window, policy, policy);
 	text_view = g_object_ref_sink ((GtkTextView*) gtk_text_view_new ());
 	gtk_container_add ((GtkContainer*) scrolled_window, (GtkWidget*) text_view);
 	gtk_text_view_set_editable (text_view, FALSE);
@@ -142,35 +144,35 @@ GtkBox* debug_dialog_new_error_box (DebugDialog* self) {
 }
 
 
-static void _lambda1_ (DebugDialog* self) {
+static void _lambda1_ (OmapDebugDialog* self) {
 	g_signal_emit_by_name (self, "closed");
 	gtk_object_destroy ((GtkObject*) self);
 }
 
 
-static void __lambda1__gtk_dialog_response (DebugDialog* _sender, gint response_id, gpointer self) {
+static void __lambda1__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self) {
 	_lambda1_ (self);
 }
 
 
-static gboolean _lambda2_ (DebugDialog* self) {
+static gboolean _lambda2_ (OmapDebugDialog* self) {
 	gboolean result;
 	g_signal_emit_by_name (self, "closed");
 }
 
 
-static gboolean __lambda2__gtk_widget_delete_event (DebugDialog* _sender, GdkEvent* event, gpointer self) {
+static gboolean __lambda2__gtk_widget_delete_event (OmapDebugDialog* _sender, GdkEvent* event, gpointer self) {
 	return _lambda2_ (self);
 }
 
 
-static GObject * debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	DebugDialog * self;
-	parent_class = G_OBJECT_CLASS (debug_dialog_parent_class);
+	OmapDebugDialog * self;
+	parent_class = G_OBJECT_CLASS (omap_debug_dialog_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = DEBUG_DIALOG (obj);
+	self = OMAP_DEBUG_DIALOG (obj);
 	{
 		GtkWidget* _tmp0_;
 		GtkBox* content_area;
@@ -179,7 +181,7 @@ static GObject * debug_dialog_constructor (GType type, guint n_construct_propert
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
 		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, -1);
 		content_area = _g_object_ref0 ((_tmp0_ = gtk_dialog_get_content_area ((GtkDialog*) self), GTK_IS_BOX (_tmp0_) ? ((GtkBox*) _tmp0_) : NULL));
-		gtk_container_add ((GtkContainer*) content_area, (GtkWidget*) (_tmp1_ = debug_dialog_new_error_box (self)));
+		gtk_container_add ((GtkContainer*) content_area, (GtkWidget*) (_tmp1_ = omap_debug_dialog_new_error_box (self)));
 		_g_object_unref0 (_tmp1_);
 		gtk_text_buffer_create_tag (self->text_buffer, "bold", "weight", PANGO_WEIGHT_BOLD, NULL, NULL);
 		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda1__gtk_dialog_response, self, 0);
@@ -190,33 +192,33 @@ static GObject * debug_dialog_constructor (GType type, guint n_construct_propert
 }
 
 
-static void debug_dialog_class_init (DebugDialogClass * klass) {
-	debug_dialog_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->constructor = debug_dialog_constructor;
-	G_OBJECT_CLASS (klass)->finalize = debug_dialog_finalize;
-	g_signal_new ("closed", TYPE_DEBUG_DIALOG, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+static void omap_debug_dialog_class_init (OmapDebugDialogClass * klass) {
+	omap_debug_dialog_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->constructor = omap_debug_dialog_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_debug_dialog_finalize;
+	g_signal_new ("closed", OMAP_TYPE_DEBUG_DIALOG, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 
-static void debug_dialog_instance_init (DebugDialog * self) {
+static void omap_debug_dialog_instance_init (OmapDebugDialog * self) {
 }
 
 
-static void debug_dialog_finalize (GObject* obj) {
-	DebugDialog * self;
-	self = DEBUG_DIALOG (obj);
+static void omap_debug_dialog_finalize (GObject* obj) {
+	OmapDebugDialog * self;
+	self = OMAP_DEBUG_DIALOG (obj);
 	_g_object_unref0 (self->text_buffer);
-	G_OBJECT_CLASS (debug_dialog_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_debug_dialog_parent_class)->finalize (obj);
 }
 
 
-GType debug_dialog_get_type (void) {
-	static GType debug_dialog_type_id = 0;
-	if (debug_dialog_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (DebugDialogClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) debug_dialog_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (DebugDialog), 0, (GInstanceInitFunc) debug_dialog_instance_init, NULL };
-		debug_dialog_type_id = g_type_register_static (GTK_TYPE_DIALOG, "DebugDialog", &g_define_type_info, 0);
+GType omap_debug_dialog_get_type (void) {
+	static GType omap_debug_dialog_type_id = 0;
+	if (omap_debug_dialog_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapDebugDialogClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_debug_dialog_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapDebugDialog), 0, (GInstanceInitFunc) omap_debug_dialog_instance_init, NULL };
+		omap_debug_dialog_type_id = g_type_register_static (GTK_TYPE_DIALOG, "OmapDebugDialog", &g_define_type_info, 0);
 	}
-	return debug_dialog_type_id;
+	return omap_debug_dialog_type_id;
 }
 
 

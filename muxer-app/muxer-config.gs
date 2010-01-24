@@ -1,7 +1,7 @@
 [indent=4]
 
 
-class MuxerConfigParser: GLib.Object
+class Omap.MuxerConfigParser: GLib.Object
     current_group: string
     current_key: string
     current_value: string

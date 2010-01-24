@@ -9,23 +9,23 @@
 #include <glib/gstdio.h>
 
 
-#define TYPE_MUXER_CONFIG_PARSER (muxer_config_parser_get_type ())
-#define MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParser))
-#define MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParserClass))
-#define IS_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_CONFIG_PARSER))
-#define IS_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_CONFIG_PARSER))
-#define MUXER_CONFIG_PARSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_CONFIG_PARSER, MuxerConfigParserClass))
+#define OMAP_TYPE_MUXER_CONFIG_PARSER (omap_muxer_config_parser_get_type ())
+#define OMAP_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParser))
+#define OMAP_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParserClass))
+#define OMAP_IS_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER))
+#define OMAP_IS_MUXER_CONFIG_PARSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_CONFIG_PARSER))
+#define OMAP_MUXER_CONFIG_PARSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParserClass))
 
-typedef struct _MuxerConfigParser MuxerConfigParser;
-typedef struct _MuxerConfigParserClass MuxerConfigParserClass;
-typedef struct _MuxerConfigParserPrivate MuxerConfigParserPrivate;
+typedef struct _OmapMuxerConfigParser OmapMuxerConfigParser;
+typedef struct _OmapMuxerConfigParserClass OmapMuxerConfigParserClass;
+typedef struct _OmapMuxerConfigParserPrivate OmapMuxerConfigParserPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_markup_parse_context_free0(var) ((var == NULL) ? NULL : (var = (g_markup_parse_context_free (var), NULL)))
 #define __g_list_free_g_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_free (var), NULL)))
 
-struct _MuxerConfigParser {
+struct _OmapMuxerConfigParser {
 	GObject parent_instance;
-	MuxerConfigParserPrivate * priv;
+	OmapMuxerConfigParserPrivate * priv;
 	char* current_group;
 	char* current_key;
 	char* current_value;
@@ -35,55 +35,55 @@ struct _MuxerConfigParser {
 	gboolean has_record;
 };
 
-struct _MuxerConfigParserClass {
+struct _OmapMuxerConfigParserClass {
 	GObjectClass parent_class;
 };
 
 
-static gpointer muxer_config_parser_parent_class = NULL;
+static gpointer omap_muxer_config_parser_parent_class = NULL;
 
-GType muxer_config_parser_get_type (void);
+GType omap_muxer_config_parser_get_type (void);
 enum  {
-	MUXER_CONFIG_PARSER_DUMMY_PROPERTY
+	OMAP_MUXER_CONFIG_PARSER_DUMMY_PROPERTY
 };
-void muxer_config_parser_start (MuxerConfigParser* self, GMarkupParseContext* context, const char* name, char** attr_names, int attr_names_length1, char** attr_values, int attr_values_length1, GError** error);
-static void _muxer_config_parser_start_gmarkup_parser_start_element_func (GMarkupParseContext* context, const char* element_name, char** attribute_names, char** attribute_values, gpointer self, GError** error);
-void muxer_config_parser_end (MuxerConfigParser* self, GMarkupParseContext* context, const char* name, GError** error);
-static void _muxer_config_parser_end_gmarkup_parser_end_element_func (GMarkupParseContext* context, const char* element_name, gpointer self, GError** error);
-void muxer_config_parser_text (MuxerConfigParser* self, GMarkupParseContext* context, const char* text, gsize text_len, GError** error);
-static void _muxer_config_parser_text_gmarkup_parser_text_func (GMarkupParseContext* context, const char* text, gsize text_len, gpointer self, GError** error);
-gboolean muxer_config_parser_parse_data (MuxerConfigParser* self, const char* data, gssize length, GKeyFile** key_file, GError** error);
-gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
-gboolean muxer_config_parser_normalize_value (MuxerConfigParser* self);
+void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* name, char** attr_names, int attr_names_length1, char** attr_values, int attr_values_length1, GError** error);
+static void _omap_muxer_config_parser_start_gmarkup_parser_start_element_func (GMarkupParseContext* context, const char* element_name, char** attribute_names, char** attribute_values, gpointer self, GError** error);
+void omap_muxer_config_parser_end (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* name, GError** error);
+static void _omap_muxer_config_parser_end_gmarkup_parser_end_element_func (GMarkupParseContext* context, const char* element_name, gpointer self, GError** error);
+void omap_muxer_config_parser_text (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* text, gsize text_len, GError** error);
+static void _omap_muxer_config_parser_text_gmarkup_parser_text_func (GMarkupParseContext* context, const char* text, gsize text_len, gpointer self, GError** error);
+gboolean omap_muxer_config_parser_parse_data (OmapMuxerConfigParser* self, const char* data, gssize length, GKeyFile** key_file, GError** error);
+gboolean omap_muxer_config_parser_parse_file (OmapMuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error);
+gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self);
 static void _g_list_free_g_free (GList* self);
-MuxerConfigParser* muxer_config_parser_new (void);
-MuxerConfigParser* muxer_config_parser_construct (GType object_type);
-static GObject * muxer_config_parser_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void muxer_config_parser_finalize (GObject* obj);
+OmapMuxerConfigParser* omap_muxer_config_parser_new (void);
+OmapMuxerConfigParser* omap_muxer_config_parser_construct (GType object_type);
+static GObject * omap_muxer_config_parser_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void omap_muxer_config_parser_finalize (GObject* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static gint _vala_array_length (gpointer array);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
-static const GMarkupParser MUXER_CONFIG_PARSER_parser = {_muxer_config_parser_start_gmarkup_parser_start_element_func, _muxer_config_parser_end_gmarkup_parser_end_element_func, _muxer_config_parser_text_gmarkup_parser_text_func, NULL, NULL};
+static const GMarkupParser OMAP_MUXER_CONFIG_PARSER_parser = {_omap_muxer_config_parser_start_gmarkup_parser_start_element_func, _omap_muxer_config_parser_end_gmarkup_parser_end_element_func, _omap_muxer_config_parser_text_gmarkup_parser_text_func, NULL, NULL};
 
 
-static void _muxer_config_parser_start_gmarkup_parser_start_element_func (GMarkupParseContext* context, const char* element_name, char** attribute_names, char** attribute_values, gpointer self, GError** error) {
-	muxer_config_parser_start (self, context, element_name, attribute_names, _vala_array_length (attribute_names), attribute_values, _vala_array_length (attribute_values), error);
+static void _omap_muxer_config_parser_start_gmarkup_parser_start_element_func (GMarkupParseContext* context, const char* element_name, char** attribute_names, char** attribute_values, gpointer self, GError** error) {
+	omap_muxer_config_parser_start (self, context, element_name, attribute_names, _vala_array_length (attribute_names), attribute_values, _vala_array_length (attribute_values), error);
 }
 
 
-static void _muxer_config_parser_end_gmarkup_parser_end_element_func (GMarkupParseContext* context, const char* element_name, gpointer self, GError** error) {
-	muxer_config_parser_end (self, context, element_name, error);
+static void _omap_muxer_config_parser_end_gmarkup_parser_end_element_func (GMarkupParseContext* context, const char* element_name, gpointer self, GError** error) {
+	omap_muxer_config_parser_end (self, context, element_name, error);
 }
 
 
-static void _muxer_config_parser_text_gmarkup_parser_text_func (GMarkupParseContext* context, const char* text, gsize text_len, gpointer self, GError** error) {
-	muxer_config_parser_text (self, context, text, text_len, error);
+static void _omap_muxer_config_parser_text_gmarkup_parser_text_func (GMarkupParseContext* context, const char* text, gsize text_len, gpointer self, GError** error) {
+	omap_muxer_config_parser_text (self, context, text, text_len, error);
 }
 
 
-gboolean muxer_config_parser_parse_data (MuxerConfigParser* self, const char* data, gssize length, GKeyFile** key_file, GError** error) {
+gboolean omap_muxer_config_parser_parse_data (OmapMuxerConfigParser* self, const char* data, gssize length, GKeyFile** key_file, GError** error) {
 	gboolean result;
 	GError * _inner_error_;
 	gboolean _tmp0_;
@@ -108,7 +108,7 @@ gboolean muxer_config_parser_parse_data (MuxerConfigParser* self, const char* da
 }
 
 
-gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error) {
+gboolean omap_muxer_config_parser_parse_file (OmapMuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error) {
 	gboolean result;
 	GError * _inner_error_;
 	char* content;
@@ -137,7 +137,7 @@ gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* fi
 	}
 	if (_tmp3_) {
 		gboolean _tmp4_;
-		_tmp4_ = muxer_config_parser_parse_data (self, content, (gssize) length, key_file, &_inner_error_);
+		_tmp4_ = omap_muxer_config_parser_parse_data (self, content, (gssize) length, key_file, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if ((_inner_error_->domain == G_MARKUP_ERROR) || (_inner_error_->domain == G_FILE_ERROR)) {
 				g_propagate_error (error, _inner_error_);
@@ -160,7 +160,7 @@ gboolean muxer_config_parser_parse_file (MuxerConfigParser* self, const char* fi
 }
 
 
-void muxer_config_parser_start (MuxerConfigParser* self, GMarkupParseContext* context, const char* name, char** attr_names, int attr_names_length1, char** attr_values, int attr_values_length1, GError** error) {
+void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* name, char** attr_names, int attr_names_length1, char** attr_values, int attr_values_length1, GError** error) {
 	GError * _inner_error_;
 	gint line_n = 0;
 	gint char_n = 0;
@@ -272,7 +272,7 @@ void muxer_config_parser_start (MuxerConfigParser* self, GMarkupParseContext* co
 }
 
 
-void muxer_config_parser_end (MuxerConfigParser* self, GMarkupParseContext* context, const char* name, GError** error) {
+void omap_muxer_config_parser_end (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* name, GError** error) {
 	GError * _inner_error_;
 	gint line_n = 0;
 	gint char_n = 0;
@@ -322,7 +322,7 @@ void muxer_config_parser_end (MuxerConfigParser* self, GMarkupParseContext* cont
 			_tmp4_ = _vala_strcmp0 (name, "record") == 0;
 		}
 		if (_tmp4_) {
-			if (muxer_config_parser_normalize_value (self)) {
+			if (omap_muxer_config_parser_normalize_value (self)) {
 				char* _tmp5_;
 				g_key_file_set_string (self->config_key_file, self->current_group, self->current_key, self->current_value);
 				self->current_key = (_tmp5_ = NULL, _g_free0 (self->current_key), _tmp5_);
@@ -358,7 +358,7 @@ static void _g_list_free_g_free (GList* self) {
 }
 
 
-gboolean muxer_config_parser_normalize_value (MuxerConfigParser* self) {
+gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self) {
 	gboolean result;
 	GList* stripped_list;
 	gint lines_size;
@@ -424,7 +424,7 @@ gboolean muxer_config_parser_normalize_value (MuxerConfigParser* self) {
 }
 
 
-void muxer_config_parser_text (MuxerConfigParser* self, GMarkupParseContext* context, const char* text, gsize text_len, GError** error) {
+void omap_muxer_config_parser_text (OmapMuxerConfigParser* self, GMarkupParseContext* context, const char* text, gsize text_len, GError** error) {
 	gboolean _tmp0_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (context != NULL);
@@ -441,62 +441,62 @@ void muxer_config_parser_text (MuxerConfigParser* self, GMarkupParseContext* con
 }
 
 
-MuxerConfigParser* muxer_config_parser_construct (GType object_type) {
-	MuxerConfigParser * self;
+OmapMuxerConfigParser* omap_muxer_config_parser_construct (GType object_type) {
+	OmapMuxerConfigParser * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-MuxerConfigParser* muxer_config_parser_new (void) {
-	return muxer_config_parser_construct (TYPE_MUXER_CONFIG_PARSER);
+OmapMuxerConfigParser* omap_muxer_config_parser_new (void) {
+	return omap_muxer_config_parser_construct (OMAP_TYPE_MUXER_CONFIG_PARSER);
 }
 
 
-static GObject * muxer_config_parser_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * omap_muxer_config_parser_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	MuxerConfigParser * self;
-	parent_class = G_OBJECT_CLASS (muxer_config_parser_parent_class);
+	OmapMuxerConfigParser * self;
+	parent_class = G_OBJECT_CLASS (omap_muxer_config_parser_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = MUXER_CONFIG_PARSER (obj);
+	self = OMAP_MUXER_CONFIG_PARSER (obj);
 	{
 		GMarkupParseContext* _tmp0_;
-		self->context = (_tmp0_ = g_markup_parse_context_new (&MUXER_CONFIG_PARSER_parser, 0, self, NULL), _g_markup_parse_context_free0 (self->context), _tmp0_);
+		self->context = (_tmp0_ = g_markup_parse_context_new (&OMAP_MUXER_CONFIG_PARSER_parser, 0, self, NULL), _g_markup_parse_context_free0 (self->context), _tmp0_);
 	}
 	return obj;
 }
 
 
-static void muxer_config_parser_class_init (MuxerConfigParserClass * klass) {
-	muxer_config_parser_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->constructor = muxer_config_parser_constructor;
-	G_OBJECT_CLASS (klass)->finalize = muxer_config_parser_finalize;
+static void omap_muxer_config_parser_class_init (OmapMuxerConfigParserClass * klass) {
+	omap_muxer_config_parser_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->constructor = omap_muxer_config_parser_constructor;
+	G_OBJECT_CLASS (klass)->finalize = omap_muxer_config_parser_finalize;
 }
 
 
-static void muxer_config_parser_instance_init (MuxerConfigParser * self) {
+static void omap_muxer_config_parser_instance_init (OmapMuxerConfigParser * self) {
 }
 
 
-static void muxer_config_parser_finalize (GObject* obj) {
-	MuxerConfigParser * self;
-	self = MUXER_CONFIG_PARSER (obj);
+static void omap_muxer_config_parser_finalize (GObject* obj) {
+	OmapMuxerConfigParser * self;
+	self = OMAP_MUXER_CONFIG_PARSER (obj);
 	_g_free0 (self->current_group);
 	_g_free0 (self->current_key);
 	_g_free0 (self->current_value);
 	_g_markup_parse_context_free0 (self->context);
-	G_OBJECT_CLASS (muxer_config_parser_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_muxer_config_parser_parent_class)->finalize (obj);
 }
 
 
-GType muxer_config_parser_get_type (void) {
-	static GType muxer_config_parser_type_id = 0;
-	if (muxer_config_parser_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (MuxerConfigParserClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) muxer_config_parser_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (MuxerConfigParser), 0, (GInstanceInitFunc) muxer_config_parser_instance_init, NULL };
-		muxer_config_parser_type_id = g_type_register_static (G_TYPE_OBJECT, "MuxerConfigParser", &g_define_type_info, 0);
+GType omap_muxer_config_parser_get_type (void) {
+	static GType omap_muxer_config_parser_type_id = 0;
+	if (omap_muxer_config_parser_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerConfigParserClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_config_parser_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerConfigParser), 0, (GInstanceInitFunc) omap_muxer_config_parser_instance_init, NULL };
+		omap_muxer_config_parser_type_id = g_type_register_static (G_TYPE_OBJECT, "OmapMuxerConfigParser", &g_define_type_info, 0);
 	}
-	return muxer_config_parser_type_id;
+	return omap_muxer_config_parser_type_id;
 }
 
 

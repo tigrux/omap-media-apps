@@ -1,10 +1,8 @@
 [indent=4]
 
-uses Gtk
 
-
-class DebugDialog: Dialog
-    text_buffer: TextBuffer
+class Omap.DebugDialog: Gtk.Dialog
+    text_buffer: Gtk.TextBuffer
     errors_n: int
 
     event closed()
@@ -12,8 +10,8 @@ class DebugDialog: Dialog
     init
         title = "Error"
         modal = true
-        add_button(STOCK_CLOSE, -1)
-        var content_area = get_content_area() as Box
+        add_button(Gtk.STOCK_CLOSE, -1)
+        var content_area = get_content_area() as Gtk.Box
         content_area.add(new_error_box())
         text_buffer.create_tag("bold", "weight", Pango.Weight.BOLD, null)
         response += def()
@@ -22,7 +20,7 @@ class DebugDialog: Dialog
         delete_event += def()
             closed()
 
-    construct(parent: Window)
+    construct(parent: Gtk.Window)
         width, height: int
         parent.get_size(out width, out height)
         set_default_size(3*width/4, 3*height/4)
@@ -32,7 +30,7 @@ class DebugDialog: Dialog
         errors_n ++
         if errors_n > 1
             title = "%d errors".printf(errors_n)
-        iter: TextIter
+        iter: Gtk.TextIter
         text_buffer.get_end_iter(out iter)
         text_insert_new_line(ref iter)
         text_buffer.insert_with_tags_by_name(iter, \
@@ -42,36 +40,38 @@ class DebugDialog: Dialog
             text_buffer.insert(iter, debug, -1)
             text_insert_new_line(ref iter)
 
-    def text_insert_new_line(ref iter: TextIter)
+    def text_insert_new_line(ref iter: Gtk.TextIter)
         text_buffer.insert(iter, "\n", -1)
 
-    def new_error_box(): Box
-        var box = new HBox(false, 0)
+    def new_error_box(): Gtk.Box
+        var box = new Gtk.HBox(false, 0)
 
-        var image = new Image.from_stock(STOCK_DIALOG_ERROR, IconSize.DIALOG)
+        var image = new Gtk.Image.from_stock( \
+                        Gtk.STOCK_DIALOG_ERROR, Gtk.IconSize.DIALOG)
         box.pack_start(image, false, false, 3)
 
-        var separator = new VSeparator()
+        var separator = new Gtk.VSeparator()
         box.pack_start(separator, false, false, 0)
 
-        var scrolled_window = new ScrolledWindow(null, null)
+        var scrolled_window = new Gtk.ScrolledWindow(null, null)
         box.pack_start(scrolled_window, true, true, 0)
-        scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC)
+        var policy = Gtk.PolicyType.AUTOMATIC
+        scrolled_window.set_policy(policy, policy)
 
-        var text_view = new TextView()
+        var text_view = new Gtk.TextView()
         scrolled_window.add(text_view)
         text_view.editable = false
         text_view.cursor_visible = false
-        text_view.wrap_mode = WrapMode.WORD
+        text_view.wrap_mode = Gtk.WrapMode.WORD
         text_buffer = text_view.buffer
 
         box.show_all()
         return box
 
 def error_dialog(error: Error)
-    dialog: Dialog = new MessageDialog( \
+    dialog: Gtk.Dialog = new Gtk.MessageDialog( \
         null, 0, \
-        MessageType.ERROR,  ButtonsType.CLOSE, \
+        Gtk.MessageType.ERROR,  Gtk.ButtonsType.CLOSE, \
         "%s", error.message)
     dialog.title = "Error"
     dialog.response += def(widget, response)

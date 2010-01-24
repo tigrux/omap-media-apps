@@ -11,31 +11,31 @@
 #include <string.h>
 
 
-#define TYPE_MUXER_WINDOW (muxer_window_get_type ())
-#define MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MUXER_WINDOW, MuxerWindow))
-#define MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MUXER_WINDOW, MuxerWindowClass))
-#define IS_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MUXER_WINDOW))
-#define IS_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MUXER_WINDOW))
-#define MUXER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MUXER_WINDOW, MuxerWindowClass))
+#define OMAP_TYPE_MUXER_WINDOW (omap_muxer_window_get_type ())
+#define OMAP_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindow))
+#define OMAP_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindowClass))
+#define OMAP_IS_MUXER_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_MUXER_WINDOW))
+#define OMAP_IS_MUXER_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_MUXER_WINDOW))
+#define OMAP_MUXER_WINDOW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_MUXER_WINDOW, OmapMuxerWindowClass))
 
-typedef struct _MuxerWindow MuxerWindow;
-typedef struct _MuxerWindowClass MuxerWindowClass;
+typedef struct _OmapMuxerWindow OmapMuxerWindow;
+typedef struct _OmapMuxerWindowClass OmapMuxerWindowClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 
 
-MuxerWindow* muxer_window_new (void);
-MuxerWindow* muxer_window_construct (GType object_type);
-GType muxer_window_get_type (void);
+OmapMuxerWindow* omap_muxer_window_new (void);
+OmapMuxerWindow* omap_muxer_window_construct (GType object_type);
+GType omap_muxer_window_get_type (void);
 void _main (char** args, int args_length1);
 
 
 
 void _main (char** args, int args_length1) {
-	MuxerWindow* window;
+	OmapMuxerWindow* window;
 	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
-	window = g_object_ref_sink (muxer_window_new ());
+	window = g_object_ref_sink (omap_muxer_window_new ());
 	gtk_widget_show ((GtkWidget*) window);
 	gtk_main ();
 	_g_object_unref0 (window);

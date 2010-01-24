@@ -1,24 +1,22 @@
 [indent=4]
 
-uses Gst
 
-
-class MediaControl: GLib.Object
-    _pipeline: Bin
+class Omap.MediaControl: GLib.Object
+    _pipeline: Gst.Bin
     prepare_xwindow_q: static Quark = Quark.from_string("prepare-xwindow-id")
-    xoverlay: XOverlay
+    xoverlay: Gst.XOverlay
 
-    event prepare_xwindow_id(imagesink: XOverlay)
+    event prepare_xwindow_id(imagesink: Gst.XOverlay)
     event tag_found(name: string, tag_value: GLib.Value)
 
     event eos_message(src: Gst.Object)
     event error_message(src: Gst.Object, error: Error, debug: string)
-    event element_message(src: Gst.Object, structure: Structure)
-    event segment_start_message(src: Gst.Object, format: Format, pos: int64)
-    event segment_done_message(src: Gst.Object, format: Format, pos: int64)
-    event tag_message(src: Gst.Object, tag_list: TagList)
+    event element_message(src: Gst.Object, structure: Gst.Structure)
+    event segment_start_message(src: Gst.Object, format: Gst.Format, pos: int64)
+    event segment_done_message(src: Gst.Object, format: Gst.Format, pos: int64)
+    event tag_message(src: Gst.Object, tag_list: Gst.TagList)
     event state_changed_message(src: Gst.Object, \
-            old: State, current: State, pending: State)
+            old: Gst.State, current: Gst.State, pending: Gst.State)
 
     final
         if _pipeline != null
@@ -38,10 +36,10 @@ class MediaControl: GLib.Object
         bus.message += on_bus_message
         bus.sync_message += on_bus_sync_message
 
-    prop pipeline: Bin
+    prop pipeline: Gst.Bin
         set
             if _pipeline != null
-                state = State.NULL
+                state = Gst.State.NULL
                 remove_signals()
             _pipeline = value
             if value != null
@@ -49,79 +47,79 @@ class MediaControl: GLib.Object
         get
             return _pipeline
 
-    def on_bus_message(message: Message)
+    def on_bus_message(message: Gst.Message)
         case message.type
-            when MessageType.ELEMENT
-                st: Structure
+            when Gst.MessageType.ELEMENT
+                st: Gst.Structure
                 if (st = message.structure) != null
                     element_message(message.src, st)
-            when MessageType.EOS
+            when Gst.MessageType.EOS
                 eos_message(message.src)
-            when MessageType.ERROR
+            when Gst.MessageType.ERROR
                 e: Error
                 d: string
                 message.parse_error(out e, out d)
                 error_message(message.src, e, d)
-            when MessageType.STATE_CHANGED
-                old, current, pending: State
+            when Gst.MessageType.STATE_CHANGED
+                old, current, pending: Gst.State
                 message.parse_state_changed(out old, out current, out pending)
                 state_changed_message(message.src, old, current, pending)
-            when MessageType.SEGMENT_START
-                format: Format
+            when Gst.MessageType.SEGMENT_START
+                format: Gst.Format
                 position: int64
                 message.parse_segment_start(out format, out position)
                 segment_start_message(message.src, format, position)
-            when MessageType.SEGMENT_DONE
-                format: Format
+            when Gst.MessageType.SEGMENT_DONE
+                format: Gst.Format
                 position: int64
                 message.parse_segment_done(out format, out position)
                 segment_done_message(message.src, format, position)
-            when MessageType.TAG
-                tag_list: TagList
+            when Gst.MessageType.TAG
+                tag_list: Gst.TagList
                 message.parse_tag(out tag_list)
                 tag_list.foreach(tag_foreach_func)
                 tag_message(message.src, tag_list)
             default
                 pass
 
-    def tag_foreach_func(tag_list: TagList, tag_name: string)
+    def tag_foreach_func(tag_list: Gst.TagList, tag_name: string)
         tag_value: GLib.Value
-        TagList.copy_value(out tag_value, tag_list, tag_name)
+        Gst.TagList.copy_value(out tag_value, tag_list, tag_name)
         tag_found(tag_name, tag_value)
 
-    def on_bus_sync_message(message: Message)
-        structure: Structure
+    def on_bus_sync_message(message: Gst.Message)
+        structure: Gst.Structure
         if (structure = message.structure) == null
             return
         if structure.name == prepare_xwindow_q
-            xoverlay = message.src as XOverlay
+            xoverlay = message.src as Gst.XOverlay
             prepare_xwindow_id(xoverlay)
 
-    prop state: State
+    prop state: Gst.State
         get
-            state: State
-            pipeline.get_state(out state, null, (ClockTime)(MSECOND*50))
+            state: Gst.State
+            pipeline.get_state(out state, null, (Gst.ClockTime)(Gst.MSECOND*50))
             return state
         set
             pipeline.set_state(value)
 
     prop position: int64
         get
-            var format = Format.TIME
+            var format = Gst.Format.TIME
             position: int64
             pipeline.query_position(ref format, out position)
             return position
         set
-            var seek_event = new Event.seek( \
-                1.0, Format.TIME, \
-                SeekFlags.FLUSH | SeekFlags.ACCURATE, \
+            var seek_event = new Gst.Event.seek( \
+                1.0, Gst.Format.TIME, \
+                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, \
                 Gst.SeekType.SET, value, \
                 Gst.SeekType.NONE, 0)
             pipeline.send_event(seek_event)
 
     prop duration: int64
         get
-            var format = Format.TIME
+            var format = Gst.Format.TIME
             duration: int64
             pipeline.query_duration(ref format, out duration)
             return duration

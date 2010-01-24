@@ -10,53 +10,53 @@
 #include <gst/gst.h>
 
 
-#define TYPE_IMAGE_CONTROL (image_control_get_type ())
-#define IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_IMAGE_CONTROL, ImageControl))
-#define IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_IMAGE_CONTROL, ImageControlClass))
-#define IS_IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_IMAGE_CONTROL))
-#define IS_IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_IMAGE_CONTROL))
-#define IMAGE_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_IMAGE_CONTROL, ImageControlClass))
+#define OMAP_TYPE_IMAGE_CONTROL (omap_image_control_get_type ())
+#define OMAP_IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_IMAGE_CONTROL, OmapImageControl))
+#define OMAP_IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_IMAGE_CONTROL, OmapImageControlClass))
+#define OMAP_IS_IMAGE_CONTROL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_IMAGE_CONTROL))
+#define OMAP_IS_IMAGE_CONTROL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_IMAGE_CONTROL))
+#define OMAP_IMAGE_CONTROL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_IMAGE_CONTROL, OmapImageControlClass))
 
-typedef struct _ImageControl ImageControl;
-typedef struct _ImageControlClass ImageControlClass;
-typedef struct _ImageControlPrivate ImageControlPrivate;
+typedef struct _OmapImageControl OmapImageControl;
+typedef struct _OmapImageControlClass OmapImageControlClass;
+typedef struct _OmapImageControlPrivate OmapImageControlPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
 
-struct _ImageControl {
-	MediaControl parent_instance;
-	ImageControlPrivate * priv;
+struct _OmapImageControl {
+	OmapMediaControl parent_instance;
+	OmapImageControlPrivate * priv;
 	GstElement* filesrc;
 };
 
-struct _ImageControlClass {
-	MediaControlClass parent_class;
+struct _OmapImageControlClass {
+	OmapMediaControlClass parent_class;
 };
 
 
-static gpointer image_control_parent_class = NULL;
+static gpointer omap_image_control_parent_class = NULL;
 
 #define IMAGE_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! ximagesink"
-GType image_control_get_type (void);
+GType omap_image_control_get_type (void);
 enum  {
-	IMAGE_CONTROL_DUMMY_PROPERTY,
-	IMAGE_CONTROL_LOCATION
+	OMAP_IMAGE_CONTROL_DUMMY_PROPERTY,
+	OMAP_IMAGE_CONTROL_LOCATION
 };
-void image_control_setup_pipeline (ImageControl* self, GError** error);
-ImageControl* image_control_new (GError** error);
-ImageControl* image_control_construct (GType object_type, GError** error);
+void omap_image_control_setup_pipeline (OmapImageControl* self, GError** error);
+OmapImageControl* omap_image_control_new (GError** error);
+OmapImageControl* omap_image_control_construct (GType object_type, GError** error);
 static inline void _dynamic_set_location2 (GstElement* obj, const char* value);
-void image_control_set_location (ImageControl* self, const char* value);
-static void image_control_finalize (GObject* obj);
-static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+void omap_image_control_set_location (OmapImageControl* self, const char* value);
+static void omap_image_control_finalize (GObject* obj);
+static void omap_image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
 
-ImageControl* image_control_construct (GType object_type, GError** error) {
+OmapImageControl* omap_image_control_construct (GType object_type, GError** error) {
 	GError * _inner_error_;
-	ImageControl * self;
+	OmapImageControl * self;
 	_inner_error_ = NULL;
-	self = (ImageControl*) media_control_construct (object_type);
-	image_control_setup_pipeline (self, &_inner_error_);
+	self = (OmapImageControl*) omap_media_control_construct (object_type);
+	omap_image_control_setup_pipeline (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return NULL;
@@ -65,12 +65,12 @@ ImageControl* image_control_construct (GType object_type, GError** error) {
 }
 
 
-ImageControl* image_control_new (GError** error) {
-	return image_control_construct (TYPE_IMAGE_CONTROL, error);
+OmapImageControl* omap_image_control_new (GError** error) {
+	return omap_image_control_construct (OMAP_TYPE_IMAGE_CONTROL, error);
 }
 
 
-void image_control_setup_pipeline (ImageControl* self, GError** error) {
+void omap_image_control_setup_pipeline (OmapImageControl* self, GError** error) {
 	GError * _inner_error_;
 	GstElement* _tmp0_;
 	GstElement* _tmp1_;
@@ -93,7 +93,7 @@ void image_control_setup_pipeline (ImageControl* self, GError** error) {
 			return;
 		}
 	}
-	media_control_set_pipeline ((MediaControl*) self, (GstBin*) image_pipeline);
+	omap_media_control_set_pipeline ((OmapMediaControl*) self, (GstBin*) image_pipeline);
 	_gst_object_unref0 (image_pipeline);
 }
 
@@ -103,49 +103,49 @@ static inline void _dynamic_set_location2 (GstElement* obj, const char* value) {
 }
 
 
-void image_control_set_location (ImageControl* self, const char* value) {
+void omap_image_control_set_location (OmapImageControl* self, const char* value) {
 	g_return_if_fail (self != NULL);
 	_dynamic_set_location2 (self->filesrc, value);
 	g_object_notify ((GObject *) self, "location");
 }
 
 
-static void image_control_class_init (ImageControlClass * klass) {
-	image_control_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->set_property = image_control_set_property;
-	G_OBJECT_CLASS (klass)->finalize = image_control_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), IMAGE_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
+static void omap_image_control_class_init (OmapImageControlClass * klass) {
+	omap_image_control_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->set_property = omap_image_control_set_property;
+	G_OBJECT_CLASS (klass)->finalize = omap_image_control_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), OMAP_IMAGE_CONTROL_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_WRITABLE));
 }
 
 
-static void image_control_instance_init (ImageControl * self) {
+static void omap_image_control_instance_init (OmapImageControl * self) {
 }
 
 
-static void image_control_finalize (GObject* obj) {
-	ImageControl * self;
-	self = IMAGE_CONTROL (obj);
+static void omap_image_control_finalize (GObject* obj) {
+	OmapImageControl * self;
+	self = OMAP_IMAGE_CONTROL (obj);
 	_gst_object_unref0 (self->filesrc);
-	G_OBJECT_CLASS (image_control_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (omap_image_control_parent_class)->finalize (obj);
 }
 
 
-GType image_control_get_type (void) {
-	static GType image_control_type_id = 0;
-	if (image_control_type_id == 0) {
-		static const GTypeInfo g_define_type_info = { sizeof (ImageControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) image_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (ImageControl), 0, (GInstanceInitFunc) image_control_instance_init, NULL };
-		image_control_type_id = g_type_register_static (TYPE_MEDIA_CONTROL, "ImageControl", &g_define_type_info, 0);
+GType omap_image_control_get_type (void) {
+	static GType omap_image_control_type_id = 0;
+	if (omap_image_control_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (OmapImageControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_image_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapImageControl), 0, (GInstanceInitFunc) omap_image_control_instance_init, NULL };
+		omap_image_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapImageControl", &g_define_type_info, 0);
 	}
-	return image_control_type_id;
+	return omap_image_control_type_id;
 }
 
 
-static void image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	ImageControl * self;
-	self = IMAGE_CONTROL (object);
+static void omap_image_control_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	OmapImageControl * self;
+	self = OMAP_IMAGE_CONTROL (object);
 	switch (property_id) {
-		case IMAGE_CONTROL_LOCATION:
-		image_control_set_location (self, g_value_get_string (value));
+		case OMAP_IMAGE_CONTROL_LOCATION:
+		omap_image_control_set_location (self, g_value_get_string (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
