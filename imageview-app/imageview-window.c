@@ -137,9 +137,8 @@ void omap_image_view_window_setup_notebook (OmapImageViewWindow* self);
 void omap_image_view_window_setup_widgets (OmapImageViewWindow* self);
 GtkBox* omap_image_view_window_new_iconlist_box (OmapImageViewWindow* self);
 GtkBox* omap_image_view_window_new_video_box (OmapImageViewWindow* self);
-void omap_image_view_window_on_notebook_switch_page (OmapImageViewWindow* self, guint num_page);
-static void _lambda0_ (GtkNotebookPage* page, guint num_page, OmapImageViewWindow* self);
-static void __lambda0__gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self);
+void omap_image_view_window_on_notebook_switch_page (OmapImageViewWindow* self, GtkNotebookPage* page, guint num_page);
+static void _omap_image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self);
 void omap_image_view_window_do_fill_visible_icons (OmapImageViewWindow* self);
 static void _omap_image_view_window_do_fill_visible_icons_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 static void _omap_image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self);
@@ -273,14 +272,8 @@ void omap_image_view_window_setup_widgets (OmapImageViewWindow* self) {
 }
 
 
-static void _lambda0_ (GtkNotebookPage* page, guint num_page, OmapImageViewWindow* self) {
-	g_return_if_fail (page != NULL);
-	omap_image_view_window_on_notebook_switch_page (self, num_page);
-}
-
-
-static void __lambda0__gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self) {
-	_lambda0_ (page, page_num, self);
+static void _omap_image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self) {
+	omap_image_view_window_on_notebook_switch_page (self, page, page_num);
 }
 
 
@@ -296,7 +289,7 @@ void omap_image_view_window_setup_notebook (OmapImageViewWindow* self) {
 	gtk_notebook_append_page (((OmapMediaWindow*) self)->notebook, (GtkWidget*) (_tmp2_ = omap_image_view_window_new_video_box (self)), (GtkWidget*) (_tmp3_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Video"))));
 	_g_object_unref0 (_tmp3_);
 	_g_object_unref0 (_tmp2_);
-	g_signal_connect_object (((OmapMediaWindow*) self)->notebook, "switch-page", (GCallback) __lambda0__gtk_notebook_switch_page, self, 0);
+	g_signal_connect_object (((OmapMediaWindow*) self)->notebook, "switch-page", (GCallback) _omap_image_view_window_on_notebook_switch_page_gtk_notebook_switch_page, self, 0);
 }
 
 
@@ -512,8 +505,9 @@ void omap_image_view_window_on_slideshow (OmapImageViewWindow* self) {
 }
 
 
-void omap_image_view_window_on_notebook_switch_page (OmapImageViewWindow* self, guint num_page) {
+void omap_image_view_window_on_notebook_switch_page (OmapImageViewWindow* self, GtkNotebookPage* page, guint num_page) {
 	g_return_if_fail (self != NULL);
+	g_return_if_fail (page != NULL);
 	if (num_page == OMAP_MEDIA_WINDOW_TAB_LIST) {
 		gtk_tool_button_set_stock_id (self->image_button, GTK_STOCK_ZOOM_100);
 	} else {

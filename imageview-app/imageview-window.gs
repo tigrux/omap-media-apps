@@ -55,8 +55,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
     def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Gtk.Label("List"))
         notebook.append_page(new_video_box(), new Gtk.Label("Video"))
-        notebook.switch_page += def(page, num_page)
-            on_notebook_switch_page(num_page)
+        notebook.switch_page += on_notebook_switch_page
 
     def new_iconlist_box(): Gtk.Box
         var box = new Gtk.VBox(false, 0)
@@ -170,7 +169,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         else
             stop_slideshow()
 
-    def on_notebook_switch_page(num_page: uint)
+    def on_notebook_switch_page(page: Gtk.NotebookPage, num_page: uint)
         if num_page == Tab.LIST
             image_button.stock_id = Gtk.STOCK_ZOOM_100
         else
