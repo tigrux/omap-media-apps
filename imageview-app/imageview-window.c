@@ -9,7 +9,6 @@
 #include <common.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 
@@ -118,6 +117,7 @@ enum  {
 void image_view_window_setup_controls (ImageViewWindow* self, GError** error);
 ImageViewWindow* image_view_window_new (GError** error);
 ImageViewWindow* image_view_window_construct (GType object_type, GError** error);
+GtkListStore* icon_list_control_model_new (void);
 void image_view_window_setup_model (ImageViewWindow* self);
 IconListControl* icon_list_control_new (GtkListStore* model, GError** error);
 IconListControl* icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
@@ -208,17 +208,9 @@ ImageViewWindow* image_view_window_new (GError** error) {
 
 
 void image_view_window_setup_model (ImageViewWindow* self) {
-	GType s;
-	GType p;
-	GType b;
-	GType i;
 	GtkListStore* _tmp0_;
 	g_return_if_fail (self != NULL);
-	s = G_TYPE_STRING;
-	p = GDK_TYPE_PIXBUF;
-	b = G_TYPE_BOOLEAN;
-	i = G_TYPE_INT;
-	self->iconlist_store = (_tmp0_ = gtk_list_store_new (7, s, s, p, b, b, i, i, NULL), _g_object_unref0 (self->iconlist_store), _tmp0_);
+	self->iconlist_store = (_tmp0_ = icon_list_control_model_new (), _g_object_unref0 (self->iconlist_store), _tmp0_);
 }
 
 

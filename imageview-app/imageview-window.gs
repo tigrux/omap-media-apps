@@ -37,11 +37,7 @@ class ImageViewWindow: MediaWindow
         setup_controls()
 
     def setup_model()
-        var s = typeof(string)
-        var p = typeof(Gdk.Pixbuf)
-        var b = typeof(bool)
-        var i = typeof(int)
-        iconlist_store = new ListStore(7, s, s, p, b, b, i, i)
+        iconlist_store = IconListControl.model_new()
 
     def setup_controls() raises Error
         iconlist_control = new IconListControl(iconlist_store)

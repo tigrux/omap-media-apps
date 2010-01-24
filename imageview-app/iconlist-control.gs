@@ -201,3 +201,10 @@ class IconListControl: MediaControl
             Col.HEIGHT, out height, \
             -1)
 
+    def static model_new(): ListStore
+        var s = typeof(string)
+        var p = typeof(Gdk.Pixbuf)
+        var b = typeof(bool)
+        var i = typeof(int)
+        return new ListStore(7, s, s, p, b, b, i, i)
+

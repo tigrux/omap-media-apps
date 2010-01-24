@@ -161,6 +161,7 @@ gboolean icon_list_control_iter_is_valid (IconListControl* self, GtkTreeIter* it
 gboolean icon_list_control_iter_is_filled (IconListControl* self, GtkTreeIter* iter);
 char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter);
 void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
+GtkListStore* icon_list_control_model_new (void);
 static void _icon_list_control_on_eos_media_control_eos_message (IconListControl* _sender, GstObject* src, gpointer self);
 static void _icon_list_control_on_error_media_control_error_message (IconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 static void _icon_list_control_on_element_media_control_element_message (IconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
@@ -696,6 +697,21 @@ char* icon_list_control_iter_get_file (IconListControl* self, GtkTreeIter* iter)
 void icon_list_control_iter_get_size (IconListControl* self, GtkTreeIter* iter, gint* width, gint* height) {
 	g_return_if_fail (self != NULL);
 	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, ICON_LIST_CONTROL_COL_WIDTH, width, ICON_LIST_CONTROL_COL_HEIGHT, height, -1, -1);
+}
+
+
+GtkListStore* icon_list_control_model_new (void) {
+	GtkListStore* result;
+	GType s;
+	GType p;
+	GType b;
+	GType i;
+	s = G_TYPE_STRING;
+	p = GDK_TYPE_PIXBUF;
+	b = G_TYPE_BOOLEAN;
+	i = G_TYPE_INT;
+	result = gtk_list_store_new (7, s, s, p, b, b, i, i, NULL);
+	return result;
 }
 
 

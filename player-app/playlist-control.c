@@ -79,6 +79,7 @@ gint play_list_control_get_name_column (void);
 gint play_list_control_get_icon_column (void);
 char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
 char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
+GtkListStore* play_list_control_model_new (void);
 static inline double _dynamic_get_volume0 (GstBin* obj);
 double play_list_control_get_volume (PlayListControl* self);
 static inline void _dynamic_set_volume1 (GstBin* obj, double value);
@@ -333,6 +334,15 @@ char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter)
 	file = NULL;
 	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_FILE, &file, -1, -1);
 	result = file;
+	return result;
+}
+
+
+GtkListStore* play_list_control_model_new (void) {
+	GtkListStore* result;
+	GType s;
+	s = G_TYPE_STRING;
+	result = gtk_list_store_new (3, s, s, s, NULL);
 	return result;
 }
 

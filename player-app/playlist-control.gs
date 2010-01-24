@@ -147,3 +147,7 @@ class PlayListControl: MediaControl
         playlist_store.get(iter, Col.FILE, out file, -1)
         return file
 
+    def static model_new(): ListStore
+        var s = typeof(string)
+        return new ListStore(3, s, s, s)
+

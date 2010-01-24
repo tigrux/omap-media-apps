@@ -45,8 +45,7 @@ class PlayerWindow: MediaWindow
         setup_widgets()
 
     def setup_model()
-        var s = typeof(string)
-        playlist_store = new ListStore(3, s, s, s)
+        playlist_store = PlayListControl.model_new()
 
     def setup_controls()
         playlist_control = new PlayListControl(playlist_store)

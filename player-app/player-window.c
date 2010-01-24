@@ -83,6 +83,7 @@ enum  {
 	PLAYER_WINDOW_DUMMY_PROPERTY,
 	PLAYER_WINDOW_PLAYING
 };
+GtkListStore* play_list_control_model_new (void);
 void player_window_setup_model (PlayerWindow* self);
 PlayListControl* play_list_control_new (GtkListStore* store);
 PlayListControl* play_list_control_construct (GType object_type, GtkListStore* store);
@@ -180,11 +181,9 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 
 void player_window_setup_model (PlayerWindow* self) {
-	GType s;
 	GtkListStore* _tmp0_;
 	g_return_if_fail (self != NULL);
-	s = G_TYPE_STRING;
-	self->playlist_store = (_tmp0_ = gtk_list_store_new (3, s, s, s, NULL), _g_object_unref0 (self->playlist_store), _tmp0_);
+	self->playlist_store = (_tmp0_ = play_list_control_model_new (), _g_object_unref0 (self->playlist_store), _tmp0_);
 }
 
 
