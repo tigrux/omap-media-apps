@@ -24,8 +24,8 @@ class MediaWindow: Window
 
     init
         lookup_and_set_icon_name(Environment.get_prgname())
-        settings: Gtk.Settings = get_settings()
-        settings.set("gtk-touchscreen-mode", true)
+        settings: dynamic Gtk.Settings = get_settings()
+        settings.gtk_touchscreen_mode = true
 
         set_default_size(800, 480)
         destroy += on_quit

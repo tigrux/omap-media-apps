@@ -291,7 +291,7 @@ static GObject * media_window_constructor (GType type, guint n_construct_propert
 		GtkNotebook* _tmp2_;
 		media_window_lookup_and_set_icon_name (self, g_get_prgname ());
 		settings = _g_object_ref0 (gtk_widget_get_settings ((GtkWidget*) self));
-		g_object_set ((GObject*) settings, "gtk-touchscreen-mode", TRUE, NULL);
+		g_object_set (settings, "gtk-touchscreen-mode", TRUE, NULL);
 		gtk_window_set_default_size ((GtkWindow*) self, 800, 480);
 		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _media_window_on_quit_gtk_object_destroy, self, 0);
 		self->main_box = (_tmp0_ = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0)), _g_object_unref0 (self->main_box), _tmp0_);
