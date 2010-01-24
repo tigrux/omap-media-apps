@@ -297,7 +297,7 @@ static GObject * media_window_constructor (GType type, guint n_construct_propert
 		self->main_box = (_tmp0_ = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0)), _g_object_unref0 (self->main_box), _tmp0_);
 		gtk_container_add ((GtkContainer*) self, (GtkWidget*) self->main_box);
 		self->toolbar = (_tmp1_ = g_object_ref_sink ((GtkToolbar*) gtk_toolbar_new ()), _g_object_unref0 (self->toolbar), _tmp1_);
-		gtk_toolbar_set_icon_size (self->toolbar, GTK_ICON_SIZE_DND);
+		gtk_toolbar_set_icon_size (self->toolbar, (gint) GTK_ICON_SIZE_DND);
 		gtk_box_pack_start ((GtkBox*) self->main_box, (GtkWidget*) self->toolbar, FALSE, FALSE, (guint) 0);
 		self->notebook = (_tmp2_ = g_object_ref_sink ((GtkNotebook*) gtk_notebook_new ()), _g_object_unref0 (self->notebook), _tmp2_);
 		gtk_notebook_set_show_tabs (self->notebook, FALSE);
