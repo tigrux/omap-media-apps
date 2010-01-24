@@ -25,11 +25,18 @@ typedef struct _OmapImageViewWindowClass OmapImageViewWindowClass;
 
 
 
-OmapImageViewWindow* omap_image_view_window_new (GError** error);
-OmapImageViewWindow* omap_image_view_window_construct (GType object_type, GError** error);
+OmapImageViewWindow* omap_image_view_window_new (void);
+OmapImageViewWindow* omap_image_view_window_construct (GType object_type);
 GType omap_image_view_window_get_type (void);
+void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
+static void _gtk_main_quit_gtk_object_destroy (GtkMessageDialog* _sender, gpointer self);
 void _main (char** args, int args_length1);
 
+
+
+static void _gtk_main_quit_gtk_object_destroy (GtkMessageDialog* _sender, gpointer self) {
+	gtk_main_quit ();
+}
 
 
 void _main (char** args, int args_length1) {
@@ -39,13 +46,14 @@ void _main (char** args, int args_length1) {
 	gtk_init (&args_length1, &args);
 	{
 		OmapImageViewWindow* window;
-		window = g_object_ref_sink (omap_image_view_window_new (&_inner_error_));
+		window = g_object_ref_sink (omap_image_view_window_new ());
+		omap_image_view_window_setup_controls (window, &_inner_error_);
 		if (_inner_error_ != NULL) {
+			_g_object_unref0 (window);
 			goto __catch0_g_error;
 			goto __finally0;
 		}
 		gtk_widget_show ((GtkWidget*) window);
-		gtk_main ();
 		_g_object_unref0 (window);
 	}
 	goto __finally0;
@@ -55,8 +63,11 @@ void _main (char** args, int args_length1) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e);
+			GtkMessageDialog* dialog;
+			dialog = omap_error_dialog (e);
+			g_signal_connect ((GtkObject*) dialog, "destroy", (GCallback) _gtk_main_quit_gtk_object_destroy, NULL);
 			_g_error_free0 (e);
+			_g_object_unref0 (dialog);
 		}
 	}
 	__finally0:
@@ -65,6 +76,7 @@ void _main (char** args, int args_length1) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
+	gtk_main ();
 }
 
 

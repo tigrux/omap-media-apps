@@ -37,6 +37,17 @@ typedef struct _OmapDebugDialog OmapDebugDialog;
 typedef struct _OmapDebugDialogClass OmapDebugDialogClass;
 typedef struct _OmapDebugDialogPrivate OmapDebugDialogPrivate;
 
+#define OMAP_TYPE_ERROR_DIALOG (omap_error_dialog_get_type ())
+#define OMAP_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_ERROR_DIALOG, OmapErrorDialog))
+#define OMAP_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_ERROR_DIALOG, OmapErrorDialogClass))
+#define OMAP_IS_ERROR_DIALOG(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), OMAP_TYPE_ERROR_DIALOG))
+#define OMAP_IS_ERROR_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), OMAP_TYPE_ERROR_DIALOG))
+#define OMAP_ERROR_DIALOG_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), OMAP_TYPE_ERROR_DIALOG, OmapErrorDialogClass))
+
+typedef struct _OmapErrorDialog OmapErrorDialog;
+typedef struct _OmapErrorDialogClass OmapErrorDialogClass;
+typedef struct _OmapErrorDialogPrivate OmapErrorDialogPrivate;
+
 #define OMAP_TYPE_MEDIA_WINDOW (omap_media_window_get_type ())
 #define OMAP_MEDIA_WINDOW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MEDIA_WINDOW, OmapMediaWindow))
 #define OMAP_MEDIA_WINDOW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), OMAP_TYPE_MEDIA_WINDOW, OmapMediaWindowClass))
@@ -82,6 +93,15 @@ struct _OmapDebugDialogClass {
 	GtkDialogClass parent_class;
 };
 
+struct _OmapErrorDialog {
+	GtkMessageDialog parent_instance;
+	OmapErrorDialogPrivate * priv;
+};
+
+struct _OmapErrorDialogClass {
+	GtkMessageDialogClass parent_class;
+};
+
 struct _OmapMediaWindow {
 	GtkWindow parent_instance;
 	OmapMediaWindowPrivate * priv;
@@ -122,7 +142,12 @@ OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* pare
 void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
 void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter);
 GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
-void omap_error_dialog (GError* _error_);
+GType omap_error_dialog_get_type (void);
+OmapErrorDialog* omap_error_dialog_new (GError* e);
+OmapErrorDialog* omap_error_dialog_construct (GType object_type, GError* e);
+void omap_error_dialog_on_response (OmapErrorDialog* self);
+gboolean omap_error_dialog_do_show (OmapErrorDialog* self);
+GtkMessageDialog* omap_error_dialog (GError* e);
 GType omap_media_window_get_type (void);
 GType omap_media_window_tab_get_type (void);
 extern gboolean omap_media_window_style_applied;

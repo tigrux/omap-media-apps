@@ -314,7 +314,9 @@ void omap_muxer_window_setup_control (OmapMuxerWindow* self, const char* preview
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e);
+			GtkMessageDialog* _tmp1_;
+			_tmp1_ = omap_error_dialog (e);
+			_g_object_unref0 (_tmp1_);
 			_g_error_free0 (e);
 			return;
 		}
@@ -391,7 +393,9 @@ void omap_muxer_window_on_record (OmapMuxerWindow* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e);
+			GtkMessageDialog* _tmp0_;
+			_tmp0_ = omap_error_dialog (e);
+			_g_object_unref0 (_tmp0_);
 			_g_error_free0 (e);
 		}
 	}
@@ -471,7 +475,9 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e1 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e1);
+			GtkMessageDialog* _tmp0_;
+			_tmp0_ = omap_error_dialog (e1);
+			_g_object_unref0 (_tmp0_);
 			_g_error_free0 (e1);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -485,7 +491,9 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e2 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e2);
+			GtkMessageDialog* _tmp1_;
+			_tmp1_ = omap_error_dialog (e2);
+			_g_object_unref0 (_tmp1_);
 			_g_error_free0 (e2);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -499,7 +507,9 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e3 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e3);
+			GtkMessageDialog* _tmp2_;
+			_tmp2_ = omap_error_dialog (e3);
+			_g_object_unref0 (_tmp2_);
 			_g_error_free0 (e3);
 			_g_free0 (config_file);
 			_g_key_file_free0 (key_file);
@@ -517,19 +527,19 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 	{
 		gtk_list_store_clear (self->combo_model);
 		{
-			gsize _tmp0_;
+			gsize _tmp3_;
 			char** group_collection;
 			int group_collection_length1;
 			int group_it;
-			group_collection = g_key_file_get_groups (key_file, &_tmp0_);
-			group_collection_length1 = _tmp0_;
-			for (group_it = 0; group_it < _tmp0_; group_it = group_it + 1) {
+			group_collection = g_key_file_get_groups (key_file, &_tmp3_);
+			group_collection_length1 = _tmp3_;
+			for (group_it = 0; group_it < _tmp3_; group_it = group_it + 1) {
 				char* group;
 				group = g_strdup (group_collection[group_it]);
 				{
 					char* preview;
 					char* record;
-					gboolean _tmp1_ = FALSE;
+					gboolean _tmp4_ = FALSE;
 					preview = g_key_file_get_string (key_file, group, "preview", &_inner_error_);
 					if (_inner_error_ != NULL) {
 						_g_free0 (group);
@@ -550,11 +560,11 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 						goto __finally3;
 					}
 					if (preview == NULL) {
-						_tmp1_ = TRUE;
+						_tmp4_ = TRUE;
 					} else {
-						_tmp1_ = record == NULL;
+						_tmp4_ = record == NULL;
 					}
-					if (_tmp1_) {
+					if (_tmp4_) {
 						_g_free0 (group);
 						_g_free0 (preview);
 						_g_free0 (record);
@@ -576,7 +586,9 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 		e4 = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			omap_error_dialog (e4);
+			GtkMessageDialog* _tmp5_;
+			_tmp5_ = omap_error_dialog (e4);
+			_g_object_unref0 (_tmp5_);
 			_g_error_free0 (e4);
 		}
 	}

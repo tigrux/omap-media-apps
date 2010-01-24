@@ -79,6 +79,7 @@ struct _OmapIconListControlAddFolderData {
 	GFile* dir;
 	GFileEnumerator* file_etor;
 	GList* next_files;
+	GtkMessageDialog* _tmp0_;
 	GError * e1;
 	GError * _inner_error_;
 };
@@ -406,7 +407,8 @@ static gboolean omap_icon_list_control_add_folder_co (OmapIconListControlAddFold
 				data->e1 = data->_inner_error_;
 				data->_inner_error_ = NULL;
 				{
-					omap_error_dialog (data->e1);
+					data->_tmp0_ = omap_error_dialog (data->e1);
+					_g_object_unref0 (data->_tmp0_);
 					_g_error_free0 (data->e1);
 				}
 			}

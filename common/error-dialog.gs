@@ -68,15 +68,29 @@ class Omap.DebugDialog: Gtk.Dialog
         box.show_all()
         return box
 
+
+class Omap.ErrorDialog: Gtk.MessageDialog
+    init
+        message_type = Gtk.MessageType.ERROR
+        title = "Error"
+        modal = true
+        response += on_response
+        add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+
+    construct(e: Error)
+        text = e.message
+
+    def on_response()
+        destroy()
+
+    def do_show(): bool
+        show()
+        return true
+
+
 namespace Omap
-    def error_dialog(error: Error)
-        dialog: Gtk.Dialog = new Gtk.MessageDialog(
-            null, 0,
-            Gtk.MessageType.ERROR,  Gtk.ButtonsType.CLOSE,
-            "%s", error.message)
-        dialog.title = "Error"
-        dialog.response += def(widget, response)
-            if widget != null
-                widget.destroy()
-        dialog.run()
+    def error_dialog(e: Error): Gtk.MessageDialog
+        var dialog = new Omap.ErrorDialog(e)
+        dialog.show()
+        return dialog
 

@@ -115,9 +115,6 @@ GType omap_image_control_get_type (void);
 enum  {
 	OMAP_IMAGE_VIEW_WINDOW_DUMMY_PROPERTY
 };
-void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
-OmapImageViewWindow* omap_image_view_window_new (GError** error);
-OmapImageViewWindow* omap_image_view_window_construct (GType object_type, GError** error);
 GtkListStore* omap_icon_list_control_model_new (void);
 void omap_image_view_window_setup_model (OmapImageViewWindow* self);
 OmapIconListControl* omap_icon_list_control_new (GtkListStore* model, GError** error);
@@ -132,6 +129,7 @@ void omap_image_view_window_on_image_control_eos (OmapImageViewWindow* self);
 static void _omap_image_view_window_on_image_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self);
 void omap_image_view_window_on_xid_prepared (OmapImageViewWindow* self, GstXOverlay* imagesink);
 static void _omap_image_view_window_on_xid_prepared_omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self);
+void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
 void omap_image_view_window_setup_toolbar (OmapImageViewWindow* self);
 void omap_image_view_window_setup_notebook (OmapImageViewWindow* self);
 void omap_image_view_window_setup_widgets (OmapImageViewWindow* self);
@@ -183,29 +181,12 @@ gboolean omap_image_view_window_retry_do_fill_visible_icons (OmapImageViewWindow
 static gboolean _omap_image_view_window_retry_do_fill_visible_icons_gsource_func (gpointer self);
 void omap_icon_list_control_fill_icons (OmapIconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void omap_icon_list_control_fill_icons_finish (OmapIconListControl* self, GAsyncResult* _res_);
+OmapImageViewWindow* omap_image_view_window_new (void);
+OmapImageViewWindow* omap_image_view_window_construct (GType object_type);
 static GObject * omap_image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_image_view_window_finalize (GObject* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
-
-
-OmapImageViewWindow* omap_image_view_window_construct (GType object_type, GError** error) {
-	GError * _inner_error_;
-	OmapImageViewWindow * self;
-	_inner_error_ = NULL;
-	self = g_object_newv (object_type, 0, NULL);
-	omap_image_view_window_setup_controls (self, &_inner_error_);
-	if (_inner_error_ != NULL) {
-		g_propagate_error (error, _inner_error_);
-		return NULL;
-	}
-	return self;
-}
-
-
-OmapImageViewWindow* omap_image_view_window_new (GError** error) {
-	return omap_image_view_window_construct (OMAP_TYPE_IMAGE_VIEW_WINDOW, error);
-}
 
 
 void omap_image_view_window_setup_model (OmapImageViewWindow* self) {
@@ -356,6 +337,10 @@ void omap_image_view_window_on_icon_activated (OmapImageViewWindow* self, GtkTre
 	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (path != NULL);
+	if (self->iconlist_control == NULL) {
+		g_print ("89: iconlist_control is null\n");
+		return;
+	}
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
 	if (omap_icon_list_control_iter_is_valid (self->iconlist_control, &iter)) {
 		gint width = 0;
@@ -601,6 +586,18 @@ static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlidesho
 		g_assert_not_reached ();
 		case 0:
 		{
+			if (data->self->iconlist_control == NULL) {
+				g_print ("205: iconlist_control is null\n");
+				{
+					if (data->_state_ == 0) {
+						g_simple_async_result_complete_in_idle (data->_async_result);
+					} else {
+						g_simple_async_result_complete (data->_async_result);
+					}
+					g_object_unref (data->_async_result);
+					return FALSE;
+				}
+			}
 			if (!omap_image_view_window_get_and_select_iter (data->self, &data->iter)) {
 				data->_tmp0_ = TRUE;
 			} else {
@@ -734,6 +731,10 @@ static gboolean _omap_image_view_window_retry_change_folder_gsource_func (gpoint
 
 void omap_image_view_window_change_folder (OmapImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
+	if (self->iconlist_control == NULL) {
+		g_print ("250: iconlist_control is null\n");
+		return;
+	}
 	if (self->fill_icons_cancellable == NULL) {
 		GCancellable* _tmp0_;
 		gtk_list_store_clear (self->iconlist_store);
@@ -816,6 +817,10 @@ gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self) {
 	gboolean _tmp1_;
 	GtkTreePath* _tmp0_ = NULL;
 	g_return_val_if_fail (self != NULL, FALSE);
+	if (self->iconlist_control == NULL) {
+		result = FALSE;
+		return result;
+	}
 	start = NULL;
 	end = NULL;
 	_tmp4_ = (_tmp1_ = gtk_icon_view_get_visible_range (self->icon_view, &_tmp0_, &_tmp3_), start = (_tmp2_ = _gtk_tree_path_copy0 (_tmp0_), _gtk_tree_path_free0 (start), _tmp2_), _tmp1_);
@@ -835,6 +840,18 @@ void omap_image_view_window_on_iconlist_icons_filled (OmapImageViewWindow* self)
 	g_return_if_fail (self != NULL);
 	self->fill_icons_cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
 	self->is_filling_icons = FALSE;
+}
+
+
+OmapImageViewWindow* omap_image_view_window_construct (GType object_type) {
+	OmapImageViewWindow * self;
+	self = g_object_newv (object_type, 0, NULL);
+	return self;
+}
+
+
+OmapImageViewWindow* omap_image_view_window_new (void) {
+	return omap_image_view_window_construct (OMAP_TYPE_IMAGE_VIEW_WINDOW);
 }
 
 

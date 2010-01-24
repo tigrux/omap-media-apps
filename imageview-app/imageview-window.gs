@@ -31,9 +31,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         if iconlist_control != null
             iconlist_control.files_added.disconnect(on_iconlist_files_added)
 
-    construct() raises Error
-        setup_controls()
-
     def setup_model()
         iconlist_store = Omap.IconListControl.model_new()
 
@@ -77,8 +74,8 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         icon_view.size_request += do_fill_visible_icons
         icon_view.selection_mode = Gtk.SelectionMode.BROWSE
         icon_view.model = iconlist_store
-        icon_view.text_column = iconlist_control.get_text_column()
-        icon_view.pixbuf_column = iconlist_control.get_pixbuf_column()
+        icon_view.text_column = Omap.IconListControl.get_text_column()
+        icon_view.pixbuf_column = Omap.IconListControl.get_pixbuf_column()
         icon_view.row_spacing = 0
         icon_view.column_spacing = 0
         icon_view.spacing = 0
@@ -88,6 +85,9 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         return box
 
     def on_icon_activated(path: Gtk.TreePath)
+        if iconlist_control == null
+            print "89: iconlist_control is null"
+            return
         iter: Gtk.TreeIter
         iconlist_store.get_iter(out iter, path)
         if iconlist_control.iter_is_valid(iter)
@@ -201,6 +201,9 @@ class Omap.ImageViewWindow: Omap.MediaWindow
             slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 
     def async slideshow()
+        if iconlist_control == null
+            print "205: iconlist_control is null"
+            return
         iter: Gtk.TreeIter
         if not get_and_select_iter(out iter) or slideshow_cancellable.is_cancelled()
             return
@@ -243,6 +246,9 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         change_folder()
 
     def change_folder()
+        if iconlist_control == null
+            print "250: iconlist_control is null"
+            return
         if fill_icons_cancellable == null
             iconlist_store.clear()
             fill_icons_cancellable = new Cancellable()
@@ -277,6 +283,8 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         return true
 
     def fill_visible_icons(): bool
+        if iconlist_control == null
+            return false
         start: Gtk.TreePath
         end: Gtk.TreePath
         icon_view.get_visible_range(out start, out end)

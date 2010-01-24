@@ -13,6 +13,12 @@ namespace Omap {
 		public signal void closed ();
 	}
 	[CCode (cheader_filename = "common.h")]
+	public class ErrorDialog : Gtk.MessageDialog {
+		public ErrorDialog (GLib.Error e);
+		public bool do_show ();
+		public void on_response ();
+	}
+	[CCode (cheader_filename = "common.h")]
 	public class MediaControl : GLib.Object {
 		public static GLib.Quark prepare_xwindow_q;
 		public Gst.XOverlay xoverlay;
@@ -68,5 +74,5 @@ namespace Omap {
 		public signal void activated ();
 	}
 	[CCode (cheader_filename = "common.h")]
-	public static void error_dialog (GLib.Error error);
+	public static Gtk.MessageDialog error_dialog (GLib.Error e);
 }

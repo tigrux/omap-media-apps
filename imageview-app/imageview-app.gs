@@ -6,8 +6,10 @@ init
     Gtk.init(ref args)
     try
         var window = new Omap.ImageViewWindow()
+        window.setup_controls()
         window.show()
-        Gtk.main()
     except e: Error
-        Omap.error_dialog(e)
+        var dialog = Omap.error_dialog(e)
+        dialog.destroy += Gtk.main_quit
+    Gtk.main()
 
