@@ -37,6 +37,7 @@ typedef struct _PlayListControl PlayListControl;
 typedef struct _PlayListControlClass PlayListControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 #define _gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (gtk_tree_path_free (var), NULL)))
 #define __g_list_free_gtk_tree_path_free0(var) ((var == NULL) ? NULL : (var = (_g_list_free_gtk_tree_path_free (var), NULL)))
 
@@ -99,8 +100,8 @@ void player_window_playlist_control_stopped (PlayerWindow* self, GtkTreeIter* it
 static void _player_window_playlist_control_stopped_play_list_control_stopped (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void player_window_playlist_control_moved (PlayerWindow* self, GtkTreeIter* iter);
 static void _player_window_playlist_control_moved_play_list_control_moved (PlayListControl* _sender, GtkTreeIter* iter, gpointer self);
-void player_window_on_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink);
-static void _player_window_on_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self);
+void player_window_playlist_control_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink);
+static void _player_window_playlist_control_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self);
 void player_window_setup_controls (PlayerWindow* self);
 void player_window_setup_toolbar (PlayerWindow* self);
 void player_window_setup_notebook (PlayerWindow* self);
@@ -152,11 +153,13 @@ static void _media_window_toggle_fullscreen_video_area_activated (VideoArea* _se
 void player_window_on_row_activated (PlayerWindow* self, GtkTreePath* row);
 static void _player_window_on_row_activated_gtk_tree_view_row_activated (GtkTreeView* _sender, GtkTreePath* path, GtkTreeViewColumn* column, gpointer self);
 gint play_list_control_get_icon_column (void);
-gint play_list_control_get_name_column (void);
+gint play_list_control_get_title_column (void);
+gint play_list_control_get_artist_column (void);
+gint play_list_control_get_album_column (void);
 gboolean play_list_control_get_iter (PlayListControl* self, GtkTreeIter* iter);
 gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
 gboolean player_window_get_and_select_iter (PlayerWindow* self, GtkTreeIter* iter);
-char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
+char* play_list_control_iter_get_title (PlayListControl* self, GtkTreeIter* iter);
 void player_window_add_update_scale_timeout (PlayerWindow* self);
 void player_window_remove_update_scale_timeout (PlayerWindow* self);
 void player_window_setup_chooser (PlayerWindow* self);
@@ -217,8 +220,8 @@ static void _player_window_playlist_control_moved_play_list_control_moved (PlayL
 }
 
 
-static void _player_window_on_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self) {
-	player_window_on_xid_prepared (self, imagesink);
+static void _player_window_playlist_control_xid_prepared_media_control_prepare_xwindow_id (PlayListControl* _sender, GstXOverlay* imagesink, gpointer self) {
+	player_window_playlist_control_xid_prepared (self, imagesink);
 }
 
 
@@ -232,7 +235,7 @@ void player_window_setup_controls (PlayerWindow* self) {
 	g_signal_connect_object (self->playlist_control, "paused", (GCallback) _player_window_playlist_control_paused_play_list_control_paused, self, 0);
 	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _player_window_playlist_control_stopped_play_list_control_stopped, self, 0);
 	g_signal_connect_object (self->playlist_control, "moved", (GCallback) _player_window_playlist_control_moved_play_list_control_moved, self, 0);
-	g_signal_connect_object ((MediaControl*) self->playlist_control, "prepare-xwindow-id", (GCallback) _player_window_on_xid_prepared_media_control_prepare_xwindow_id, self, 0);
+	g_signal_connect_object ((MediaControl*) self->playlist_control, "prepare-xwindow-id", (GCallback) _player_window_playlist_control_xid_prepared_media_control_prepare_xwindow_id, self, 0);
 }
 
 
@@ -433,7 +436,7 @@ void player_window_on_prev (PlayerWindow* self) {
 }
 
 
-void player_window_on_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink) {
+void player_window_playlist_control_xid_prepared (PlayerWindow* self, GstXOverlay* imagesink) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (imagesink != NULL);
 	video_area_set_sink (self->video_area, imagesink);
@@ -604,14 +607,33 @@ GtkTreeView* player_window_new_playlist_view (PlayerWindow* self) {
 	GtkTreeView* view;
 	GtkCellRendererPixbuf* _tmp0_;
 	GtkCellRendererText* _tmp1_;
+	GtkCellRendererText* _tmp2_;
+	GtkCellRendererText* _tmp3_;
 	g_return_val_if_fail (self != NULL, NULL);
 	view = g_object_ref_sink ((GtkTreeView*) gtk_tree_view_new ());
 	gtk_tree_view_set_headers_visible (view, FALSE);
 	g_signal_connect_object (view, "row-activated", (GCallback) _player_window_on_row_activated_gtk_tree_view_row_activated, self, 0);
 	gtk_tree_view_insert_column_with_attributes (view, -1, "Icon", (GtkCellRenderer*) (_tmp0_ = g_object_ref_sink ((GtkCellRendererPixbuf*) gtk_cell_renderer_pixbuf_new ())), "stock-id", play_list_control_get_icon_column (), NULL, NULL);
 	_g_object_unref0 (_tmp0_);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Song", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_name_column (), NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Title", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_title_column (), NULL, NULL);
 	_g_object_unref0 (_tmp1_);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Artist", (GtkCellRenderer*) (_tmp2_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_artist_column (), NULL, NULL);
+	_g_object_unref0 (_tmp2_);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Album", (GtkCellRenderer*) (_tmp3_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", play_list_control_get_album_column (), NULL, NULL);
+	_g_object_unref0 (_tmp3_);
+	{
+		GList* column_collection;
+		GList* column_it;
+		column_collection = gtk_tree_view_get_columns (view);
+		for (column_it = column_collection; column_it != NULL; column_it = column_it->next) {
+			GtkTreeViewColumn* column;
+			column = (GtkTreeViewColumn*) column_it->data;
+			{
+				gtk_tree_view_column_set_sizing (column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+			}
+		}
+		_g_list_free0 (column_collection);
+	}
 	result = view;
 	return result;
 }
@@ -677,7 +699,7 @@ void player_window_play_pause (PlayerWindow* self) {
 void player_window_playlist_control_playing (PlayerWindow* self, GtkTreeIter* iter) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-	gtk_window_set_title ((GtkWindow*) self, _tmp0_ = play_list_control_iter_get_name (self->playlist_control, iter));
+	gtk_window_set_title ((GtkWindow*) self, _tmp0_ = play_list_control_iter_get_title (self->playlist_control, iter));
 	_g_free0 (_tmp0_);
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PAUSE);
 	player_window_add_update_scale_timeout (self);

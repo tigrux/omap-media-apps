@@ -7,7 +7,9 @@ uses Gst
 class PlayListControl: MediaControl
     enum Col
         ICON
-        NAME
+        TITLE
+        ARTIST
+        ALBUM
         FILE
 
     playlist_store: ListStore
@@ -35,6 +37,7 @@ class PlayListControl: MediaControl
     event moved(iter: TreeIter)
 
     init
+        tag_found += on_tag_found
         player = ElementFactory.make("playbin2", "player") as Gst.Bin
         if player == null
             player = ElementFactory.make("playbin", "player") as Gst.Bin
@@ -102,7 +105,7 @@ class PlayListControl: MediaControl
     def add_file(file: string)
         playlist_store.insert_with_values( \
             null, -1, \
-            Col.NAME, Filename.display_basename(file), \
+            Col.TITLE, Filename.display_basename(file), \
             Col.FILE, file, \
             -1)
 
@@ -128,18 +131,42 @@ class PlayListControl: MediaControl
         if current_row.compare(row) == 0
             stop()
 
+    def on_tag_found(name: string, value: GLib.Value)
+        column: Col
+        case name
+            when TAG_TITLE
+                column = Col.TITLE
+            when TAG_ARTIST
+                column = Col.ARTIST
+            when TAG_ALBUM
+                column = Col.ALBUM
+            default
+                return
+        iter: TreeIter
+        playlist_store.get_iter(out iter,current_row)
+        playlist_store.set( \
+            iter, \
+            column, value.get_string(), \
+            -1)
+
     def on_row_inserted(row: TreePath)
         number_of_rows ++
-
-    def static get_name_column(): int
-        return Col.NAME
 
     def static get_icon_column(): int
         return Col.ICON
 
-    def iter_get_name(iter: TreeIter): string
+    def static get_title_column(): int
+        return Col.TITLE
+
+    def static get_artist_column(): int
+        return Col.ARTIST
+
+    def static get_album_column(): int
+        return Col.ALBUM
+
+    def iter_get_title(iter: TreeIter): string
         name: string
-        playlist_store.get(iter, Col.NAME, out name, -1)
+        playlist_store.get(iter, Col.TITLE, out name, -1)
         return name
 
     def iter_get_file(iter: TreeIter): string
@@ -149,5 +176,5 @@ class PlayListControl: MediaControl
 
     def static model_new(): ListStore
         var s = typeof(string)
-        return new ListStore(3, s, s, s)
+        return new ListStore(5, s, s, s, s, s)
 

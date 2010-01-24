@@ -45,7 +45,9 @@ struct _PlayListControlClass {
 
 typedef enum  {
 	PLAY_LIST_CONTROL_COL_ICON,
-	PLAY_LIST_CONTROL_COL_NAME,
+	PLAY_LIST_CONTROL_COL_TITLE,
+	PLAY_LIST_CONTROL_COL_ARTIST,
+	PLAY_LIST_CONTROL_COL_ALBUM,
 	PLAY_LIST_CONTROL_COL_FILE
 } PlayListControlCol;
 
@@ -75,9 +77,12 @@ gboolean play_list_control_move_to (PlayListControl* self, GtkTreePath* row);
 gboolean play_list_control_prev (PlayListControl* self);
 gboolean play_list_control_next (PlayListControl* self);
 void play_list_control_add_file (PlayListControl* self, const char* file);
-gint play_list_control_get_name_column (void);
+void play_list_control_on_tag_found (PlayListControl* self, const char* name, GValue* value);
 gint play_list_control_get_icon_column (void);
-char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter);
+gint play_list_control_get_title_column (void);
+gint play_list_control_get_artist_column (void);
+gint play_list_control_get_album_column (void);
+char* play_list_control_iter_get_title (PlayListControl* self, GtkTreeIter* iter);
 char* play_list_control_iter_get_file (PlayListControl* self, GtkTreeIter* iter);
 GtkListStore* play_list_control_model_new (void);
 static inline double _dynamic_get_volume0 (GstBin* obj);
@@ -86,6 +91,7 @@ static inline void _dynamic_set_volume1 (GstBin* obj, double value);
 void play_list_control_set_volume (PlayListControl* self, double value);
 guint play_list_control_get_n_rows (PlayListControl* self);
 static inline void _dynamic_set_uri2 (GstBin* obj, char* value);
+static void _play_list_control_on_tag_found_media_control_tag_found (PlayListControl* _sender, const char* name, GValue* tag_value, gpointer self);
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void play_list_control_finalize (GObject* obj);
 static void play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -98,7 +104,7 @@ static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * re
 GType play_list_control_col_get_type (void) {
 	static GType play_list_control_col_type_id = 0;
 	if (G_UNLIKELY (play_list_control_col_type_id == 0)) {
-		static const GEnumValue values[] = {{PLAY_LIST_CONTROL_COL_ICON, "PLAY_LIST_CONTROL_COL_ICON", "icon"}, {PLAY_LIST_CONTROL_COL_NAME, "PLAY_LIST_CONTROL_COL_NAME", "name"}, {PLAY_LIST_CONTROL_COL_FILE, "PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{PLAY_LIST_CONTROL_COL_ICON, "PLAY_LIST_CONTROL_COL_ICON", "icon"}, {PLAY_LIST_CONTROL_COL_TITLE, "PLAY_LIST_CONTROL_COL_TITLE", "title"}, {PLAY_LIST_CONTROL_COL_ARTIST, "PLAY_LIST_CONTROL_COL_ARTIST", "artist"}, {PLAY_LIST_CONTROL_COL_ALBUM, "PLAY_LIST_CONTROL_COL_ALBUM", "album"}, {PLAY_LIST_CONTROL_COL_FILE, "PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
 		play_list_control_col_type_id = g_enum_register_static ("PlayListControlCol", values);
 	}
 	return play_list_control_col_type_id;
@@ -239,7 +245,7 @@ void play_list_control_add_file (PlayListControl* self, const char* file) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (file != NULL);
-	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, PLAY_LIST_CONTROL_COL_NAME, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_CONTROL_COL_FILE, file, -1, -1);
+	gtk_list_store_insert_with_values (self->playlist_store, NULL, -1, PLAY_LIST_CONTROL_COL_TITLE, _tmp0_ = g_filename_display_basename (file), PLAY_LIST_CONTROL_COL_FILE, file, -1, -1);
 	_g_free0 (_tmp0_);
 }
 
@@ -295,17 +301,49 @@ void play_list_control_on_row_deleted (PlayListControl* self, GtkTreePath* row) 
 }
 
 
+void play_list_control_on_tag_found (PlayListControl* self, const char* name, GValue* value) {
+	PlayListControlCol column = 0;
+	GQuark _tmp1_;
+	const char* _tmp0_;
+	GtkTreeIter iter = {0};
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (name != NULL);
+	_tmp0_ = name;
+	_tmp1_ = (NULL == _tmp0_) ? 0 : g_quark_from_string (_tmp0_);
+	if (_tmp1_ == g_quark_from_string (GST_TAG_TITLE))
+	do {
+		{
+			column = PLAY_LIST_CONTROL_COL_TITLE;
+		}
+		break;
+	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ARTIST))
+	do {
+		{
+			column = PLAY_LIST_CONTROL_COL_ARTIST;
+		}
+		break;
+	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ALBUM))
+	do {
+		{
+			column = PLAY_LIST_CONTROL_COL_ALBUM;
+		}
+		break;
+	} while (0); else
+	do {
+		{
+			return;
+		}
+		break;
+	} while (0);
+	gtk_tree_model_get_iter ((GtkTreeModel*) self->playlist_store, &iter, self->current_row);
+	gtk_list_store_set (self->playlist_store, &iter, column, g_value_get_string (value), -1, -1);
+}
+
+
 void play_list_control_on_row_inserted (PlayListControl* self, GtkTreePath* row) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (row != NULL);
 	self->number_of_rows++;
-}
-
-
-gint play_list_control_get_name_column (void) {
-	gint result;
-	result = (gint) PLAY_LIST_CONTROL_COL_NAME;
-	return result;
 }
 
 
@@ -316,12 +354,33 @@ gint play_list_control_get_icon_column (void) {
 }
 
 
-char* play_list_control_iter_get_name (PlayListControl* self, GtkTreeIter* iter) {
+gint play_list_control_get_title_column (void) {
+	gint result;
+	result = (gint) PLAY_LIST_CONTROL_COL_TITLE;
+	return result;
+}
+
+
+gint play_list_control_get_artist_column (void) {
+	gint result;
+	result = (gint) PLAY_LIST_CONTROL_COL_ARTIST;
+	return result;
+}
+
+
+gint play_list_control_get_album_column (void) {
+	gint result;
+	result = (gint) PLAY_LIST_CONTROL_COL_ALBUM;
+	return result;
+}
+
+
+char* play_list_control_iter_get_title (PlayListControl* self, GtkTreeIter* iter) {
 	char* result;
 	char* name;
 	g_return_val_if_fail (self != NULL, NULL);
 	name = NULL;
-	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_NAME, &name, -1, -1);
+	gtk_tree_model_get ((GtkTreeModel*) self->playlist_store, iter, PLAY_LIST_CONTROL_COL_TITLE, &name, -1, -1);
 	result = name;
 	return result;
 }
@@ -342,7 +401,7 @@ GtkListStore* play_list_control_model_new (void) {
 	GtkListStore* result;
 	GType s;
 	s = G_TYPE_STRING;
-	result = gtk_list_store_new (3, s, s, s, NULL);
+	result = gtk_list_store_new (5, s, s, s, s, s, NULL);
 	return result;
 }
 
@@ -396,6 +455,11 @@ void play_list_control_set_location (PlayListControl* self, const char* value) {
 }
 
 
+static void _play_list_control_on_tag_found_media_control_tag_found (PlayListControl* _sender, const char* name, GValue* tag_value, gpointer self) {
+	play_list_control_on_tag_found (self, name, tag_value);
+}
+
+
 static GObject * play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -406,6 +470,7 @@ static GObject * play_list_control_constructor (GType type, guint n_construct_pr
 	{
 		GstBin* _tmp1_;
 		GstElement* _tmp0_;
+		g_signal_connect_object ((MediaControl*) self, "tag-found", (GCallback) _play_list_control_on_tag_found_media_control_tag_found, self, 0);
 		self->player = (_tmp1_ = (_tmp0_ = gst_element_factory_make ("playbin2", "player"), GST_IS_BIN (_tmp0_) ? ((GstBin*) _tmp0_) : NULL), _gst_object_unref0 (self->player), _tmp1_);
 		if (self->player == NULL) {
 			GstBin* _tmp3_;

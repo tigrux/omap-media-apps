@@ -55,7 +55,7 @@ class PlayerWindow: MediaWindow
         playlist_control.paused += playlist_control_paused
         playlist_control.stopped += playlist_control_stopped
         playlist_control.moved += playlist_control_moved
-        playlist_control.prepare_xwindow_id += on_xid_prepared
+        playlist_control.prepare_xwindow_id += playlist_control_xid_prepared
 
     def setup_widgets()
         title = TITLE
@@ -148,7 +148,7 @@ class PlayerWindow: MediaWindow
             if was_playing
                 play()
 
-    def on_xid_prepared(imagesink: Gst.XOverlay)
+    def playlist_control_xid_prepared(imagesink: Gst.XOverlay)
         video_area.sink = imagesink
         notebook.page = Tab.VIDEO
 
@@ -233,11 +233,24 @@ class PlayerWindow: MediaWindow
 
         view.insert_column_with_attributes( \
             -1, "Icon", new CellRendererPixbuf(), \
-            "stock-id", playlist_control.get_icon_column(), null)
-
+            "stock-id", playlist_control.get_icon_column(), \
+            null)
         view.insert_column_with_attributes( \
-            -1, "Song", new CellRendererText(), \
-            "markup", playlist_control.get_name_column(), null)
+            -1, "Title", new CellRendererText(), \
+            "markup", playlist_control.get_title_column(), \
+            null)
+        view.insert_column_with_attributes( \
+            -1, "Artist", new CellRendererText(), \
+            "markup", playlist_control.get_artist_column(), \
+            null)
+        view.insert_column_with_attributes( \
+            -1, "Album", new CellRendererText(), \
+            "markup", playlist_control.get_album_column(), \
+            null)
+
+        for var column in view.get_columns()
+            column.sizing = TreeViewColumnSizing.AUTOSIZE
+
 
         return view
 
@@ -266,7 +279,7 @@ class PlayerWindow: MediaWindow
                 play()
 
     def playlist_control_playing(iter: TreeIter)
-        title = playlist_control.iter_get_name(iter)
+        title = playlist_control.iter_get_title(iter)
         play_pause_button.stock_id = STOCK_MEDIA_PAUSE
         add_update_scale_timeout()
         seeking_scale.show()
