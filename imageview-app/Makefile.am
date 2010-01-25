@@ -11,14 +11,14 @@ omap4_imageview_app_VALASOURCES = \
 	image-control.gs
 
 omap4_imageview_app_SOURCES = \
-	$(omap4_imageview_app_VALASOURCES:.gs=.c) $(COMMON_SOURCES)
+	$(omap4_imageview_app_VALASOURCES:.gs=.c)
 
 vala.stamp: $(omap4_imageview_app_VALASOURCES) $(COMMON_VAPI)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 
 omap4_imageview_app_LDADD = \
-	$(PROGRAM_LIBS)
+	$(PROGRAM_LIBS) $(COMMON_LIB)
 
 desktopdir = $(datadir)/applications
 desktop_DATA = omap4-imageview-app.desktop
@@ -31,6 +31,4 @@ EXTRA_DIST = \
 	vala.stamp \
 	omap4-imageview-app.png \
 	omap4-imageview-app.desktop
-
-DISTCLEANFILES =
 

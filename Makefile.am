@@ -4,7 +4,5 @@ SUBDIRS = \
 	muxer-app \
 	imageview-app
 
-EXTRA_DIST =
-
-DISTCLEANFILES =
+EXTRA_DIST = autogen.sh
 

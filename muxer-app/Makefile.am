@@ -11,14 +11,14 @@ omap4_muxer_app_VALASOURCES = \
 	muxer-window.gs
 	
 omap4_muxer_app_SOURCES = \
-	$(omap4_muxer_app_VALASOURCES:.gs=.c) $(COMMON_SOURCES)
+	$(omap4_muxer_app_VALASOURCES:.gs=.c)
 
 vala.stamp: $(omap4_muxer_app_VALASOURCES) $(COMMON_VAPI)
 	$(VALAC) $(VALA_DEPS) -C  $^
 	touch $@
 
 omap4_muxer_app_LDADD = \
-	$(PROGRAM_LIBS)
+	$(PROGRAM_LIBS) $(COMMON_LIB)
 
 desktopdir = $(datadir)/applications
 desktop_DATA = omap4-muxer-app.desktop
@@ -33,6 +33,4 @@ EXTRA_DIST = \
 	omap4-muxer-app.desktop \
 	test.ini \
 	test.xml
-
-DISTCLEANFILES =
 
