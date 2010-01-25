@@ -86,7 +86,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def on_icon_activated(path: Gtk.TreePath)
         if iconlist_control == null
-            print "89: iconlist_control is null"
             return
         iter: Gtk.TreeIter
         iconlist_store.get_iter(out iter, path)
@@ -202,7 +201,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def async slideshow()
         if iconlist_control == null
-            print "205: iconlist_control is null"
             return
         iter: Gtk.TreeIter
         if not get_and_select_iter(out iter) or slideshow_cancellable.is_cancelled()
@@ -247,7 +245,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def change_folder()
         if iconlist_control == null
-            print "250: iconlist_control is null"
             return
         if fill_icons_cancellable == null
             iconlist_store.clear()
