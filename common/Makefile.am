@@ -1,5 +1,3 @@
-all: libcommon.a
-
 include common.am
 
 BUILT_SOURCES = vala.stamp
