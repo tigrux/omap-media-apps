@@ -145,8 +145,6 @@ GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
 GType omap_error_dialog_get_type (void);
 OmapErrorDialog* omap_error_dialog_new (GError* e);
 OmapErrorDialog* omap_error_dialog_construct (GType object_type, GError* e);
-void omap_error_dialog_on_response (OmapErrorDialog* self);
-gboolean omap_error_dialog_do_show (OmapErrorDialog* self);
 GtkMessageDialog* omap_error_dialog (GError* e);
 GType omap_media_window_get_type (void);
 GType omap_media_window_tab_get_type (void);

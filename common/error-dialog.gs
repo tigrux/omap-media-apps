@@ -10,15 +10,14 @@ class Omap.DebugDialog: Gtk.Dialog
     init
         title = "Error"
         modal = true
-        add_button(Gtk.STOCK_CLOSE, -1)
+        add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
         var content_area = get_content_area() as Gtk.Box
         content_area.add(new_error_box())
         text_buffer.create_tag("bold", "weight", Pango.Weight.BOLD, null)
+        destroy += def()
+            closed()
         response += def()
-            closed()
             destroy()
-        delete_event += def()
-            closed()
 
     construct(parent: Gtk.Window)
         width, height: int
@@ -74,18 +73,12 @@ class Omap.ErrorDialog: Gtk.MessageDialog
         message_type = Gtk.MessageType.ERROR
         title = "Error"
         modal = true
-        response += on_response
         add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
+        response += def()
+            destroy()
 
     construct(e: Error)
         text = e.message
-
-    def on_response()
-        destroy()
-
-    def do_show(): bool
-        show()
-        return true
 
 
 namespace Omap

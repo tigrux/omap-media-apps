@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pango/pango.h>
-#include <gdk/gdk.h>
 
 
 #define OMAP_TYPE_DEBUG_DIALOG (omap_debug_dialog_get_type ())
@@ -69,9 +68,9 @@ void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter*
 void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
 GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
 static void _lambda1_ (OmapDebugDialog* self);
-static void __lambda1__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self);
-static gboolean _lambda2_ (OmapDebugDialog* self);
-static gboolean __lambda2__gtk_widget_delete_event (OmapDebugDialog* _sender, GdkEvent* event, gpointer self);
+static void __lambda1__gtk_object_destroy (OmapDebugDialog* _sender, gpointer self);
+static void _lambda2_ (OmapDebugDialog* self);
+static void __lambda2__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self);
 static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_debug_dialog_finalize (GObject* obj);
 GType omap_error_dialog_get_type (void);
@@ -80,9 +79,8 @@ enum  {
 };
 OmapErrorDialog* omap_error_dialog_new (GError* e);
 OmapErrorDialog* omap_error_dialog_construct (GType object_type, GError* e);
-void omap_error_dialog_on_response (OmapErrorDialog* self);
-gboolean omap_error_dialog_do_show (OmapErrorDialog* self);
-static void _omap_error_dialog_on_response_gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self);
+static void _lambda3_ (OmapErrorDialog* self);
+static void __lambda3__gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self);
 static GObject * omap_error_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 GtkMessageDialog* omap_error_dialog (GError* e);
 
@@ -175,23 +173,21 @@ GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self) {
 
 static void _lambda1_ (OmapDebugDialog* self) {
 	g_signal_emit_by_name (self, "closed");
-	gtk_object_destroy ((GtkObject*) self);
 }
 
 
-static void __lambda1__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self) {
+static void __lambda1__gtk_object_destroy (OmapDebugDialog* _sender, gpointer self) {
 	_lambda1_ (self);
 }
 
 
-static gboolean _lambda2_ (OmapDebugDialog* self) {
-	gboolean result;
-	g_signal_emit_by_name (self, "closed");
+static void _lambda2_ (OmapDebugDialog* self) {
+	gtk_object_destroy ((GtkObject*) self);
 }
 
 
-static gboolean __lambda2__gtk_widget_delete_event (OmapDebugDialog* _sender, GdkEvent* event, gpointer self) {
-	return _lambda2_ (self);
+static void __lambda2__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self) {
+	_lambda2_ (self);
 }
 
 
@@ -208,13 +204,13 @@ static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_pr
 		GtkBox* _tmp1_;
 		gtk_window_set_title ((GtkWindow*) self, "Error");
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
-		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, -1);
+		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, (gint) GTK_RESPONSE_CLOSE);
 		content_area = _g_object_ref0 ((_tmp0_ = gtk_dialog_get_content_area ((GtkDialog*) self), GTK_IS_BOX (_tmp0_) ? ((GtkBox*) _tmp0_) : NULL));
 		gtk_container_add ((GtkContainer*) content_area, (GtkWidget*) (_tmp1_ = omap_debug_dialog_new_error_box (self)));
 		_g_object_unref0 (_tmp1_);
 		gtk_text_buffer_create_tag (self->text_buffer, "bold", "weight", PANGO_WEIGHT_BOLD, NULL, NULL);
-		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda1__gtk_dialog_response, self, 0);
-		g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda2__gtk_widget_delete_event, self, 0);
+		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) __lambda1__gtk_object_destroy, self, 0);
+		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda2__gtk_dialog_response, self, 0);
 		_g_object_unref0 (content_area);
 	}
 	return obj;
@@ -264,23 +260,13 @@ OmapErrorDialog* omap_error_dialog_new (GError* e) {
 }
 
 
-void omap_error_dialog_on_response (OmapErrorDialog* self) {
-	g_return_if_fail (self != NULL);
+static void _lambda3_ (OmapErrorDialog* self) {
 	gtk_object_destroy ((GtkObject*) self);
 }
 
 
-gboolean omap_error_dialog_do_show (OmapErrorDialog* self) {
-	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
-	gtk_widget_show ((GtkWidget*) self);
-	result = TRUE;
-	return result;
-}
-
-
-static void _omap_error_dialog_on_response_gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self) {
-	omap_error_dialog_on_response (self);
+static void __lambda3__gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self) {
+	_lambda3_ (self);
 }
 
 
@@ -295,8 +281,8 @@ static GObject * omap_error_dialog_constructor (GType type, guint n_construct_pr
 		g_object_set ((GtkMessageDialog*) self, "message-type", GTK_MESSAGE_ERROR, NULL);
 		gtk_window_set_title ((GtkWindow*) self, "Error");
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
-		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) _omap_error_dialog_on_response_gtk_dialog_response, self, 0);
 		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, (gint) GTK_RESPONSE_CLOSE);
+		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda3__gtk_dialog_response, self, 0);
 	}
 	return obj;
 }

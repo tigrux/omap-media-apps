@@ -338,7 +338,6 @@ void omap_image_view_window_on_icon_activated (OmapImageViewWindow* self, GtkTre
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (path != NULL);
 	if (self->iconlist_control == NULL) {
-		g_print ("89: iconlist_control is null\n");
 		return;
 	}
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, &iter, path);
@@ -587,7 +586,6 @@ static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlidesho
 		case 0:
 		{
 			if (data->self->iconlist_control == NULL) {
-				g_print ("205: iconlist_control is null\n");
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -732,7 +730,6 @@ static gboolean _omap_image_view_window_retry_change_folder_gsource_func (gpoint
 void omap_image_view_window_change_folder (OmapImageViewWindow* self) {
 	g_return_if_fail (self != NULL);
 	if (self->iconlist_control == NULL) {
-		g_print ("250: iconlist_control is null\n");
 		return;
 	}
 	if (self->fill_icons_cancellable == NULL) {

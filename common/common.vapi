@@ -15,8 +15,6 @@ namespace Omap {
 	[CCode (cheader_filename = "common.h")]
 	public class ErrorDialog : Gtk.MessageDialog {
 		public ErrorDialog (GLib.Error e);
-		public bool do_show ();
-		public void on_response ();
 	}
 	[CCode (cheader_filename = "common.h")]
 	public class MediaControl : GLib.Object {
