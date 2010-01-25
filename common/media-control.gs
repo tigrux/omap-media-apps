@@ -19,8 +19,7 @@ class Omap.MediaControl: GLib.Object
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
     final
-        if _pipeline != null
-            pipeline = null
+        pipeline = null
 
     def remove_signals()
         var bus = _pipeline.bus
@@ -46,6 +45,35 @@ class Omap.MediaControl: GLib.Object
                 add_signals()
         get
             return _pipeline
+
+    prop state: Gst.State
+        get
+            state: Gst.State
+            pipeline.get_state(out state, null, (Gst.ClockTime)(Gst.MSECOND*50))
+            return state
+        set
+            pipeline.set_state(value)
+
+    prop position: int64
+        get
+            var format = Gst.Format.TIME
+            position: int64
+            pipeline.query_position(ref format, out position)
+            return position
+        set
+            var seek_event = new Gst.Event.seek(
+                1.0, Gst.Format.TIME,
+                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
+                Gst.SeekType.SET, value,
+                Gst.SeekType.NONE, 0)
+            pipeline.send_event(seek_event)
+
+    prop duration: int64
+        get
+            var format = Gst.Format.TIME
+            duration: int64
+            pipeline.query_duration(ref format, out duration)
+            return duration
 
     def on_bus_message(message: Gst.Message)
         case message.type
@@ -94,33 +122,4 @@ class Omap.MediaControl: GLib.Object
         if structure.name == prepare_xwindow_q
             xoverlay = message.src as Gst.XOverlay
             prepare_xwindow_id(xoverlay)
-
-    prop state: Gst.State
-        get
-            state: Gst.State
-            pipeline.get_state(out state, null, (Gst.ClockTime)(Gst.MSECOND*50))
-            return state
-        set
-            pipeline.set_state(value)
-
-    prop position: int64
-        get
-            var format = Gst.Format.TIME
-            position: int64
-            pipeline.query_position(ref format, out position)
-            return position
-        set
-            var seek_event = new Gst.Event.seek(
-                1.0, Gst.Format.TIME,
-                Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE,
-                Gst.SeekType.SET, value,
-                Gst.SeekType.NONE, 0)
-            pipeline.send_event(seek_event)
-
-    prop duration: int64
-        get
-            var format = Gst.Format.TIME
-            duration: int64
-            pipeline.query_duration(ref format, out duration)
-            return duration
 

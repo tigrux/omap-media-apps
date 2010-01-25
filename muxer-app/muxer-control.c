@@ -69,10 +69,10 @@ void omap_muxer_control_load_record_bin (OmapMuxerControl* self, GError** error)
 static inline void _dynamic_set_silent0 (GstElement* obj, gboolean value);
 void omap_muxer_control_start_record (OmapMuxerControl* self, GError** error);
 void omap_muxer_control_stop_record (OmapMuxerControl* self);
+void omap_muxer_control_stop (OmapMuxerControl* self);
 void omap_muxer_control_on_state_changed (OmapMuxerControl* self, GstObject* src, GstState old, GstState current, GstState pending);
 static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void omap_muxer_control_on_eos (OmapMuxerControl* self, GstObject* src);
-void omap_muxer_control_stop (OmapMuxerControl* self);
 gboolean omap_muxer_control_get_previewing (OmapMuxerControl* self);
 gboolean omap_muxer_control_get_recording (OmapMuxerControl* self);
 static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMuxerControl* _sender, GstObject* src, gpointer self);
@@ -121,9 +121,11 @@ void omap_muxer_control_start_preview (OmapMuxerControl* self) {
 
 void omap_muxer_control_stop_preview (OmapMuxerControl* self) {
 	g_return_if_fail (self != NULL);
-	omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_NULL);
-	self->priv->_previewing = FALSE;
-	g_signal_emit_by_name (self, "preview-stopped");
+	if (omap_media_control_get_pipeline ((OmapMediaControl*) self) != NULL) {
+		omap_media_control_set_state ((OmapMediaControl*) self, GST_STATE_NULL);
+		self->priv->_previewing = FALSE;
+		g_signal_emit_by_name (self, "preview-stopped");
+	}
 }
 
 
@@ -165,6 +167,12 @@ void omap_muxer_control_stop_record (OmapMuxerControl* self) {
 	if (self->audiosrc != NULL) {
 		gst_element_send_event (self->audiosrc, gst_event_new_eos ());
 	}
+}
+
+
+void omap_muxer_control_stop (OmapMuxerControl* self) {
+	g_return_if_fail (self != NULL);
+	omap_muxer_control_stop_preview (self);
 }
 
 
@@ -276,12 +284,6 @@ void omap_muxer_control_on_eos (OmapMuxerControl* self, GstObject* src) {
 	gst_bin_remove (self->preview_bin, (GstElement*) self->record_bin);
 	g_signal_emit_by_name ((OmapMediaControl*) self, "prepare-xwindow-id", ((OmapMediaControl*) self)->xoverlay);
 	omap_muxer_control_start_preview (self);
-}
-
-
-void omap_muxer_control_stop (OmapMuxerControl* self) {
-	g_return_if_fail (self != NULL);
-	omap_muxer_control_stop_preview (self);
 }
 
 

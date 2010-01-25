@@ -50,9 +50,10 @@ class Omap.MuxerControl: MediaControl
         state = Gst.State.PLAYING
 
     def stop_preview()
-        state = Gst.State.NULL
-        _previewing = false
-        preview_stopped()
+        if pipeline != null
+            state = Gst.State.NULL
+            _previewing = false
+            preview_stopped()
 
     def start_record() raises Error
         state = Gst.State.NULL
@@ -69,6 +70,9 @@ class Omap.MuxerControl: MediaControl
         videosrc.send_event(new Gst.Event.eos())
         if audiosrc != null
             audiosrc.send_event(new Gst.Event.eos())
+
+    def stop()
+        stop_preview()
 
     def load_preview_bin() raises Error
         preview_bin = Gst.parse_launch(preview_desc) as Gst.Pipeline
@@ -111,7 +115,4 @@ class Omap.MuxerControl: MediaControl
         preview_bin.remove(record_bin)
         prepare_xwindow_id(xoverlay)
         start_preview()
-
-    def stop()
-        stop_preview()
 

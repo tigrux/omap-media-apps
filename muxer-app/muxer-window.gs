@@ -86,6 +86,12 @@ class Omap.MuxerWindow: Omap.MediaWindow
 
     def setup_control(preview: string, record: string)
         muxer_control = new Omap.MuxerControl(preview, record)
+        try
+            muxer_control.load()
+        except e: Error
+            muxer_control = null
+            Omap.error_dialog(e)
+            return
         muxer_control.error_message += on_control_error    
         muxer_control.preview_started += on_preview_started
         muxer_control.preview_stopped += on_preview_stopped
@@ -94,20 +100,15 @@ class Omap.MuxerWindow: Omap.MediaWindow
         muxer_control.prepare_xwindow_id += def(imagesink)
             video_area.sink = imagesink
 
-        try
-            muxer_control.load()
-        except e: Error
-            Omap.error_dialog(e)
-            return
 
     def on_preview()
         if muxer_control == null
             preview, record: string
             if not get_pipelines(out preview, out record)
-                print "Could not get the pipelines"
                 return
             setup_control(preview, record)
-        muxer_control.start_preview()
+        if muxer_control != null
+            muxer_control.start_preview()
 
     def on_pause()
         if muxer_control == null

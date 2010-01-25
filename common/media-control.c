@@ -399,9 +399,7 @@ static void omap_media_control_finalize (GObject* obj) {
 	OmapMediaControl * self;
 	self = OMAP_MEDIA_CONTROL (obj);
 	{
-		if (self->priv->_pipeline != NULL) {
-			omap_media_control_set_pipeline (self, NULL);
-		}
+		omap_media_control_set_pipeline (self, NULL);
 	}
 	_gst_object_unref0 (self->priv->_pipeline);
 	_gst_object_unref0 (self->xoverlay);
