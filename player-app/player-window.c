@@ -612,11 +612,11 @@ GtkTreeView* omap_player_window_new_playlist_view (OmapPlayerWindow* self) {
 	g_signal_connect_object (view, "row-activated", (GCallback) _omap_player_window_on_row_activated_gtk_tree_view_row_activated, self, 0);
 	gtk_tree_view_insert_column_with_attributes (view, -1, "Icon", (GtkCellRenderer*) (_tmp0_ = g_object_ref_sink ((GtkCellRendererPixbuf*) gtk_cell_renderer_pixbuf_new ())), "stock-id", omap_play_list_control_get_icon_column (), NULL, NULL);
 	_g_object_unref0 (_tmp0_);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Title", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", omap_play_list_control_get_title_column (), NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Title", (GtkCellRenderer*) (_tmp1_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "text", omap_play_list_control_get_title_column (), NULL, NULL);
 	_g_object_unref0 (_tmp1_);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Artist", (GtkCellRenderer*) (_tmp2_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", omap_play_list_control_get_artist_column (), NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Artist", (GtkCellRenderer*) (_tmp2_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "text", omap_play_list_control_get_artist_column (), NULL, NULL);
 	_g_object_unref0 (_tmp2_);
-	gtk_tree_view_insert_column_with_attributes (view, -1, "Album", (GtkCellRenderer*) (_tmp3_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "markup", omap_play_list_control_get_album_column (), NULL, NULL);
+	gtk_tree_view_insert_column_with_attributes (view, -1, "Album", (GtkCellRenderer*) (_tmp3_ = g_object_ref_sink ((GtkCellRendererText*) gtk_cell_renderer_text_new ())), "text", omap_play_list_control_get_album_column (), NULL, NULL);
 	_g_object_unref0 (_tmp3_);
 	{
 		GList* column_collection;

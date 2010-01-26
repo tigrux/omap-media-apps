@@ -232,15 +232,15 @@ class Omap.PlayerWindow: Omap.MediaWindow
             null)
         view.insert_column_with_attributes(
             -1, "Title", new Gtk.CellRendererText(),
-            "markup", playlist_control.get_title_column(),
+            "text", playlist_control.get_title_column(),
             null)
         view.insert_column_with_attributes(
             -1, "Artist", new Gtk.CellRendererText(),
-            "markup", playlist_control.get_artist_column(),
+            "text", playlist_control.get_artist_column(),
             null)
         view.insert_column_with_attributes(
             -1, "Album", new Gtk.CellRendererText(),
-            "markup", playlist_control.get_album_column(),
+            "text", playlist_control.get_album_column(),
             null)
 
         for var column in view.get_columns()
