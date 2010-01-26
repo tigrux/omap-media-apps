@@ -9,7 +9,6 @@ const IMAGE_FILE_ATTRIBUTES: string = \
 "standard::name,standard::display-name,standard::content-type"
 
 
-
 class Omap.IconListControl: Omap.MediaControl
     enum Col
         TEXT

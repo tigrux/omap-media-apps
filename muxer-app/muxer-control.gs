@@ -1,7 +1,7 @@
 [indent=4]
 
 
-class Omap.MuxerControl: MediaControl
+class Omap.MuxerControl: Omap.MediaControl
     preview_desc: string
     record_desc: string
     _recording: bool
