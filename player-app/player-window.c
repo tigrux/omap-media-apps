@@ -161,6 +161,8 @@ gboolean omap_player_window_get_and_select_iter (OmapPlayerWindow* self, GtkTree
 void omap_player_window_setup_chooser (OmapPlayerWindow* self);
 void omap_player_window_on_chooser_response (OmapPlayerWindow* self, gint response);
 static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkFileChooserDialog* _sender, gint response_id, gpointer self);
+gboolean omap_player_window_on_chooser_delete (OmapPlayerWindow* self);
+static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkFileChooserDialog* _sender, GdkEvent* event, gpointer self);
 void omap_play_list_control_add_file (OmapPlayListControl* self, const char* file);
 void omap_player_window_on_remove_files (OmapPlayerWindow* self);
 static void _g_list_free_gtk_tree_path_free (GList* self);
@@ -699,6 +701,11 @@ static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkFile
 }
 
 
+static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkFileChooserDialog* _sender, GdkEvent* event, gpointer self) {
+	return omap_player_window_on_chooser_delete (self);
+}
+
+
 void omap_player_window_setup_chooser (OmapPlayerWindow* self) {
 	GtkFileChooserDialog* _tmp0_;
 	g_return_if_fail (self != NULL);
@@ -707,6 +714,7 @@ void omap_player_window_setup_chooser (OmapPlayerWindow* self) {
 	}
 	self->chooser = (_tmp0_ = g_object_ref_sink ((GtkFileChooserDialog*) gtk_file_chooser_dialog_new ("Add files to playlist", (GtkWindow*) self, GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE, GTK_STOCK_ADD, GTK_RESPONSE_OK, NULL, NULL)), _g_object_unref0 (self->chooser), _tmp0_);
 	g_signal_connect_object ((GtkDialog*) self->chooser, "response", (GCallback) _omap_player_window_on_chooser_response_gtk_dialog_response, self, 0);
+	g_signal_connect_object ((GtkWidget*) self->chooser, "delete-event", (GCallback) _omap_player_window_on_chooser_delete_gtk_widget_delete_event, self, 0);
 }
 
 
@@ -730,6 +738,15 @@ void omap_player_window_on_chooser_response (OmapPlayerWindow* self, gint respon
 			break;
 		}
 	}
+}
+
+
+gboolean omap_player_window_on_chooser_delete (OmapPlayerWindow* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	gtk_widget_hide ((GtkWidget*) self->chooser);
+	result = TRUE;
+	return result;
 }
 
 

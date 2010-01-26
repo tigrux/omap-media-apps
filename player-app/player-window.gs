@@ -289,6 +289,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
             Gtk.STOCK_ADD, Gtk.ResponseType.OK,
             null)
         chooser.response += on_chooser_response
+        chooser.delete_event += on_chooser_delete
 
     def on_chooser_response(response: int)
         case response
@@ -296,6 +297,10 @@ class Omap.PlayerWindow: Omap.MediaWindow
                 chooser.hide()
             when Gtk.ResponseType.OK
                 playlist_control.add_file(chooser.get_filename())
+
+    def on_chooser_delete(): bool
+        chooser.hide()
+        return true
 
     def on_remove()
         on_remove_files()
