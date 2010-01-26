@@ -27,20 +27,17 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         setup_model()
         setup_widgets()
 
-    final
-        if iconlist_control != null
-            iconlist_control.files_added.disconnect(on_iconlist_files_added)
-
     def setup_model()
         iconlist_store = Omap.IconListControl.model_new()
 
     def setup_controls() raises Error
         iconlist_control = new Omap.IconListControl(iconlist_store)
-        iconlist_control.files_added += on_iconlist_files_added
-        iconlist_control.icons_filled += on_iconlist_icons_filled
+        iconlist_control.files_added += on_control_files_added
+        iconlist_control.icons_filled += on_control_icons_filled
         image_control = new Omap.ImageControl()
-        image_control.eos_message += on_image_control_eos
-        image_control.prepare_xwindow_id += on_xid_prepared
+        image_control.eos_message += on_control_eos
+        image_control.prepare_xwindow_id += def(imagesink)
+            video_area.sink = imagesink
 
     def setup_widgets()
         title = TITLE
@@ -96,9 +93,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
             var file = iconlist_control.iter_get_file(iter)
             image_control.location = file
             image_control.state = Gst.State.PLAYING
-
-    def on_xid_prepared(imagesink: Gst.XOverlay)
-        video_area.sink = imagesink
 
     def new_video_box(): Gtk.Box
         var box = new Gtk.VBox(false, 0)
@@ -193,12 +187,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
             Idle.add(slideshow_continuation)
             slideshow_button.stock_id = Gtk.STOCK_MEDIA_PLAY
 
-    def on_image_control_eos()
-        image_control.state = Gst.State.READY
-        notebook.page = Tab.VIDEO
-        if slideshow_continuation != null
-            slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
-
     def async slideshow()
         if iconlist_control == null
             return
@@ -260,10 +248,6 @@ class Omap.ImageViewWindow: Omap.MediaWindow
             return false
         return true
 
-    def on_iconlist_files_added()
-        if fill_icons_cancellable != null
-            Idle.add(fill_visible_icons)
-
     def do_fill_visible_icons()
         if fill_icons_cancellable == null
             fill_icons_cancellable = new Cancellable()
@@ -289,7 +273,17 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         iconlist_control.fill_icons(start, end, fill_icons_cancellable)
         return false
 
-    def on_iconlist_icons_filled()
+    def on_control_icons_filled()
         fill_icons_cancellable = null
         is_filling_icons = false
+
+    def on_control_files_added()
+        if fill_icons_cancellable != null
+            Idle.add(fill_visible_icons)
+
+    def on_control_eos()
+        image_control.state = Gst.State.READY
+        notebook.page = Tab.VIDEO
+        if slideshow_continuation != null
+            slideshow_timeout = Timeout.add_seconds(2, slideshow_continuation)
 

@@ -119,16 +119,16 @@ GtkListStore* omap_icon_list_control_model_new (void);
 void omap_image_view_window_setup_model (OmapImageViewWindow* self);
 OmapIconListControl* omap_icon_list_control_new (GtkListStore* model, GError** error);
 OmapIconListControl* omap_icon_list_control_construct (GType object_type, GtkListStore* model, GError** error);
-void omap_image_view_window_on_iconlist_files_added (OmapImageViewWindow* self);
-static void _omap_image_view_window_on_iconlist_files_added_omap_icon_list_control_files_added (OmapIconListControl* _sender, gpointer self);
-void omap_image_view_window_on_iconlist_icons_filled (OmapImageViewWindow* self);
-static void _omap_image_view_window_on_iconlist_icons_filled_omap_icon_list_control_icons_filled (OmapIconListControl* _sender, gpointer self);
+void omap_image_view_window_on_control_files_added (OmapImageViewWindow* self);
+static void _omap_image_view_window_on_control_files_added_omap_icon_list_control_files_added (OmapIconListControl* _sender, gpointer self);
+void omap_image_view_window_on_control_icons_filled (OmapImageViewWindow* self);
+static void _omap_image_view_window_on_control_icons_filled_omap_icon_list_control_icons_filled (OmapIconListControl* _sender, gpointer self);
 OmapImageControl* omap_image_control_new (GError** error);
 OmapImageControl* omap_image_control_construct (GType object_type, GError** error);
-void omap_image_view_window_on_image_control_eos (OmapImageViewWindow* self);
-static void _omap_image_view_window_on_image_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self);
-void omap_image_view_window_on_xid_prepared (OmapImageViewWindow* self, GstXOverlay* imagesink);
-static void _omap_image_view_window_on_xid_prepared_omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self);
+void omap_image_view_window_on_control_eos (OmapImageViewWindow* self);
+static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self);
+static void _lambda0_ (GstXOverlay* imagesink, OmapImageViewWindow* self);
+static void __lambda0__omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self);
 void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
 void omap_image_view_window_setup_toolbar (OmapImageViewWindow* self);
 void omap_image_view_window_setup_notebook (OmapImageViewWindow* self);
@@ -176,11 +176,11 @@ void omap_icon_list_control_add_folder_finish (OmapIconListControl* self, GAsync
 gboolean omap_image_view_window_retry_change_folder (OmapImageViewWindow* self);
 static gboolean _omap_image_view_window_retry_change_folder_gsource_func (gpointer self);
 gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self);
-static gboolean _omap_image_view_window_fill_visible_icons_gsource_func (gpointer self);
 gboolean omap_image_view_window_retry_do_fill_visible_icons (OmapImageViewWindow* self);
 static gboolean _omap_image_view_window_retry_do_fill_visible_icons_gsource_func (gpointer self);
 void omap_icon_list_control_fill_icons (OmapIconListControl* self, GtkTreePath* path, GtkTreePath* end, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void omap_icon_list_control_fill_icons_finish (OmapIconListControl* self, GAsyncResult* _res_);
+static gboolean _omap_image_view_window_fill_visible_icons_gsource_func (gpointer self);
 OmapImageViewWindow* omap_image_view_window_new (void);
 OmapImageViewWindow* omap_image_view_window_construct (GType object_type);
 static GObject * omap_image_view_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -196,23 +196,29 @@ void omap_image_view_window_setup_model (OmapImageViewWindow* self) {
 }
 
 
-static void _omap_image_view_window_on_iconlist_files_added_omap_icon_list_control_files_added (OmapIconListControl* _sender, gpointer self) {
-	omap_image_view_window_on_iconlist_files_added (self);
+static void _omap_image_view_window_on_control_files_added_omap_icon_list_control_files_added (OmapIconListControl* _sender, gpointer self) {
+	omap_image_view_window_on_control_files_added (self);
 }
 
 
-static void _omap_image_view_window_on_iconlist_icons_filled_omap_icon_list_control_icons_filled (OmapIconListControl* _sender, gpointer self) {
-	omap_image_view_window_on_iconlist_icons_filled (self);
+static void _omap_image_view_window_on_control_icons_filled_omap_icon_list_control_icons_filled (OmapIconListControl* _sender, gpointer self) {
+	omap_image_view_window_on_control_icons_filled (self);
 }
 
 
-static void _omap_image_view_window_on_image_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self) {
-	omap_image_view_window_on_image_control_eos (self);
+static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self) {
+	omap_image_view_window_on_control_eos (self);
 }
 
 
-static void _omap_image_view_window_on_xid_prepared_omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self) {
-	omap_image_view_window_on_xid_prepared (self, imagesink);
+static void _lambda0_ (GstXOverlay* imagesink, OmapImageViewWindow* self) {
+	g_return_if_fail (imagesink != NULL);
+	omap_video_area_set_sink (self->video_area, imagesink);
+}
+
+
+static void __lambda0__omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self) {
+	_lambda0_ (imagesink, self);
 }
 
 
@@ -230,16 +236,16 @@ void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** 
 		return;
 	}
 	self->iconlist_control = (_tmp1_ = _tmp0_, _g_object_unref0 (self->iconlist_control), _tmp1_);
-	g_signal_connect_object (self->iconlist_control, "files-added", (GCallback) _omap_image_view_window_on_iconlist_files_added_omap_icon_list_control_files_added, self, 0);
-	g_signal_connect_object (self->iconlist_control, "icons-filled", (GCallback) _omap_image_view_window_on_iconlist_icons_filled_omap_icon_list_control_icons_filled, self, 0);
+	g_signal_connect_object (self->iconlist_control, "files-added", (GCallback) _omap_image_view_window_on_control_files_added_omap_icon_list_control_files_added, self, 0);
+	g_signal_connect_object (self->iconlist_control, "icons-filled", (GCallback) _omap_image_view_window_on_control_icons_filled_omap_icon_list_control_icons_filled, self, 0);
 	_tmp2_ = omap_image_control_new (&_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
 		return;
 	}
 	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
-	g_signal_connect_object ((OmapMediaControl*) self->image_control, "eos-message", (GCallback) _omap_image_view_window_on_image_control_eos_omap_media_control_eos_message, self, 0);
-	g_signal_connect_object ((OmapMediaControl*) self->image_control, "prepare-xwindow-id", (GCallback) _omap_image_view_window_on_xid_prepared_omap_media_control_prepare_xwindow_id, self, 0);
+	g_signal_connect_object ((OmapMediaControl*) self->image_control, "eos-message", (GCallback) _omap_image_view_window_on_control_eos_omap_media_control_eos_message, self, 0);
+	g_signal_connect_object ((OmapMediaControl*) self->image_control, "prepare-xwindow-id", (GCallback) __lambda0__omap_media_control_prepare_xwindow_id, self, 0);
 }
 
 
@@ -352,13 +358,6 @@ void omap_image_view_window_on_icon_activated (OmapImageViewWindow* self, GtkTre
 		omap_media_control_set_state ((OmapMediaControl*) self->image_control, GST_STATE_PLAYING);
 		_g_free0 (file);
 	}
-}
-
-
-void omap_image_view_window_on_xid_prepared (OmapImageViewWindow* self, GstXOverlay* imagesink) {
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (imagesink != NULL);
-	omap_video_area_set_sink (self->video_area, imagesink);
 }
 
 
@@ -529,16 +528,6 @@ void omap_image_view_window_stop_slideshow (OmapImageViewWindow* self) {
 		g_source_remove (self->slideshow_timeout);
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 		gtk_tool_button_set_stock_id (self->slideshow_button, GTK_STOCK_MEDIA_PLAY);
-	}
-}
-
-
-void omap_image_view_window_on_image_control_eos (OmapImageViewWindow* self) {
-	g_return_if_fail (self != NULL);
-	omap_media_control_set_state ((OmapMediaControl*) self->image_control, GST_STATE_READY);
-	g_object_set (((OmapMediaWindow*) self)->notebook, "page", (gint) OMAP_MEDIA_WINDOW_TAB_VIDEO, NULL);
-	if (self->slideshow_continuation != NULL) {
-		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
 	}
 }
 
@@ -757,19 +746,6 @@ gboolean omap_image_view_window_retry_change_folder (OmapImageViewWindow* self) 
 }
 
 
-static gboolean _omap_image_view_window_fill_visible_icons_gsource_func (gpointer self) {
-	return omap_image_view_window_fill_visible_icons (self);
-}
-
-
-void omap_image_view_window_on_iconlist_files_added (OmapImageViewWindow* self) {
-	g_return_if_fail (self != NULL);
-	if (self->fill_icons_cancellable != NULL) {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _omap_image_view_window_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
-	}
-}
-
-
 static gboolean _omap_image_view_window_retry_do_fill_visible_icons_gsource_func (gpointer self) {
 	return omap_image_view_window_retry_do_fill_visible_icons (self);
 }
@@ -832,11 +808,34 @@ gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self) {
 }
 
 
-void omap_image_view_window_on_iconlist_icons_filled (OmapImageViewWindow* self) {
+void omap_image_view_window_on_control_icons_filled (OmapImageViewWindow* self) {
 	GCancellable* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->fill_icons_cancellable = (_tmp0_ = NULL, _g_object_unref0 (self->fill_icons_cancellable), _tmp0_);
 	self->is_filling_icons = FALSE;
+}
+
+
+static gboolean _omap_image_view_window_fill_visible_icons_gsource_func (gpointer self) {
+	return omap_image_view_window_fill_visible_icons (self);
+}
+
+
+void omap_image_view_window_on_control_files_added (OmapImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (self->fill_icons_cancellable != NULL) {
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _omap_image_view_window_fill_visible_icons_gsource_func, g_object_ref (self), g_object_unref);
+	}
+}
+
+
+void omap_image_view_window_on_control_eos (OmapImageViewWindow* self) {
+	g_return_if_fail (self != NULL);
+	omap_media_control_set_state ((OmapMediaControl*) self->image_control, GST_STATE_READY);
+	g_object_set (((OmapMediaWindow*) self)->notebook, "page", (gint) OMAP_MEDIA_WINDOW_TAB_VIDEO, NULL);
+	if (self->slideshow_continuation != NULL) {
+		self->slideshow_timeout = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 2, self->slideshow_continuation, self->slideshow_continuation_target, NULL);
+	}
 }
 
 
@@ -881,12 +880,6 @@ static void omap_image_view_window_instance_init (OmapImageViewWindow * self) {
 static void omap_image_view_window_finalize (GObject* obj) {
 	OmapImageViewWindow * self;
 	self = OMAP_IMAGE_VIEW_WINDOW (obj);
-	{
-		if (self->iconlist_control != NULL) {
-			guint _tmp0_;
-			g_signal_handlers_disconnect_matched (self->iconlist_control, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("files-added", OMAP_TYPE_ICON_LIST_CONTROL, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _omap_image_view_window_on_iconlist_files_added_omap_icon_list_control_files_added, self);
-		}
-	}
 	_g_object_unref0 (self->chooser_button);
 	_g_object_unref0 (self->icon_view);
 	_g_object_unref0 (self->video_area);

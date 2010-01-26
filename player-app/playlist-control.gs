@@ -140,7 +140,7 @@ class Omap.PlayListControl: Omap.MediaControl
             default
                 return
         iter: Gtk.TreeIter
-        playlist_store.get_iter(out iter,current_row)
+        playlist_store.get_iter(out iter, current_row)
         playlist_store.set(
             iter,
             column, value.get_string(),

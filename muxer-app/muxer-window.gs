@@ -100,7 +100,6 @@ class Omap.MuxerWindow: Omap.MediaWindow
         muxer_control.prepare_xwindow_id += def(imagesink)
             video_area.sink = imagesink
 
-
     def on_preview()
         if muxer_control == null
             preview, record: string

@@ -47,13 +47,13 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
     def setup_controls()
         playlist_control = new Omap.PlayListControl(playlist_store)
-        playlist_control.eos_message += playlist_control_eos
-        playlist_control.error_message += playlist_control_error
-        playlist_control.playing += playlist_control_playing
-        playlist_control.paused += playlist_control_paused
-        playlist_control.stopped += playlist_control_stopped
-        playlist_control.moved += playlist_control_moved
-        playlist_control.prepare_xwindow_id += playlist_control_xid_prepared
+        playlist_control.eos_message += on_control_eos
+        playlist_control.error_message += on_control_error
+        playlist_control.playing += on_control_playing
+        playlist_control.paused += on_control_paused
+        playlist_control.stopped += on_control_stopped
+        playlist_control.moved += on_control_moved
+        playlist_control.prepare_xwindow_id += on_control_xid_prepared
 
     def setup_widgets()
         title = TITLE
@@ -144,10 +144,6 @@ class Omap.PlayerWindow: Omap.MediaWindow
         if playlist_control.prev()
             if was_playing
                 play()
-
-    def playlist_control_xid_prepared(imagesink: Gst.XOverlay)
-        video_area.sink = imagesink
-        notebook.page = Tab.VIDEO
 
     def on_mute_clicked()
         var volume = volume_button.adjustment
@@ -275,28 +271,6 @@ class Omap.PlayerWindow: Omap.MediaWindow
                 notebook.page = Tab.LIST
                 play()
 
-    def playlist_control_playing(iter: Gtk.TreeIter)
-        title = playlist_control.iter_get_title(iter)
-        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PAUSE
-        add_update_scale_timeout()
-        seeking_scale.show()
-
-    def playlist_control_paused(iter: Gtk.TreeIter)
-        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PLAY
-        remove_update_scale_timeout()
-
-    def playlist_control_stopped(iter: Gtk.TreeIter)
-        title = TITLE
-        var page = notebook.page
-        if page != Tab.LIST
-            notebook.page = Tab.LIST
-        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PLAY
-        remove_update_scale_timeout()
-        seeking_scale.hide()
-
-    def playlist_control_moved(iter: Gtk.TreeIter)
-        playlist_selection.select_iter(iter)
-
     def on_add()
         iter: Gtk.TreeIter
         setup_chooser()
@@ -405,10 +379,36 @@ class Omap.PlayerWindow: Omap.MediaWindow
         stop()
         debug_dialog = null
 
-    def playlist_control_eos(src: Gst.Object)
+    def on_control_xid_prepared(imagesink: Gst.XOverlay)
+        video_area.sink = imagesink
+        notebook.page = Tab.VIDEO
+
+    def on_control_playing(iter: Gtk.TreeIter)
+        title = playlist_control.iter_get_title(iter)
+        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PAUSE
+        add_update_scale_timeout()
+        seeking_scale.show()
+
+    def on_control_paused(iter: Gtk.TreeIter)
+        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PLAY
+        remove_update_scale_timeout()
+
+    def on_control_stopped(iter: Gtk.TreeIter)
+        title = TITLE
+        var page = notebook.page
+        if page != Tab.LIST
+            notebook.page = Tab.LIST
+        play_pause_button.stock_id = Gtk.STOCK_MEDIA_PLAY
+        remove_update_scale_timeout()
+        seeking_scale.hide()
+
+    def on_control_moved(iter: Gtk.TreeIter)
+        playlist_selection.select_iter(iter)
+
+    def on_control_eos(src: Gst.Object)
         next_button.activate()
 
-    def playlist_control_error(src: Gst.Object, error: Error, debug: string)
+    def on_control_error(src: Gst.Object, error: Error, debug: string)
         setup_debug_dialog()
         debug_dialog.add_error_debug(error, debug)
 
