@@ -32,6 +32,7 @@ class Omap.PlayListControl: Omap.MediaControl
     event paused(iter: Gtk.TreeIter)
     event stopped(iter: Gtk.TreeIter)
     event moved(iter: Gtk.TreeIter)
+    event title_changed(title: string)
 
     init
         tag_found += on_tag_found
@@ -58,6 +59,7 @@ class Omap.PlayListControl: Omap.MediaControl
 
         if pipeline.set_state(Gst.State.PLAYING) != Gst.StateChangeReturn.FAILURE
             playlist_store.set(iter, Col.ICON, Gtk.STOCK_MEDIA_PLAY, -1)
+            title_changed(iter_get_title(iter))
             playing(iter)
             return true
         return false
@@ -128,23 +130,29 @@ class Omap.PlayListControl: Omap.MediaControl
         if current_row.compare(row) == 0
             stop()
 
-    def on_tag_found(name: string, value: GLib.Value)
+    def on_tag_found(tag_name: string, tag_value: GLib.Value)
         column: Col
-        case name
+        is_title: bool = false
+        case tag_name
             when Gst.TAG_TITLE
                 column = Col.TITLE
+                is_title = true
             when Gst.TAG_ARTIST
                 column = Col.ARTIST
             when Gst.TAG_ALBUM
                 column = Col.ALBUM
             default
                 return
+
+        var column_value = tag_value.get_string()
         iter: Gtk.TreeIter
         playlist_store.get_iter(out iter, current_row)
         playlist_store.set(
             iter,
-            column, value.get_string(),
+            column, column_value,
             -1)
+        if is_title
+           title_changed(column_value)
 
     def on_row_inserted(row: Gtk.TreePath)
         number_of_rows ++

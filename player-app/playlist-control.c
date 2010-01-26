@@ -70,6 +70,7 @@ OmapPlayListControl* omap_play_list_control_new (GtkListStore* store);
 OmapPlayListControl* omap_play_list_control_construct (GType object_type, GtkListStore* store);
 gboolean omap_play_list_control_get_iter (OmapPlayListControl* self, GtkTreeIter* iter);
 void omap_play_list_control_set_location (OmapPlayListControl* self, const char* value);
+char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter);
 gboolean omap_play_list_control_play (OmapPlayListControl* self);
 gboolean omap_play_list_control_pause (OmapPlayListControl* self);
 gboolean omap_play_list_control_stop (OmapPlayListControl* self);
@@ -77,12 +78,11 @@ gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath*
 gboolean omap_play_list_control_prev (OmapPlayListControl* self);
 gboolean omap_play_list_control_next (OmapPlayListControl* self);
 void omap_play_list_control_add_file (OmapPlayListControl* self, const char* file);
-void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* name, GValue* value);
+void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* tag_name, GValue* tag_value);
 gint omap_play_list_control_get_icon_column (void);
 gint omap_play_list_control_get_title_column (void);
 gint omap_play_list_control_get_artist_column (void);
 gint omap_play_list_control_get_album_column (void);
-char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter);
 char* omap_play_list_control_iter_get_file (OmapPlayListControl* self, GtkTreeIter* iter);
 GtkListStore* omap_play_list_control_model_new (void);
 static inline double _dynamic_get_volume0 (GstBin* obj);
@@ -158,7 +158,10 @@ gboolean omap_play_list_control_play (OmapPlayListControl* self) {
 		omap_play_list_control_set_location (self, filename);
 	}
 	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+		char* _tmp0_;
 		gtk_list_store_set (self->playlist_store, &iter, OMAP_PLAY_LIST_CONTROL_COL_ICON, GTK_STOCK_MEDIA_PLAY, -1, -1);
+		g_signal_emit_by_name (self, "title-changed", _tmp0_ = omap_play_list_control_iter_get_title (self, &iter));
+		_g_free0 (_tmp0_);
 		g_signal_emit_by_name (self, "playing", &iter);
 		result = TRUE;
 		_g_free0 (filename);
@@ -301,19 +304,23 @@ void omap_play_list_control_on_row_deleted (OmapPlayListControl* self, GtkTreePa
 }
 
 
-void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* name, GValue* value) {
+void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char* tag_name, GValue* tag_value) {
 	OmapPlayListControlCol column = 0;
+	gboolean is_title;
 	GQuark _tmp1_;
 	const char* _tmp0_;
+	char* column_value;
 	GtkTreeIter iter = {0};
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (name != NULL);
-	_tmp0_ = name;
+	g_return_if_fail (tag_name != NULL);
+	is_title = FALSE;
+	_tmp0_ = tag_name;
 	_tmp1_ = (NULL == _tmp0_) ? 0 : g_quark_from_string (_tmp0_);
 	if (_tmp1_ == g_quark_from_string (GST_TAG_TITLE))
 	do {
 		{
 			column = OMAP_PLAY_LIST_CONTROL_COL_TITLE;
+			is_title = TRUE;
 		}
 		break;
 	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ARTIST))
@@ -335,8 +342,13 @@ void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char*
 		}
 		break;
 	} while (0);
+	column_value = g_strdup (g_value_get_string (tag_value));
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->playlist_store, &iter, self->current_row);
-	gtk_list_store_set (self->playlist_store, &iter, column, g_value_get_string (value), -1, -1);
+	gtk_list_store_set (self->playlist_store, &iter, column, column_value, -1, -1);
+	if (is_title) {
+		g_signal_emit_by_name (self, "title-changed", column_value);
+	}
+	_g_free0 (column_value);
 }
 
 
@@ -496,6 +508,7 @@ static void omap_play_list_control_class_init (OmapPlayListControlClass * klass)
 	g_signal_new ("paused", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("stopped", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
 	g_signal_new ("moved", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, 1, GTK_TYPE_TREE_ITER);
+	g_signal_new ("title_changed", OMAP_TYPE_PLAY_LIST_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
 

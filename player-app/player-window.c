@@ -102,6 +102,8 @@ void omap_player_window_on_control_moved (OmapPlayerWindow* self, GtkTreeIter* i
 static void _omap_player_window_on_control_moved_omap_play_list_control_moved (OmapPlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void omap_player_window_on_control_xid_prepared (OmapPlayerWindow* self, GstXOverlay* imagesink);
 static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id (OmapPlayListControl* _sender, GstXOverlay* imagesink, gpointer self);
+void omap_player_window_on_control_title_changed (OmapPlayerWindow* self, const char* song_title);
+static void _omap_player_window_on_control_title_changed_omap_play_list_control_title_changed (OmapPlayListControl* _sender, const char* title, gpointer self);
 void omap_player_window_setup_controls (OmapPlayerWindow* self);
 void omap_player_window_setup_toolbar (OmapPlayerWindow* self);
 void omap_player_window_setup_notebook (OmapPlayerWindow* self);
@@ -173,7 +175,6 @@ void omap_player_window_remove_update_scale_timeout (OmapPlayerWindow* self);
 void omap_player_window_on_debug_dialog_closed (OmapPlayerWindow* self);
 static void _omap_player_window_on_debug_dialog_closed_omap_debug_dialog_closed (OmapDebugDialog* _sender, gpointer self);
 void omap_player_window_setup_debug_dialog (OmapPlayerWindow* self);
-char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter);
 OmapPlayerWindow* omap_player_window_new (void);
 OmapPlayerWindow* omap_player_window_construct (GType object_type);
 static GObject * omap_player_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -226,6 +227,11 @@ static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepa
 }
 
 
+static void _omap_player_window_on_control_title_changed_omap_play_list_control_title_changed (OmapPlayListControl* _sender, const char* title, gpointer self) {
+	omap_player_window_on_control_title_changed (self, title);
+}
+
+
 void omap_player_window_setup_controls (OmapPlayerWindow* self) {
 	OmapPlayListControl* _tmp0_;
 	g_return_if_fail (self != NULL);
@@ -237,6 +243,7 @@ void omap_player_window_setup_controls (OmapPlayerWindow* self) {
 	g_signal_connect_object (self->playlist_control, "stopped", (GCallback) _omap_player_window_on_control_stopped_omap_play_list_control_stopped, self, 0);
 	g_signal_connect_object (self->playlist_control, "moved", (GCallback) _omap_player_window_on_control_moved_omap_play_list_control_moved, self, 0);
 	g_signal_connect_object ((OmapMediaControl*) self->playlist_control, "prepare-xwindow-id", (GCallback) _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id, self, 0);
+	g_signal_connect_object (self->playlist_control, "title-changed", (GCallback) _omap_player_window_on_control_title_changed_omap_play_list_control_title_changed, self, 0);
 }
 
 
@@ -933,10 +940,7 @@ void omap_player_window_on_control_xid_prepared (OmapPlayerWindow* self, GstXOve
 
 
 void omap_player_window_on_control_playing (OmapPlayerWindow* self, GtkTreeIter* iter) {
-	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-	gtk_window_set_title ((GtkWindow*) self, _tmp0_ = omap_play_list_control_iter_get_title (self->playlist_control, iter));
-	_g_free0 (_tmp0_);
 	gtk_tool_button_set_stock_id (self->play_pause_button, GTK_STOCK_MEDIA_PAUSE);
 	omap_player_window_add_update_scale_timeout (self);
 	gtk_widget_show ((GtkWidget*) self->seeking_scale);
@@ -968,6 +972,13 @@ void omap_player_window_on_control_stopped (OmapPlayerWindow* self, GtkTreeIter*
 void omap_player_window_on_control_moved (OmapPlayerWindow* self, GtkTreeIter* iter) {
 	g_return_if_fail (self != NULL);
 	gtk_tree_selection_select_iter (self->playlist_selection, iter);
+}
+
+
+void omap_player_window_on_control_title_changed (OmapPlayerWindow* self, const char* song_title) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (song_title != NULL);
+	gtk_window_set_title ((GtkWindow*) self, song_title);
 }
 
 

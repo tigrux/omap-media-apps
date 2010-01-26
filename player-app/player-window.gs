@@ -54,6 +54,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
         playlist_control.stopped += on_control_stopped
         playlist_control.moved += on_control_moved
         playlist_control.prepare_xwindow_id += on_control_xid_prepared
+        playlist_control.title_changed += on_control_title_changed
 
     def setup_widgets()
         title = TITLE
@@ -389,7 +390,6 @@ class Omap.PlayerWindow: Omap.MediaWindow
         notebook.page = Tab.VIDEO
 
     def on_control_playing(iter: Gtk.TreeIter)
-        title = playlist_control.iter_get_title(iter)
         play_pause_button.stock_id = Gtk.STOCK_MEDIA_PAUSE
         add_update_scale_timeout()
         seeking_scale.show()
@@ -409,6 +409,9 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
     def on_control_moved(iter: Gtk.TreeIter)
         playlist_selection.select_iter(iter)
+
+    def on_control_title_changed(song_title: string)
+        title = song_title
 
     def on_control_eos(src: Gst.Object)
         next_button.activate()
