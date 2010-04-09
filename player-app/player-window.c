@@ -456,7 +456,7 @@ void omap_player_window_on_mute_clicked (OmapPlayerWindow* self) {
 
 
 gboolean omap_player_window_on_volume_button_pressed (OmapPlayerWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->is_muted) {
 		gtk_adjustment_set_value (gtk_scale_button_get_adjustment ((GtkScaleButton*) self->volume_button), self->previous_volume);
@@ -502,7 +502,7 @@ static void __lambda0__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpo
 
 
 GtkVolumeButton* omap_player_window_new_volume_button_with_mute (OmapPlayerWindow* self) {
-	GtkVolumeButton* result;
+	GtkVolumeButton* result = NULL;
 	GtkVolumeButton* volume_button;
 	GtkIconSize icon_size;
 	GtkWidget* _tmp0_;
@@ -552,7 +552,7 @@ GtkVolumeButton* omap_player_window_new_volume_button_with_mute (OmapPlayerWindo
 
 
 GtkBox* omap_player_window_new_playlist_box (OmapPlayerWindow* self) {
-	GtkBox* result;
+	GtkBox* result = NULL;
 	GtkVBox* box;
 	GtkScrolledWindow* scrolled_window;
 	GtkPolicyType policy;
@@ -581,7 +581,7 @@ static void _omap_media_window_toggle_fullscreen_omap_video_area_activated (Omap
 
 
 GtkBox* omap_player_window_new_video_box (OmapPlayerWindow* self) {
-	GtkBox* result;
+	GtkBox* result = NULL;
 	GtkVBox* box;
 	OmapVideoArea* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -600,7 +600,7 @@ static void _omap_player_window_on_row_activated_gtk_tree_view_row_activated (Gt
 
 
 GtkTreeView* omap_player_window_new_playlist_view (OmapPlayerWindow* self) {
-	GtkTreeView* result;
+	GtkTreeView* result = NULL;
 	GtkTreeView* view;
 	GtkCellRendererPixbuf* _tmp0_;
 	GtkCellRendererText* _tmp1_;
@@ -637,7 +637,7 @@ GtkTreeView* omap_player_window_new_playlist_view (OmapPlayerWindow* self) {
 
 
 gboolean omap_player_window_get_and_select_iter (OmapPlayerWindow* self, GtkTreeIter* iter) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreePath* path;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (!gtk_tree_selection_get_selected (self->playlist_selection, NULL, iter)) {
@@ -749,7 +749,7 @@ void omap_player_window_on_chooser_response (OmapPlayerWindow* self, gint respon
 
 
 gboolean omap_player_window_on_chooser_delete (OmapPlayerWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	gtk_widget_hide ((GtkWidget*) self->chooser);
 	result = TRUE;
@@ -808,7 +808,7 @@ void omap_player_window_on_row_activated (OmapPlayerWindow* self, GtkTreePath* r
 
 
 gboolean omap_player_window_on_seeking_scale_pressed (OmapPlayerWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (omap_player_window_get_playing (self)) {
 		omap_player_window_pause (self);
@@ -822,7 +822,7 @@ gboolean omap_player_window_on_seeking_scale_pressed (OmapPlayerWindow* self) {
 
 
 gboolean omap_player_window_on_seeking_scale_released (OmapPlayerWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	gint64 real_value = 0LL;
 	g_return_val_if_fail (self != NULL, FALSE);
 	real_value = (gint64) ((gtk_adjustment_get_value (self->seeking_adjustment) * self->stream_duration) / 100);
@@ -836,7 +836,7 @@ gboolean omap_player_window_on_seeking_scale_released (OmapPlayerWindow* self) {
 
 
 char* omap_player_window_on_scale_format_value (OmapPlayerWindow* self, double scale_value) {
-	char* result;
+	char* result = NULL;
 	double real_value = 0.0;
 	double real_duration = 0.0;
 	gint sec0;
@@ -883,7 +883,7 @@ void omap_player_window_remove_update_scale_timeout (OmapPlayerWindow* self) {
 
 
 gboolean omap_player_window_update_scale_timeout (OmapPlayerWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	self->stream_position = omap_media_control_get_position ((OmapMediaControl*) self->playlist_control);
@@ -1073,12 +1073,14 @@ static void omap_player_window_finalize (GObject* obj) {
 
 
 GType omap_player_window_get_type (void) {
-	static GType omap_player_window_type_id = 0;
-	if (omap_player_window_type_id == 0) {
+	static volatile gsize omap_player_window_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_player_window_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapPlayerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_player_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapPlayerWindow), 0, (GInstanceInitFunc) omap_player_window_instance_init, NULL };
+		GType omap_player_window_type_id;
 		omap_player_window_type_id = g_type_register_static (OMAP_TYPE_MEDIA_WINDOW, "OmapPlayerWindow", &g_define_type_info, 0);
+		g_once_init_leave (&omap_player_window_type_id__volatile, omap_player_window_type_id);
 	}
-	return omap_player_window_type_id;
+	return omap_player_window_type_id__volatile;
 }
 
 

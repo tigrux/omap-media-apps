@@ -27,11 +27,11 @@ typedef struct _OmapPlayerWindowClass OmapPlayerWindowClass;
 OmapPlayerWindow* omap_player_window_new (void);
 OmapPlayerWindow* omap_player_window_construct (GType object_type);
 GType omap_player_window_get_type (void);
-void _main (char** args, int args_length1);
+void _vala_main (char** args, int args_length1);
 
 
 
-void _main (char** args, int args_length1) {
+void _vala_main (char** args, int args_length1) {
 	OmapPlayerWindow* window;
 	gst_init (&args_length1, &args);
 	gtk_init (&args_length1, &args);
@@ -44,7 +44,7 @@ void _main (char** args, int args_length1) {
 
 int main (int argc, char ** argv) {
 	g_type_init ();
-	_main (argv, argc);
+	_vala_main (argv, argc);
 	return 0;
 }
 

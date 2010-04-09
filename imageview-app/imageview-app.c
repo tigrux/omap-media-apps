@@ -30,7 +30,7 @@ OmapImageViewWindow* omap_image_view_window_construct (GType object_type);
 GType omap_image_view_window_get_type (void);
 void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
 static void _gtk_main_quit_gtk_object_destroy (GtkMessageDialog* _sender, gpointer self);
-void _main (char** args, int args_length1);
+void _vala_main (char** args, int args_length1);
 
 
 
@@ -39,7 +39,7 @@ static void _gtk_main_quit_gtk_object_destroy (GtkMessageDialog* _sender, gpoint
 }
 
 
-void _main (char** args, int args_length1) {
+void _vala_main (char** args, int args_length1) {
 	GError * _inner_error_;
 	_inner_error_ = NULL;
 	gst_init (&args_length1, &args);
@@ -51,7 +51,6 @@ void _main (char** args, int args_length1) {
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (window);
 			goto __catch0_g_error;
-			goto __finally0;
 		}
 		gtk_widget_show ((GtkWidget*) window);
 		_g_object_unref0 (window);
@@ -82,7 +81,7 @@ void _main (char** args, int args_length1) {
 
 int main (int argc, char ** argv) {
 	g_type_init ();
-	_main (argv, argc);
+	_vala_main (argv, argc);
 	return 0;
 }
 

@@ -301,7 +301,7 @@ static void _omap_image_view_window_on_icon_activated_gtk_icon_view_item_activat
 
 
 GtkBox* omap_image_view_window_new_iconlist_box (OmapImageViewWindow* self) {
-	GtkBox* result;
+	GtkBox* result = NULL;
 	GtkVBox* box;
 	GtkScrolledWindow* scrolled_window;
 	GtkPolicyType policy;
@@ -367,7 +367,7 @@ static void _omap_media_window_toggle_fullscreen_omap_video_area_activated (Omap
 
 
 GtkBox* omap_image_view_window_new_video_box (OmapImageViewWindow* self) {
-	GtkBox* result;
+	GtkBox* result = NULL;
 	GtkVBox* box;
 	GtkScrolledWindow* scrolled_window;
 	GtkPolicyType policy;
@@ -449,7 +449,7 @@ void omap_image_view_window_on_open_close (OmapImageViewWindow* self) {
 
 
 gboolean omap_image_view_window_open_image (OmapImageViewWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreeIter iter = {0};
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (omap_image_view_window_get_and_select_iter (self, &iter)) {
@@ -535,6 +535,7 @@ void omap_image_view_window_stop_slideshow (OmapImageViewWindow* self) {
 static void omap_image_view_window_slideshow_data_free (gpointer _data) {
 	OmapImageViewWindowSlideshowData* data;
 	data = _data;
+	g_object_unref (data->self);
 	g_slice_free (OmapImageViewWindowSlideshowData, data);
 }
 
@@ -544,7 +545,7 @@ void omap_image_view_window_slideshow (OmapImageViewWindow* self, GAsyncReadyCal
 	_data_ = g_slice_new0 (OmapImageViewWindowSlideshowData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, omap_image_view_window_slideshow);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, omap_image_view_window_slideshow_data_free);
-	_data_->self = self;
+	_data_->self = g_object_ref (self);
 	omap_image_view_window_slideshow_co (_data_);
 }
 
@@ -570,84 +571,88 @@ static gboolean _omap_image_view_window_slideshow_co_gsource_func (gpointer self
 
 static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlideshowData* data) {
 	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 1:
+		goto _state_1;
 		default:
 		g_assert_not_reached ();
-		case 0:
-		{
-			if (data->self->iconlist_control == NULL) {
-				{
-					if (data->_state_ == 0) {
-						g_simple_async_result_complete_in_idle (data->_async_result);
-					} else {
-						g_simple_async_result_complete (data->_async_result);
-					}
-					g_object_unref (data->_async_result);
-					return FALSE;
-				}
-			}
-			if (!omap_image_view_window_get_and_select_iter (data->self, &data->iter)) {
-				data->_tmp0_ = TRUE;
-			} else {
-				data->_tmp0_ = g_cancellable_is_cancelled (data->self->slideshow_cancellable);
-			}
-			if (data->_tmp0_) {
-				{
-					if (data->_state_ == 0) {
-						g_simple_async_result_complete_in_idle (data->_async_result);
-					} else {
-						g_simple_async_result_complete (data->_async_result);
-					}
-					g_object_unref (data->_async_result);
-					return FALSE;
-				}
-			}
-			data->self->slideshow_continuation = (data->_tmp1_ = _omap_image_view_window_slideshow_co_gsource_func, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = data, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp1_);
+	}
+	_state_0:
+	{
+		if (data->self->iconlist_control == NULL) {
 			{
-				data->_tmp2_ = TRUE;
-				while (TRUE) {
-					if (!data->_tmp2_) {
-						if (gtk_tree_model_iter_next ((GtkTreeModel*) data->self->iconlist_store, &data->iter)) {
-							data->_tmp3_ = !g_cancellable_is_cancelled (data->self->slideshow_cancellable);
-						} else {
-							data->_tmp3_ = FALSE;
-						}
-						if (!data->_tmp3_) {
-							break;
-						}
-					}
-					data->_tmp2_ = FALSE;
-					data->path = gtk_tree_model_get_path ((GtkTreeModel*) data->self->iconlist_store, &data->iter);
-					if (!omap_icon_list_control_iter_is_valid (data->self->iconlist_control, &data->iter)) {
-						_gtk_tree_path_free0 (data->path);
-						continue;
-					}
-					gtk_icon_view_select_path (data->self->icon_view, data->path);
-					gtk_icon_view_scroll_to_path (data->self->icon_view, data->path, TRUE, 0.5f, 0.5f);
-					gtk_icon_view_item_activated (data->self->icon_view, data->path);
-					data->_state_ = 1;
-					return FALSE;
-					case 1:
-					;
-					data->self->slideshow_timeout = (guint) 0;
-					_gtk_tree_path_free0 (data->path);
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
 				}
+				g_object_unref (data->_async_result);
+				return FALSE;
 			}
-			if (!g_cancellable_is_cancelled (data->self->slideshow_cancellable)) {
-				omap_image_view_window_close_image (data->self);
-			}
-			gtk_tool_button_set_stock_id (data->self->slideshow_button, GTK_STOCK_MEDIA_PLAY);
-			data->self->slideshow_continuation = (data->_tmp4_ = NULL, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp4_);
-			data->self->slideshow_cancellable = (data->_tmp5_ = NULL, _g_object_unref0 (data->self->slideshow_cancellable), data->_tmp5_);
 		}
+		if (!omap_image_view_window_get_and_select_iter (data->self, &data->iter)) {
+			data->_tmp0_ = TRUE;
+		} else {
+			data->_tmp0_ = g_cancellable_is_cancelled (data->self->slideshow_cancellable);
+		}
+		if (data->_tmp0_) {
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
+		}
+		data->self->slideshow_continuation = (data->_tmp1_ = _omap_image_view_window_slideshow_co_gsource_func, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = data, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp1_);
 		{
-			if (data->_state_ == 0) {
-				g_simple_async_result_complete_in_idle (data->_async_result);
-			} else {
-				g_simple_async_result_complete (data->_async_result);
+			data->_tmp2_ = TRUE;
+			while (TRUE) {
+				if (!data->_tmp2_) {
+					if (gtk_tree_model_iter_next ((GtkTreeModel*) data->self->iconlist_store, &data->iter)) {
+						data->_tmp3_ = !g_cancellable_is_cancelled (data->self->slideshow_cancellable);
+					} else {
+						data->_tmp3_ = FALSE;
+					}
+					if (!data->_tmp3_) {
+						break;
+					}
+				}
+				data->_tmp2_ = FALSE;
+				data->path = gtk_tree_model_get_path ((GtkTreeModel*) data->self->iconlist_store, &data->iter);
+				if (!omap_icon_list_control_iter_is_valid (data->self->iconlist_control, &data->iter)) {
+					_gtk_tree_path_free0 (data->path);
+					continue;
+				}
+				gtk_icon_view_select_path (data->self->icon_view, data->path);
+				gtk_icon_view_scroll_to_path (data->self->icon_view, data->path, TRUE, 0.5f, 0.5f);
+				gtk_icon_view_item_activated (data->self->icon_view, data->path);
+				data->_state_ = 1;
+				return FALSE;
+				_state_1:
+				;
+				data->self->slideshow_timeout = (guint) 0;
+				_gtk_tree_path_free0 (data->path);
 			}
-			g_object_unref (data->_async_result);
-			return FALSE;
 		}
+		if (!g_cancellable_is_cancelled (data->self->slideshow_cancellable)) {
+			omap_image_view_window_close_image (data->self);
+		}
+		gtk_tool_button_set_stock_id (data->self->slideshow_button, GTK_STOCK_MEDIA_PLAY);
+		data->self->slideshow_continuation = (data->_tmp4_ = NULL, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp4_);
+		data->self->slideshow_cancellable = (data->_tmp5_ = NULL, _g_object_unref0 (data->self->slideshow_cancellable), data->_tmp5_);
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
@@ -664,7 +669,7 @@ static void _g_list_free_gtk_tree_path_free (GList* self) {
 
 
 gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, GtkTreeIter* iter) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreePath* path;
 	GList* selected;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -734,7 +739,7 @@ void omap_image_view_window_change_folder (OmapImageViewWindow* self) {
 
 
 gboolean omap_image_view_window_retry_change_folder (OmapImageViewWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->fill_icons_cancellable == NULL) {
 		omap_image_view_window_change_folder (self);
@@ -767,7 +772,7 @@ void omap_image_view_window_do_fill_visible_icons (OmapImageViewWindow* self) {
 
 
 gboolean omap_image_view_window_retry_do_fill_visible_icons (OmapImageViewWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->fill_icons_cancellable == NULL) {
 		omap_image_view_window_do_fill_visible_icons (self);
@@ -780,14 +785,12 @@ gboolean omap_image_view_window_retry_do_fill_visible_icons (OmapImageViewWindow
 
 
 gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreePath* start;
 	GtkTreePath* end;
-	GtkTreePath* _tmp5_;
-	gboolean _tmp4_;
-	GtkTreePath* _tmp3_ = NULL;
-	GtkTreePath* _tmp2_;
-	gboolean _tmp1_;
+	GtkTreePath* _tmp3_;
+	GtkTreePath* _tmp2_ = NULL;
+	GtkTreePath* _tmp1_;
 	GtkTreePath* _tmp0_ = NULL;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->iconlist_control == NULL) {
@@ -796,9 +799,8 @@ gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self) {
 	}
 	start = NULL;
 	end = NULL;
-	_tmp4_ = (_tmp1_ = gtk_icon_view_get_visible_range (self->icon_view, &_tmp0_, &_tmp3_), start = (_tmp2_ = _gtk_tree_path_copy0 (_tmp0_), _gtk_tree_path_free0 (start), _tmp2_), _tmp1_);
-	end = (_tmp5_ = _gtk_tree_path_copy0 (_tmp3_), _gtk_tree_path_free0 (end), _tmp5_);
-	_tmp4_;
+	(gtk_icon_view_get_visible_range (self->icon_view, &_tmp0_, &_tmp2_), start = (_tmp1_ = _gtk_tree_path_copy0 (_tmp0_), _gtk_tree_path_free0 (start), _tmp1_));
+	end = (_tmp3_ = _gtk_tree_path_copy0 (_tmp2_), _gtk_tree_path_free0 (end), _tmp3_);
 	self->is_filling_icons = TRUE;
 	omap_icon_list_control_fill_icons (self->iconlist_control, start, end, self->fill_icons_cancellable, NULL, NULL);
 	result = FALSE;
@@ -905,12 +907,14 @@ static void omap_image_view_window_finalize (GObject* obj) {
 
 
 GType omap_image_view_window_get_type (void) {
-	static GType omap_image_view_window_type_id = 0;
-	if (omap_image_view_window_type_id == 0) {
+	static volatile gsize omap_image_view_window_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_image_view_window_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapImageViewWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_image_view_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapImageViewWindow), 0, (GInstanceInitFunc) omap_image_view_window_instance_init, NULL };
+		GType omap_image_view_window_type_id;
 		omap_image_view_window_type_id = g_type_register_static (OMAP_TYPE_MEDIA_WINDOW, "OmapImageViewWindow", &g_define_type_info, 0);
+		g_once_init_leave (&omap_image_view_window_type_id__volatile, omap_image_view_window_type_id);
 	}
-	return omap_image_view_window_type_id;
+	return omap_image_view_window_type_id__volatile;
 }
 
 

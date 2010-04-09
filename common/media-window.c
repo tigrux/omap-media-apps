@@ -78,19 +78,20 @@ static gint _vala_array_length (gpointer array);
 
 
 
-
 GType omap_media_window_tab_get_type (void) {
-	static GType omap_media_window_tab_type_id = 0;
-	if (G_UNLIKELY (omap_media_window_tab_type_id == 0)) {
+	static volatile gsize omap_media_window_tab_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_media_window_tab_type_id__volatile)) {
 		static const GEnumValue values[] = {{OMAP_MEDIA_WINDOW_TAB_LIST, "OMAP_MEDIA_WINDOW_TAB_LIST", "list"}, {OMAP_MEDIA_WINDOW_TAB_VIDEO, "OMAP_MEDIA_WINDOW_TAB_VIDEO", "video"}, {0, NULL, NULL}};
+		GType omap_media_window_tab_type_id;
 		omap_media_window_tab_type_id = g_enum_register_static ("OmapMediaWindowTab", values);
+		g_once_init_leave (&omap_media_window_tab_type_id__volatile, omap_media_window_tab_type_id);
 	}
-	return omap_media_window_tab_type_id;
+	return omap_media_window_tab_type_id__volatile;
 }
 
 
 gboolean omap_media_window_apply_style (void) {
-	gboolean result;
+	gboolean result = FALSE;
 	{
 		char** _tmp0_;
 		char** dir_collection;
@@ -142,7 +143,6 @@ void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const ch
 			gtk_window_set_icon_from_file ((GtkWindow*) self, gtk_icon_info_get_filename (icon_info), &_inner_error_);
 			if (_inner_error_ != NULL) {
 				goto __catch0_g_error;
-				goto __finally0;
 			}
 		}
 		goto __finally0;
@@ -213,7 +213,7 @@ void omap_media_window_on_quit (OmapMediaWindow* self) {
 
 
 gboolean omap_media_window_quit (OmapMediaWindow* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	gtk_main_quit ();
 	result = FALSE;
@@ -335,12 +335,14 @@ static void omap_media_window_finalize (GObject* obj) {
 
 
 GType omap_media_window_get_type (void) {
-	static GType omap_media_window_type_id = 0;
-	if (omap_media_window_type_id == 0) {
+	static volatile gsize omap_media_window_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_media_window_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapMediaWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_media_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMediaWindow), 0, (GInstanceInitFunc) omap_media_window_instance_init, NULL };
+		GType omap_media_window_type_id;
 		omap_media_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "OmapMediaWindow", &g_define_type_info, 0);
+		g_once_init_leave (&omap_media_window_type_id__volatile, omap_media_window_type_id);
 	}
-	return omap_media_window_type_id;
+	return omap_media_window_type_id__volatile;
 }
 
 

@@ -64,7 +64,7 @@ namespace Omap {
 	}
 	[CCode (cheader_filename = "common.h")]
 	public class VideoArea : Gtk.DrawingArea {
-		public uint32 xid;
+		public X.ID xid;
 		public VideoArea ();
 		public override bool button_press_event (Gdk.EventButton event);
 		public override bool expose_event (Gdk.EventExpose e);

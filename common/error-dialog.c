@@ -137,7 +137,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 
 GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self) {
-	GtkBox* result;
+	GtkBox* result = NULL;
 	GtkHBox* box;
 	GtkImage* image;
 	GtkVSeparator* separator;
@@ -238,12 +238,14 @@ static void omap_debug_dialog_finalize (GObject* obj) {
 
 
 GType omap_debug_dialog_get_type (void) {
-	static GType omap_debug_dialog_type_id = 0;
-	if (omap_debug_dialog_type_id == 0) {
+	static volatile gsize omap_debug_dialog_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_debug_dialog_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapDebugDialogClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_debug_dialog_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapDebugDialog), 0, (GInstanceInitFunc) omap_debug_dialog_instance_init, NULL };
+		GType omap_debug_dialog_type_id;
 		omap_debug_dialog_type_id = g_type_register_static (GTK_TYPE_DIALOG, "OmapDebugDialog", &g_define_type_info, 0);
+		g_once_init_leave (&omap_debug_dialog_type_id__volatile, omap_debug_dialog_type_id);
 	}
-	return omap_debug_dialog_type_id;
+	return omap_debug_dialog_type_id__volatile;
 }
 
 
@@ -299,17 +301,19 @@ static void omap_error_dialog_instance_init (OmapErrorDialog * self) {
 
 
 GType omap_error_dialog_get_type (void) {
-	static GType omap_error_dialog_type_id = 0;
-	if (omap_error_dialog_type_id == 0) {
+	static volatile gsize omap_error_dialog_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_error_dialog_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapErrorDialogClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_error_dialog_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapErrorDialog), 0, (GInstanceInitFunc) omap_error_dialog_instance_init, NULL };
+		GType omap_error_dialog_type_id;
 		omap_error_dialog_type_id = g_type_register_static (GTK_TYPE_MESSAGE_DIALOG, "OmapErrorDialog", &g_define_type_info, 0);
+		g_once_init_leave (&omap_error_dialog_type_id__volatile, omap_error_dialog_type_id);
 	}
-	return omap_error_dialog_type_id;
+	return omap_error_dialog_type_id__volatile;
 }
 
 
 GtkMessageDialog* omap_error_dialog (GError* e) {
-	GtkMessageDialog* result;
+	GtkMessageDialog* result = NULL;
 	OmapErrorDialog* dialog;
 	dialog = g_object_ref_sink (omap_error_dialog_new (e));
 	gtk_widget_show ((GtkWidget*) dialog);

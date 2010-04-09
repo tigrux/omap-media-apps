@@ -65,7 +65,7 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 static gint _vala_array_length (gpointer array);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
-static const GMarkupParser OMAP_MUXER_CONFIG_PARSER_parser = {_omap_muxer_config_parser_start_gmarkup_parser_start_element_func, _omap_muxer_config_parser_end_gmarkup_parser_end_element_func, _omap_muxer_config_parser_text_gmarkup_parser_text_func, NULL, NULL};
+const GMarkupParser OMAP_MUXER_CONFIG_PARSER_parser = {_omap_muxer_config_parser_start_gmarkup_parser_start_element_func, _omap_muxer_config_parser_end_gmarkup_parser_end_element_func, _omap_muxer_config_parser_text_gmarkup_parser_text_func, NULL, NULL};
 
 
 static void _omap_muxer_config_parser_start_gmarkup_parser_start_element_func (GMarkupParseContext* context, const char* element_name, char** attribute_names, char** attribute_values, gpointer self, GError** error) {
@@ -84,7 +84,7 @@ static void _omap_muxer_config_parser_text_gmarkup_parser_text_func (GMarkupPars
 
 
 gboolean omap_muxer_config_parser_parse_data (OmapMuxerConfigParser* self, const char* data, gssize length, GKeyFile** key_file, GError** error) {
-	gboolean result;
+	gboolean result = FALSE;
 	GError * _inner_error_;
 	gboolean _tmp0_;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -109,7 +109,7 @@ gboolean omap_muxer_config_parser_parse_data (OmapMuxerConfigParser* self, const
 
 
 gboolean omap_muxer_config_parser_parse_file (OmapMuxerConfigParser* self, const char* file, GKeyFile** key_file, GError** error) {
-	gboolean result;
+	gboolean result = FALSE;
 	GError * _inner_error_;
 	char* content;
 	gsize length = 0UL;
@@ -193,7 +193,7 @@ void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseCo
 				_g_free0 (attr_value);
 			} else {
 				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ATTRIBUTE, "Error on line %d char %d: Element '%s' has unknown attribute '%s'", line_n, char_n, name, attr_name);
-				if (_inner_error_ != NULL) {
+				{
 					if (_inner_error_->domain == G_MARKUP_ERROR) {
 						g_propagate_error (error, _inner_error_);
 						_g_free0 (attr_name);
@@ -210,7 +210,7 @@ void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseCo
 		}
 		if (self->current_group == NULL) {
 			_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_MISSING_ATTRIBUTE, "Error on line %d char %d: Element '%s' has no attribute 'name'", line_n, char_n, name);
-			if (_inner_error_ != NULL) {
+			{
 				if (_inner_error_->domain == G_MARKUP_ERROR) {
 					g_propagate_error (error, _inner_error_);
 					_g_free0 (attr_name);
@@ -243,8 +243,9 @@ void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseCo
 				char* _tmp4_;
 				self->current_key = (_tmp4_ = g_strdup (name), _g_free0 (self->current_key), _tmp4_);
 			} else {
-				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was opened, but no outer element 'pipeline' was found", line_n, char_n, name);
-				if (_inner_error_ != NULL) {
+				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was opened, but no outer elemen" \
+"t 'pipeline' was found", line_n, char_n, name);
+				{
 					if (_inner_error_->domain == G_MARKUP_ERROR) {
 						g_propagate_error (error, _inner_error_);
 						return;
@@ -257,7 +258,7 @@ void omap_muxer_config_parser_start (OmapMuxerConfigParser* self, GMarkupParseCo
 			}
 		} else {
 			_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ELEMENT, "Error on line %d char %d: Element '%s' in unknown", line_n, char_n, name);
-			if (_inner_error_ != NULL) {
+			{
 				if (_inner_error_->domain == G_MARKUP_ERROR) {
 					g_propagate_error (error, _inner_error_);
 					return;
@@ -299,8 +300,9 @@ void omap_muxer_config_parser_end (OmapMuxerConfigParser* self, GMarkupParseCont
 			}
 		}
 		if (missing_tag != NULL) {
-			_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was closed, but no inner element '%s' was found", line_n, char_n, name, missing_tag);
-			if (_inner_error_ != NULL) {
+			_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' was closed, but no inner elemen" \
+"t '%s' was found", line_n, char_n, name, missing_tag);
+			{
 				if (_inner_error_->domain == G_MARKUP_ERROR) {
 					g_propagate_error (error, _inner_error_);
 					_g_free0 (missing_tag);
@@ -328,7 +330,7 @@ void omap_muxer_config_parser_end (OmapMuxerConfigParser* self, GMarkupParseCont
 				self->current_key = (_tmp5_ = NULL, _g_free0 (self->current_key), _tmp5_);
 			} else {
 				_inner_error_ = g_error_new (G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, "Error on line %d char %d: Element '%s' has no text", line_n, char_n, name);
-				if (_inner_error_ != NULL) {
+				{
 					if (_inner_error_->domain == G_MARKUP_ERROR) {
 						g_propagate_error (error, _inner_error_);
 						return;
@@ -359,9 +361,9 @@ static void _g_list_free_g_free (GList* self) {
 
 
 gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	GList* stripped_list;
-	gint lines_size;
+	gint _lines_size_;
 	gint lines_length1;
 	char** lines;
 	gint i = 0;
@@ -378,7 +380,7 @@ gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self) 
 	}
 	stripped_list = NULL;
 	lines = (lines_length1 = 0, NULL);
-	lines = (_tmp1_ = _tmp0_ = g_strsplit (self->current_value, "\n", 0), lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL), lines_length1 = _vala_array_length (_tmp0_), lines_size = lines_length1, _tmp1_);
+	lines = (_tmp1_ = _tmp0_ = g_strsplit (self->current_value, "\n", 0), lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL), lines_length1 = _vala_array_length (_tmp0_), _lines_size_ = lines_length1, _tmp1_);
 	i = 0;
 	line = NULL;
 	while (TRUE) {
@@ -391,7 +393,7 @@ gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self) 
 		}
 		i++;
 	}
-	lines = (_tmp4_ = g_new0 (char*, (_tmp3_ = g_list_length (stripped_list)) + 1), lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL), lines_length1 = _tmp3_, lines_size = lines_length1, _tmp4_);
+	lines = (_tmp4_ = g_new0 (char*, (_tmp3_ = g_list_length (stripped_list)) + 1), lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL), lines_length1 = _tmp3_, _lines_size_ = lines_length1, _tmp4_);
 	i = 0;
 	{
 		GList* line_collection;
@@ -491,12 +493,14 @@ static void omap_muxer_config_parser_finalize (GObject* obj) {
 
 
 GType omap_muxer_config_parser_get_type (void) {
-	static GType omap_muxer_config_parser_type_id = 0;
-	if (omap_muxer_config_parser_type_id == 0) {
+	static volatile gsize omap_muxer_config_parser_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_muxer_config_parser_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerConfigParserClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_config_parser_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerConfigParser), 0, (GInstanceInitFunc) omap_muxer_config_parser_instance_init, NULL };
+		GType omap_muxer_config_parser_type_id;
 		omap_muxer_config_parser_type_id = g_type_register_static (G_TYPE_OBJECT, "OmapMuxerConfigParser", &g_define_type_info, 0);
+		g_once_init_leave (&omap_muxer_config_parser_type_id__volatile, omap_muxer_config_parser_type_id);
 	}
-	return omap_muxer_config_parser_type_id;
+	return omap_muxer_config_parser_type_id__volatile;
 }
 
 

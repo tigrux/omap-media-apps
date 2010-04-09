@@ -80,8 +80,9 @@ static void omap_media_control_set_property (GObject * object, guint property_id
 
 static void g_cclosure_user_marshal_VOID__STRING_BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_ENUM_ENUM (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 static gpointer _gst_object_ref0 (gpointer self) {
@@ -105,8 +106,10 @@ void omap_media_control_remove_signals (OmapMediaControl* self) {
 	guint _tmp1_;
 	g_return_if_fail (self != NULL);
 	bus = _gst_object_ref0 (((GstElement*) self->priv->_pipeline)->bus);
-	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _omap_media_control_on_bus_sync_message_gst_bus_message, self);
-	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _omap_media_control_on_bus_message_gst_bus_message, self);
+	g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp0_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _omap_media_control_on_bus_sync_message_gst_bus_message, self);
+	g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _omap_media_control_on_bus_message_gst_bus_message, self);
 	gst_bus_disable_sync_message_emission (bus);
 	gst_bus_remove_signal_watch (bus);
 	_gst_object_unref0 (bus);
@@ -143,15 +146,15 @@ static void _omap_media_control_tag_foreach_func_gst_tag_foreach_func (GstTagLis
 void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* message) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (message != NULL);
-	switch (message->type) {
+	switch (GST_MESSAGE_TYPE (message)) {
 		case GST_MESSAGE_ELEMENT:
 		{
 			{
 				GstStructure* st;
 				GstStructure* _tmp0_;
 				st = NULL;
-				if ((st = (_tmp0_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (st), _tmp0_)) != NULL) {
-					g_signal_emit_by_name (self, "element-message", message->src, st);
+				if ((st = (_tmp0_ = _gst_structure_copy0 (gst_message_get_structure (message)), _gst_structure_free0 (st), _tmp0_)) != NULL) {
+					g_signal_emit_by_name (self, "element-message", GST_MESSAGE_SRC (message), st);
 				}
 				_gst_structure_free0 (st);
 			}
@@ -160,7 +163,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 		case GST_MESSAGE_EOS:
 		{
 			{
-				g_signal_emit_by_name (self, "eos-message", message->src);
+				g_signal_emit_by_name (self, "eos-message", GST_MESSAGE_SRC (message));
 			}
 			break;
 		}
@@ -177,7 +180,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				d = NULL;
 				(gst_message_parse_error (message, &_tmp1_, &_tmp3_), e = (_tmp2_ = _tmp1_, _g_error_free0 (e), _tmp2_));
 				d = (_tmp4_ = _tmp3_, _g_free0 (d), _tmp4_);
-				g_signal_emit_by_name (self, "error-message", message->src, e, d);
+				g_signal_emit_by_name (self, "error-message", GST_MESSAGE_SRC (message), e, d);
 				_g_error_free0 (e);
 				_g_free0 (d);
 			}
@@ -190,7 +193,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstState current = 0;
 				GstState pending = 0;
 				gst_message_parse_state_changed (message, &old, &current, &pending);
-				g_signal_emit_by_name (self, "state-changed-message", message->src, old, current, pending);
+				g_signal_emit_by_name (self, "state-changed-message", GST_MESSAGE_SRC (message), old, current, pending);
 			}
 			break;
 		}
@@ -200,7 +203,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_start (message, &format, &position);
-				g_signal_emit_by_name (self, "segment-start-message", message->src, format, position);
+				g_signal_emit_by_name (self, "segment-start-message", GST_MESSAGE_SRC (message), format, position);
 			}
 			break;
 		}
@@ -210,7 +213,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_done (message, &format, &position);
-				g_signal_emit_by_name (self, "segment-done-message", message->src, format, position);
+				g_signal_emit_by_name (self, "segment-done-message", GST_MESSAGE_SRC (message), format, position);
 			}
 			break;
 		}
@@ -224,7 +227,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				gst_message_parse_tag (message, &_tmp5_);
 				tag_list = (_tmp6_ = _tmp5_, _gst_tag_list_free0 (tag_list), _tmp6_);
 				gst_tag_list_foreach (tag_list, _omap_media_control_tag_foreach_func_gst_tag_foreach_func, self);
-				g_signal_emit_by_name (self, "tag-message", message->src, tag_list);
+				g_signal_emit_by_name (self, "tag-message", GST_MESSAGE_SRC (message), tag_list);
 				_gst_tag_list_free0 (tag_list);
 			}
 			break;
@@ -242,15 +245,13 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 
 void omap_media_control_tag_foreach_func (OmapMediaControl* self, GstTagList* tag_list, const char* tag_name) {
 	GValue tag_value = {0};
-	GValue _tmp2_;
-	gboolean _tmp1_;
+	GValue _tmp1_;
 	GValue _tmp0_ = {0};
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (tag_list != NULL);
 	g_return_if_fail (tag_name != NULL);
-	_tmp1_ = gst_tag_list_copy_value (&_tmp0_, tag_list, tag_name);
-	tag_value = (_tmp2_ = _tmp0_, G_IS_VALUE (&tag_value) ? (g_value_unset (&tag_value), NULL) : NULL, _tmp2_);
-	_tmp1_;
+	gst_tag_list_copy_value (&_tmp0_, tag_list, tag_name);
+	tag_value = (_tmp1_ = _tmp0_, G_IS_VALUE (&tag_value) ? (g_value_unset (&tag_value), NULL) : NULL, _tmp1_);
 	g_signal_emit_by_name (self, "tag-found", tag_name, &tag_value);
 	G_IS_VALUE (&tag_value) ? (g_value_unset (&tag_value), NULL) : NULL;
 }
@@ -262,14 +263,14 @@ void omap_media_control_on_bus_sync_message (OmapMediaControl* self, GstMessage*
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (message != NULL);
 	structure = NULL;
-	if ((structure = (_tmp0_ = _gst_structure_copy0 (message->structure), _gst_structure_free0 (structure), _tmp0_)) == NULL) {
+	if ((structure = (_tmp0_ = _gst_structure_copy0 (gst_message_get_structure (message)), _gst_structure_free0 (structure), _tmp0_)) == NULL) {
 		_gst_structure_free0 (structure);
 		return;
 	}
 	if (structure->name == omap_media_control_prepare_xwindow_q) {
 		GstXOverlay* _tmp2_;
 		GstObject* _tmp1_;
-		self->xoverlay = (_tmp2_ = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL)), _gst_object_unref0 (self->xoverlay), _tmp2_);
+		self->xoverlay = (_tmp2_ = _gst_object_ref0 ((_tmp1_ = GST_MESSAGE_SRC (message), GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL)), _gst_object_unref0 (self->xoverlay), _tmp2_);
 		g_signal_emit_by_name (self, "prepare-xwindow-id", self->xoverlay);
 	}
 	_gst_structure_free0 (structure);
@@ -381,7 +382,7 @@ static void omap_media_control_class_init (OmapMediaControlClass * klass) {
 	g_signal_new ("tag_found", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__STRING_BOXED, G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_VALUE);
 	g_signal_new ("eos_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 	g_signal_new ("error_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3, GST_TYPE_OBJECT, G_TYPE_POINTER, G_TYPE_STRING);
-	g_signal_new ("element_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, GST_TYPE_STRUCTURE);
+	g_signal_new ("element_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2, GST_TYPE_OBJECT, GST_TYPE_STRUCTURE);
 	g_signal_new ("segment_start_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
 	g_signal_new ("segment_done_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64, G_TYPE_NONE, 3, GST_TYPE_OBJECT, GST_TYPE_FORMAT, G_TYPE_INT64);
 	g_signal_new ("tag_message", OMAP_TYPE_MEDIA_CONTROL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
@@ -408,12 +409,14 @@ static void omap_media_control_finalize (GObject* obj) {
 
 
 GType omap_media_control_get_type (void) {
-	static GType omap_media_control_type_id = 0;
-	if (omap_media_control_type_id == 0) {
+	static volatile gsize omap_media_control_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_media_control_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapMediaControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_media_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMediaControl), 0, (GInstanceInitFunc) omap_media_control_instance_init, NULL };
+		GType omap_media_control_type_id;
 		omap_media_control_type_id = g_type_register_static (G_TYPE_OBJECT, "OmapMediaControl", &g_define_type_info, 0);
+		g_once_init_leave (&omap_media_control_type_id__volatile, omap_media_control_type_id);
 	}
-	return omap_media_control_type_id;
+	return omap_media_control_type_id__volatile;
 }
 
 
@@ -499,9 +502,9 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_STRING (GClosure * clos
 }
 
 
-static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__OBJECT_POINTER) (gpointer data1, gpointer arg_1, gpointer arg_2, gpointer data2);
-	register GMarshalFunc_VOID__OBJECT_POINTER callback;
+static void g_cclosure_user_marshal_VOID__OBJECT_BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_BOXED) (gpointer data1, gpointer arg_1, gpointer arg_2, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_BOXED callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
@@ -513,7 +516,7 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GV
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__OBJECT_POINTER) (marshal_data ? marshal_data : cc->callback);
+	callback = (GMarshalFunc_VOID__OBJECT_BOXED) (marshal_data ? marshal_data : cc->callback);
 	callback (data1, g_value_get_object (param_values + 1), g_value_get_boxed (param_values + 2), data2);
 }
 
@@ -534,6 +537,25 @@ static void g_cclosure_user_marshal_VOID__OBJECT_ENUM_INT64 (GClosure * closure,
 	}
 	callback = (GMarshalFunc_VOID__OBJECT_ENUM_INT64) (marshal_data ? marshal_data : cc->callback);
 	callback (data1, g_value_get_object (param_values + 1), g_value_get_enum (param_values + 2), g_value_get_int64 (param_values + 3), data2);
+}
+
+
+static void g_cclosure_user_marshal_VOID__OBJECT_POINTER (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_POINTER) (gpointer data1, gpointer arg_1, gpointer arg_2, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_POINTER callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 3);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__OBJECT_POINTER) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_pointer (param_values + 2), data2);
 }
 
 

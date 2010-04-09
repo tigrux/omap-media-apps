@@ -198,7 +198,7 @@ void omap_muxer_control_load_preview_bin (OmapMuxerControl* self, GError** error
 	self->videosrc = (_tmp4_ = gst_bin_get_by_name (self->preview_bin, "videosrc"), _gst_object_unref0 (self->videosrc), _tmp4_);
 	if ((self->tee = (_tmp5_ = gst_bin_get_by_name (self->preview_bin, "tee"), _gst_object_unref0 (self->tee), _tmp5_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named tee in the preview pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			return;
 		}
@@ -225,7 +225,7 @@ void omap_muxer_control_load_record_bin (OmapMuxerControl* self, GError** error)
 	gst_object_set_name ((GstObject*) self->record_bin, "record_bin");
 	if ((self->queue = (_tmp3_ = gst_bin_get_by_name (self->record_bin, "queue"), _gst_object_unref0 (self->queue), _tmp3_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named queue in the record pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			return;
 		}
@@ -369,12 +369,14 @@ static void omap_muxer_control_finalize (GObject* obj) {
 
 
 GType omap_muxer_control_get_type (void) {
-	static GType omap_muxer_control_type_id = 0;
-	if (omap_muxer_control_type_id == 0) {
+	static volatile gsize omap_muxer_control_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_muxer_control_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerControl), 0, (GInstanceInitFunc) omap_muxer_control_instance_init, NULL };
+		GType omap_muxer_control_type_id;
 		omap_muxer_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapMuxerControl", &g_define_type_info, 0);
+		g_once_init_leave (&omap_muxer_control_type_id__volatile, omap_muxer_control_type_id);
 	}
-	return omap_muxer_control_type_id;
+	return omap_muxer_control_type_id__volatile;
 }
 
 

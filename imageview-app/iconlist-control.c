@@ -121,7 +121,9 @@ extern gboolean omap_icon_list_control_pixbufs_loaded;
 gboolean omap_icon_list_control_pixbufs_loaded = FALSE;
 static gpointer omap_icon_list_control_parent_class = NULL;
 
-#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! videoscale !\nvideo/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
+#define ICON_PIPELINE_DESC "filesrc name=filesrc ! jpegdec name=imagedec ! ffmpegcolorspace ! vide" \
+"oscale !\n" \
+"video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
 GType omap_icon_list_control_get_type (void);
 #define OMAP_ICON_LIST_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_ICON_LIST_CONTROL, OmapIconListControlPrivate))
@@ -174,14 +176,15 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-
 GType omap_icon_list_control_col_get_type (void) {
-	static GType omap_icon_list_control_col_type_id = 0;
-	if (G_UNLIKELY (omap_icon_list_control_col_type_id == 0)) {
+	static volatile gsize omap_icon_list_control_col_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_icon_list_control_col_type_id__volatile)) {
 		static const GEnumValue values[] = {{OMAP_ICON_LIST_CONTROL_COL_TEXT, "OMAP_ICON_LIST_CONTROL_COL_TEXT", "text"}, {OMAP_ICON_LIST_CONTROL_COL_FILE, "OMAP_ICON_LIST_CONTROL_COL_FILE", "file"}, {OMAP_ICON_LIST_CONTROL_COL_PIXBUF, "OMAP_ICON_LIST_CONTROL_COL_PIXBUF", "pixbuf"}, {OMAP_ICON_LIST_CONTROL_COL_VALID, "OMAP_ICON_LIST_CONTROL_COL_VALID", "valid"}, {OMAP_ICON_LIST_CONTROL_COL_FILLED, "OMAP_ICON_LIST_CONTROL_COL_FILLED", "filled"}, {OMAP_ICON_LIST_CONTROL_COL_WIDTH, "OMAP_ICON_LIST_CONTROL_COL_WIDTH", "width"}, {OMAP_ICON_LIST_CONTROL_COL_HEIGHT, "OMAP_ICON_LIST_CONTROL_COL_HEIGHT", "height"}, {0, NULL, NULL}};
+		GType omap_icon_list_control_col_type_id;
 		omap_icon_list_control_col_type_id = g_enum_register_static ("OmapIconListControlCol", values);
+		g_once_init_leave (&omap_icon_list_control_col_type_id__volatile, omap_icon_list_control_col_type_id);
 	}
-	return omap_icon_list_control_col_type_id;
+	return omap_icon_list_control_col_type_id__volatile;
 }
 
 
@@ -196,6 +199,7 @@ OmapIconListControl* omap_icon_list_control_construct (GType object_type, GtkLis
 		omap_icon_list_control_setup_icons (self, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
+			g_object_unref (self);
 			return NULL;
 		}
 		omap_icon_list_control_pixbufs_loaded = TRUE;
@@ -203,6 +207,7 @@ OmapIconListControl* omap_icon_list_control_construct (GType object_type, GtkLis
 	omap_icon_list_control_setup_elements (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
+		g_object_unref (self);
 		return NULL;
 	}
 	return self;
@@ -292,7 +297,7 @@ void omap_icon_list_control_setup_pipeline (OmapIconListControl* self, GError** 
 	gst_object_set_name ((GstObject*) icon_pipeline, "icon_pipeline");
 	if ((self->filesrc = (_tmp2_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp2_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the icon_pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (icon_pipeline);
 			return;
@@ -300,7 +305,7 @@ void omap_icon_list_control_setup_pipeline (OmapIconListControl* self, GError** 
 	}
 	if ((self->imagesink = (_tmp3_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "imagesink"), _gst_object_unref0 (self->imagesink), _tmp3_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagesink in the icon_pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (icon_pipeline);
 			return;
@@ -308,7 +313,7 @@ void omap_icon_list_control_setup_pipeline (OmapIconListControl* self, GError** 
 	}
 	if ((self->imagedec = (_tmp4_ = gst_bin_get_by_name ((GstBin*) icon_pipeline, "imagedec"), _gst_object_unref0 (self->imagedec), _tmp4_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named imagedec in the icon_pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (icon_pipeline);
 			return;
@@ -325,6 +330,7 @@ static void omap_icon_list_control_add_folder_data_free (gpointer _data) {
 	data = _data;
 	_g_free0 (data->dirname);
 	_g_object_unref0 (data->cancellable);
+	g_object_unref (data->self);
 	g_slice_free (OmapIconListControlAddFolderData, data);
 }
 
@@ -334,7 +340,7 @@ void omap_icon_list_control_add_folder (OmapIconListControl* self, const char* d
 	_data_ = g_slice_new0 (OmapIconListControlAddFolderData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, omap_icon_list_control_add_folder);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, omap_icon_list_control_add_folder_data_free);
-	_data_->self = self;
+	_data_->self = g_object_ref (self);
 	_data_->dirname = g_strdup (dirname);
 	_data_->cancellable = _g_object_ref0 (cancellable);
 	omap_icon_list_control_add_folder_co (_data_);
@@ -363,76 +369,80 @@ static void _g_list_free_g_object_unref (GList* self) {
 
 static gboolean omap_icon_list_control_add_folder_co (OmapIconListControlAddFolderData* data) {
 	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 2:
+		goto _state_2;
+		case 3:
+		goto _state_3;
 		default:
 		g_assert_not_reached ();
-		case 0:
+	}
+	_state_0:
+	{
+		data->dir = g_file_new_for_path (data->dirname);
 		{
-			data->dir = g_file_new_for_path (data->dirname);
-			{
-				g_file_enumerate_children_async (data->dir, IMAGE_FILE_ATTRIBUTES, G_FILE_QUERY_INFO_NONE, G_PRIORITY_DEFAULT, data->cancellable, omap_icon_list_control_add_folder_ready, data);
-				data->_state_ = 2;
-				return FALSE;
-				case 2:
-				data->file_etor = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
-				if (data->_inner_error_ != NULL) {
-					goto __catch1_g_error;
-					goto __finally1;
-				}
-				while (TRUE) {
-					if (!(!g_cancellable_is_cancelled (data->cancellable))) {
-						break;
-					}
-					g_file_enumerator_next_files_async (data->file_etor, 5, G_PRIORITY_DEFAULT, data->cancellable, omap_icon_list_control_add_folder_ready, data);
-					data->_state_ = 3;
-					return FALSE;
-					case 3:
-					data->next_files = g_file_enumerator_next_files_finish (data->file_etor, data->_res_, &data->_inner_error_);
-					if (data->_inner_error_ != NULL) {
-						_g_object_unref0 (data->file_etor);
-						goto __catch1_g_error;
-						goto __finally1;
-					}
-					if (data->next_files == NULL) {
-						__g_list_free_g_object_unref0 (data->next_files);
-						break;
-					}
-					omap_icon_list_control_add_next_files (data->self, data->dirname, data->next_files);
-					__g_list_free_g_object_unref0 (data->next_files);
-				}
-				_g_object_unref0 (data->file_etor);
-			}
-			goto __finally1;
-			__catch1_g_error:
-			{
-				data->e1 = data->_inner_error_;
-				data->_inner_error_ = NULL;
-				{
-					data->_tmp0_ = omap_error_dialog (data->e1);
-					_g_object_unref0 (data->_tmp0_);
-					_g_error_free0 (data->e1);
-				}
-			}
-			__finally1:
-			{
-				g_signal_emit_by_name (data->self, "files-added");
-			}
+			data->_state_ = 2;
+			g_file_enumerate_children_async (data->dir, IMAGE_FILE_ATTRIBUTES, G_FILE_QUERY_INFO_NONE, G_PRIORITY_DEFAULT, data->cancellable, omap_icon_list_control_add_folder_ready, data);
+			return FALSE;
+			_state_2:
+			data->file_etor = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				_g_object_unref0 (data->dir);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-				g_clear_error (&data->_inner_error_);
+				goto __catch1_g_error;
+			}
+			while (TRUE) {
+				if (!(!g_cancellable_is_cancelled (data->cancellable))) {
+					break;
+				}
+				data->_state_ = 3;
+				g_file_enumerator_next_files_async (data->file_etor, 5, G_PRIORITY_DEFAULT, data->cancellable, omap_icon_list_control_add_folder_ready, data);
 				return FALSE;
+				_state_3:
+				data->next_files = g_file_enumerator_next_files_finish (data->file_etor, data->_res_, &data->_inner_error_);
+				if (data->_inner_error_ != NULL) {
+					_g_object_unref0 (data->file_etor);
+					goto __catch1_g_error;
+				}
+				if (data->next_files == NULL) {
+					__g_list_free_g_object_unref0 (data->next_files);
+					break;
+				}
+				omap_icon_list_control_add_next_files (data->self, data->dirname, data->next_files);
+				__g_list_free_g_object_unref0 (data->next_files);
 			}
-			_g_object_unref0 (data->dir);
+			_g_object_unref0 (data->file_etor);
 		}
+		goto __finally1;
+		__catch1_g_error:
 		{
-			if (data->_state_ == 0) {
-				g_simple_async_result_complete_in_idle (data->_async_result);
-			} else {
-				g_simple_async_result_complete (data->_async_result);
+			data->e1 = data->_inner_error_;
+			data->_inner_error_ = NULL;
+			{
+				data->_tmp0_ = omap_error_dialog (data->e1);
+				_g_object_unref0 (data->_tmp0_);
+				_g_error_free0 (data->e1);
 			}
-			g_object_unref (data->_async_result);
+		}
+		__finally1:
+		{
+			g_signal_emit_by_name (data->self, "files-added");
+		}
+		if (data->_inner_error_ != NULL) {
+			_g_object_unref0 (data->dir);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
 			return FALSE;
 		}
+		_g_object_unref0 (data->dir);
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
@@ -470,6 +480,7 @@ static void omap_icon_list_control_fill_icons_data_free (gpointer _data) {
 	_gtk_tree_path_free0 (data->path);
 	_gtk_tree_path_free0 (data->end);
 	_g_object_unref0 (data->cancellable);
+	g_object_unref (data->self);
 	g_slice_free (OmapIconListControlFillIconsData, data);
 }
 
@@ -484,7 +495,7 @@ void omap_icon_list_control_fill_icons (OmapIconListControl* self, GtkTreePath* 
 	_data_ = g_slice_new0 (OmapIconListControlFillIconsData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, omap_icon_list_control_fill_icons);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, omap_icon_list_control_fill_icons_data_free);
-	_data_->self = self;
+	_data_->self = g_object_ref (self);
 	_data_->path = _gtk_tree_path_copy0 (path);
 	_data_->end = _gtk_tree_path_copy0 (end);
 	_data_->cancellable = _g_object_ref0 (cancellable);
@@ -518,72 +529,76 @@ static inline void _dynamic_set_location0 (GstElement* obj, const char* value) {
 
 static gboolean omap_icon_list_control_fill_icons_co (OmapIconListControlFillIconsData* data) {
 	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 4:
+		goto _state_4;
 		default:
 		g_assert_not_reached ();
-		case 0:
-		{
-			if (data->path != NULL) {
-				data->_tmp0_ = data->end != NULL;
-			} else {
-				data->_tmp0_ = FALSE;
-			}
-			if (data->_tmp0_) {
-				data->self->continuation = (data->_tmp1_ = _omap_icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
-				omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_READY);
-				while (TRUE) {
-					if (gtk_tree_path_compare (data->path, data->end) > 0) {
-						data->_tmp2_ = TRUE;
-					} else {
-						data->_tmp2_ = g_cancellable_is_cancelled (data->cancellable);
-					}
-					if (!(!data->_tmp2_)) {
-						break;
-					}
-					gtk_tree_model_get_iter ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, data->path);
-					gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, OMAP_ICON_LIST_CONTROL_COL_FILE, &data->file, OMAP_ICON_LIST_CONTROL_COL_FILLED, &data->filled, -1, -1);
-					if (!data->filled) {
-						data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
-						omap_icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (omap_icon_list_control_last_pixbuf), data->_tmp4_);
-						_dynamic_set_location0 (data->self->filesrc, data->file);
-						omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_PLAYING);
-						data->_state_ = 4;
-						return FALSE;
-						case 4:
-						;
-						data->width = 0;
-						data->height = 0;
-						if (data->self->continuation_error == NULL) {
-							data->_tmp5_ = omap_icon_list_control_last_pixbuf != NULL;
-						} else {
-							data->_tmp5_ = FALSE;
-						}
-						data->valid = data->_tmp5_;
-						if (data->valid) {
-							data->pixbuf = (data->_tmp7_ = (data->_tmp6_ = omap_icon_list_control_last_pixbuf, omap_icon_list_control_last_pixbuf = NULL, data->_tmp6_), _g_object_unref0 (data->pixbuf), data->_tmp7_);
-							omap_icon_list_control_get_playing_image_size (data->self, &data->width, &data->height);
-						} else {
-							data->pixbuf = (data->_tmp8_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp8_);
-						}
-						gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, OMAP_ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, OMAP_ICON_LIST_CONTROL_COL_VALID, data->valid, OMAP_ICON_LIST_CONTROL_COL_FILLED, TRUE, OMAP_ICON_LIST_CONTROL_COL_WIDTH, data->width, OMAP_ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
-						_g_object_unref0 (data->pixbuf);
-					}
-					omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_READY);
-					gtk_tree_path_next (data->path);
-					_g_free0 (data->file);
+	}
+	_state_0:
+	{
+		if (data->path != NULL) {
+			data->_tmp0_ = data->end != NULL;
+		} else {
+			data->_tmp0_ = FALSE;
+		}
+		if (data->_tmp0_) {
+			data->self->continuation = (data->_tmp1_ = _omap_icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
+			omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_READY);
+			while (TRUE) {
+				if (gtk_tree_path_compare (data->path, data->end) > 0) {
+					data->_tmp2_ = TRUE;
+				} else {
+					data->_tmp2_ = g_cancellable_is_cancelled (data->cancellable);
 				}
-				omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_NULL);
+				if (!(!data->_tmp2_)) {
+					break;
+				}
+				gtk_tree_model_get_iter ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, data->path);
+				gtk_tree_model_get ((GtkTreeModel*) data->self->priv->_iconlist_store, &data->iter, OMAP_ICON_LIST_CONTROL_COL_FILE, &data->file, OMAP_ICON_LIST_CONTROL_COL_FILLED, &data->filled, -1, -1);
+				if (!data->filled) {
+					data->self->continuation_error = (data->_tmp3_ = NULL, _g_error_free0 (data->self->continuation_error), data->_tmp3_);
+					omap_icon_list_control_last_pixbuf = (data->_tmp4_ = NULL, _g_object_unref0 (omap_icon_list_control_last_pixbuf), data->_tmp4_);
+					_dynamic_set_location0 (data->self->filesrc, data->file);
+					omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_PLAYING);
+					data->_state_ = 4;
+					return FALSE;
+					_state_4:
+					;
+					data->width = 0;
+					data->height = 0;
+					if (data->self->continuation_error == NULL) {
+						data->_tmp5_ = omap_icon_list_control_last_pixbuf != NULL;
+					} else {
+						data->_tmp5_ = FALSE;
+					}
+					data->valid = data->_tmp5_;
+					if (data->valid) {
+						data->pixbuf = (data->_tmp7_ = (data->_tmp6_ = omap_icon_list_control_last_pixbuf, omap_icon_list_control_last_pixbuf = NULL, data->_tmp6_), _g_object_unref0 (data->pixbuf), data->_tmp7_);
+						omap_icon_list_control_get_playing_image_size (data->self, &data->width, &data->height);
+					} else {
+						data->pixbuf = (data->_tmp8_ = _g_object_ref0 (data->self->missing_pixbuf), _g_object_unref0 (data->pixbuf), data->_tmp8_);
+					}
+					gtk_list_store_set (data->self->priv->_iconlist_store, &data->iter, OMAP_ICON_LIST_CONTROL_COL_PIXBUF, data->pixbuf, OMAP_ICON_LIST_CONTROL_COL_VALID, data->valid, OMAP_ICON_LIST_CONTROL_COL_FILLED, TRUE, OMAP_ICON_LIST_CONTROL_COL_WIDTH, data->width, OMAP_ICON_LIST_CONTROL_COL_HEIGHT, data->height, -1, -1);
+					_g_object_unref0 (data->pixbuf);
+				}
+				omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_READY);
+				gtk_tree_path_next (data->path);
+				_g_free0 (data->file);
 			}
-			g_signal_emit_by_name (data->self, "icons-filled");
+			omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_NULL);
 		}
-		{
-			if (data->_state_ == 0) {
-				g_simple_async_result_complete_in_idle (data->_async_result);
-			} else {
-				g_simple_async_result_complete (data->_async_result);
-			}
-			g_object_unref (data->_async_result);
-			return FALSE;
+		g_signal_emit_by_name (data->self, "icons-filled");
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
 		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
@@ -652,21 +667,21 @@ void omap_icon_list_control_on_eos (OmapIconListControl* self, GstObject* src) {
 
 
 OmapIconListControlCol omap_icon_list_control_get_text_column (void) {
-	OmapIconListControlCol result;
+	OmapIconListControlCol result = 0;
 	result = OMAP_ICON_LIST_CONTROL_COL_TEXT;
 	return result;
 }
 
 
 OmapIconListControlCol omap_icon_list_control_get_pixbuf_column (void) {
-	OmapIconListControlCol result;
+	OmapIconListControlCol result = 0;
 	result = OMAP_ICON_LIST_CONTROL_COL_PIXBUF;
 	return result;
 }
 
 
 gboolean omap_icon_list_control_iter_is_valid (OmapIconListControl* self, GtkTreeIter* iter) {
-	gboolean result;
+	gboolean result = FALSE;
 	gboolean valid = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, OMAP_ICON_LIST_CONTROL_COL_VALID, &valid, -1, -1);
@@ -676,7 +691,7 @@ gboolean omap_icon_list_control_iter_is_valid (OmapIconListControl* self, GtkTre
 
 
 gboolean omap_icon_list_control_iter_is_filled (OmapIconListControl* self, GtkTreeIter* iter) {
-	gboolean result;
+	gboolean result = FALSE;
 	gboolean filled = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	gtk_tree_model_get ((GtkTreeModel*) self->priv->_iconlist_store, iter, OMAP_ICON_LIST_CONTROL_COL_FILLED, &filled, -1, -1);
@@ -686,7 +701,7 @@ gboolean omap_icon_list_control_iter_is_filled (OmapIconListControl* self, GtkTr
 
 
 char* omap_icon_list_control_iter_get_file (OmapIconListControl* self, GtkTreeIter* iter) {
-	char* result;
+	char* result = NULL;
 	char* file;
 	g_return_val_if_fail (self != NULL, NULL);
 	file = NULL;
@@ -703,7 +718,7 @@ void omap_icon_list_control_iter_get_size (OmapIconListControl* self, GtkTreeIte
 
 
 GtkListStore* omap_icon_list_control_model_new (void) {
-	GtkListStore* result;
+	GtkListStore* result = NULL;
 	GType s;
 	GType p;
 	GType b;
@@ -800,12 +815,14 @@ static void omap_icon_list_control_finalize (GObject* obj) {
 
 
 GType omap_icon_list_control_get_type (void) {
-	static GType omap_icon_list_control_type_id = 0;
-	if (omap_icon_list_control_type_id == 0) {
+	static volatile gsize omap_icon_list_control_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_icon_list_control_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapIconListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_icon_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapIconListControl), 0, (GInstanceInitFunc) omap_icon_list_control_instance_init, NULL };
+		GType omap_icon_list_control_type_id;
 		omap_icon_list_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapIconListControl", &g_define_type_info, 0);
+		g_once_init_leave (&omap_icon_list_control_type_id__volatile, omap_icon_list_control_type_id);
 	}
-	return omap_icon_list_control_type_id;
+	return omap_icon_list_control_type_id__volatile;
 }
 
 

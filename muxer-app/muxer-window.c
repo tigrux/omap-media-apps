@@ -37,6 +37,7 @@ typedef struct _OmapMuxerControlClass OmapMuxerControlClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
 
 #define OMAP_TYPE_MUXER_CONFIG_PARSER (omap_muxer_config_parser_get_type ())
 #define OMAP_MUXER_CONFIG_PARSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), OMAP_TYPE_MUXER_CONFIG_PARSER, OmapMuxerConfigParser))
@@ -47,7 +48,6 @@ typedef struct _OmapMuxerControlClass OmapMuxerControlClass;
 
 typedef struct _OmapMuxerConfigParser OmapMuxerConfigParser;
 typedef struct _OmapMuxerConfigParserClass OmapMuxerConfigParserClass;
-#define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
 
 struct _OmapMuxerWindow {
 	OmapMediaWindow parent_instance;
@@ -137,14 +137,15 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 
 
-
 GType omap_muxer_window_combo_col_get_type (void) {
-	static GType omap_muxer_window_combo_col_type_id = 0;
-	if (G_UNLIKELY (omap_muxer_window_combo_col_type_id == 0)) {
+	static volatile gsize omap_muxer_window_combo_col_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_muxer_window_combo_col_type_id__volatile)) {
 		static const GEnumValue values[] = {{OMAP_MUXER_WINDOW_COMBO_COL_GROUP, "OMAP_MUXER_WINDOW_COMBO_COL_GROUP", "group"}, {OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW, "OMAP_MUXER_WINDOW_COMBO_COL_PREVIEW", "preview"}, {OMAP_MUXER_WINDOW_COMBO_COL_RECORD, "OMAP_MUXER_WINDOW_COMBO_COL_RECORD", "record"}, {0, NULL, NULL}};
+		GType omap_muxer_window_combo_col_type_id;
 		omap_muxer_window_combo_col_type_id = g_enum_register_static ("OmapMuxerWindowComboCol", values);
+		g_once_init_leave (&omap_muxer_window_combo_col_type_id__volatile, omap_muxer_window_combo_col_type_id);
 	}
-	return omap_muxer_window_combo_col_type_id;
+	return omap_muxer_window_combo_col_type_id__volatile;
 }
 
 
@@ -298,7 +299,6 @@ void omap_muxer_window_setup_control (OmapMuxerWindow* self, const char* preview
 		omap_muxer_control_load (self->muxer_control, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
-			goto __finally0;
 		}
 	}
 	goto __finally0;
@@ -386,7 +386,6 @@ void omap_muxer_window_on_record (OmapMuxerWindow* self) {
 		omap_muxer_control_start_record (self->muxer_control, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch1_g_error;
-			goto __finally1;
 		}
 	}
 	goto __finally1;
@@ -449,7 +448,11 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 				if (_inner_error_->domain == G_MARKUP_ERROR) {
 					goto __catch2_g_markup_error;
 				}
-				goto __finally2;
+				_g_free0 (config_file);
+				_g_key_file_free0 (key_file);
+				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+				g_clear_error (&_inner_error_);
+				return;
 			}
 		} else {
 			OmapMuxerConfigParser* xml_parser;
@@ -466,7 +469,12 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 				if (_inner_error_->domain == G_MARKUP_ERROR) {
 					goto __catch2_g_markup_error;
 				}
-				goto __finally2;
+				_g_object_unref0 (xml_parser);
+				_g_free0 (config_file);
+				_g_key_file_free0 (key_file);
+				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+				g_clear_error (&_inner_error_);
+				return;
 			}
 			_g_object_unref0 (xml_parser);
 		}
@@ -550,7 +558,13 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 						if (_inner_error_->domain == G_KEY_FILE_ERROR) {
 							goto __catch3_g_key_file_error;
 						}
-						goto __finally3;
+						_g_free0 (group);
+						group_collection = (_vala_array_free (group_collection, group_collection_length1, (GDestroyNotify) g_free), NULL);
+						_g_free0 (config_file);
+						_g_key_file_free0 (key_file);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+						g_clear_error (&_inner_error_);
+						return;
 					}
 					record = g_key_file_get_string (key_file, group, "record", &_inner_error_);
 					if (_inner_error_ != NULL) {
@@ -560,7 +574,14 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 						if (_inner_error_->domain == G_KEY_FILE_ERROR) {
 							goto __catch3_g_key_file_error;
 						}
-						goto __finally3;
+						_g_free0 (group);
+						_g_free0 (preview);
+						group_collection = (_vala_array_free (group_collection, group_collection_length1, (GDestroyNotify) g_free), NULL);
+						_g_free0 (config_file);
+						_g_key_file_free0 (key_file);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+						g_clear_error (&_inner_error_);
+						return;
 					}
 					if (preview == NULL) {
 						_tmp4_ = TRUE;
@@ -609,7 +630,7 @@ void omap_muxer_window_on_chooser_file_set (OmapMuxerWindow* self) {
 
 
 gboolean omap_muxer_window_get_pipelines (OmapMuxerWindow* self, char** preview, char** record) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreeIter iter = {0};
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (preview != NULL) {
@@ -748,12 +769,14 @@ static void omap_muxer_window_finalize (GObject* obj) {
 
 
 GType omap_muxer_window_get_type (void) {
-	static GType omap_muxer_window_type_id = 0;
-	if (omap_muxer_window_type_id == 0) {
+	static volatile gsize omap_muxer_window_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_muxer_window_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapMuxerWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_muxer_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMuxerWindow), 0, (GInstanceInitFunc) omap_muxer_window_instance_init, NULL };
+		GType omap_muxer_window_type_id;
 		omap_muxer_window_type_id = g_type_register_static (OMAP_TYPE_MEDIA_WINDOW, "OmapMuxerWindow", &g_define_type_info, 0);
+		g_once_init_leave (&omap_muxer_window_type_id__volatile, omap_muxer_window_type_id);
 	}
-	return omap_muxer_window_type_id;
+	return omap_muxer_window_type_id__volatile;
 }
 
 

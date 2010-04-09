@@ -6,6 +6,10 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <X11/Xregion.h>
 #include <gst/interfaces/xoverlay.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,7 +79,7 @@ typedef struct _OmapMediaControlPrivate OmapMediaControlPrivate;
 struct _OmapVideoArea {
 	GtkDrawingArea parent_instance;
 	OmapVideoAreaPrivate * priv;
-	guint32 xid;
+	XID xid;
 };
 
 struct _OmapVideoAreaClass {

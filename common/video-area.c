@@ -5,6 +5,10 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <X11/Xregion.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -25,7 +29,7 @@ typedef struct _OmapVideoAreaPrivate OmapVideoAreaPrivate;
 struct _OmapVideoArea {
 	GtkDrawingArea parent_instance;
 	OmapVideoAreaPrivate * priv;
-	guint32 xid;
+	XID xid;
 };
 
 struct _OmapVideoAreaClass {
@@ -63,7 +67,7 @@ static void omap_video_area_set_property (GObject * object, guint property_id, c
 
 static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event) {
 	OmapVideoArea * self;
-	gboolean result;
+	gboolean result = FALSE;
 	self = (OmapVideoArea*) base;
 	if ((*event).type == GDK_2BUTTON_PRESS) {
 		g_signal_emit_by_name (self, "activated");
@@ -75,7 +79,7 @@ static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEve
 
 static gboolean omap_video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e) {
 	OmapVideoArea * self;
-	gboolean result;
+	gboolean result = FALSE;
 	self = (OmapVideoArea*) base;
 	if (self->priv->_imagesink != NULL) {
 		gst_x_overlay_expose (self->priv->_imagesink);
@@ -183,12 +187,14 @@ static void omap_video_area_finalize (GObject* obj) {
 
 
 GType omap_video_area_get_type (void) {
-	static GType omap_video_area_type_id = 0;
-	if (omap_video_area_type_id == 0) {
+	static volatile gsize omap_video_area_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_video_area_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapVideoAreaClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_video_area_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapVideoArea), 0, (GInstanceInitFunc) omap_video_area_instance_init, NULL };
+		GType omap_video_area_type_id;
 		omap_video_area_type_id = g_type_register_static (GTK_TYPE_DRAWING_AREA, "OmapVideoArea", &g_define_type_info, 0);
+		g_once_init_leave (&omap_video_area_type_id__volatile, omap_video_area_type_id);
 	}
-	return omap_video_area_type_id;
+	return omap_video_area_type_id__volatile;
 }
 
 

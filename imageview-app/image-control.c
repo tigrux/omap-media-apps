@@ -59,6 +59,7 @@ OmapImageControl* omap_image_control_construct (GType object_type, GError** erro
 	omap_image_control_setup_pipeline (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
+		g_object_unref (self);
 		return NULL;
 	}
 	return self;
@@ -87,7 +88,7 @@ void omap_image_control_setup_pipeline (OmapImageControl* self, GError** error) 
 	gst_object_set_name ((GstObject*) image_pipeline, "image_pipeline");
 	if ((self->filesrc = (_tmp2_ = gst_bin_get_by_name ((GstBin*) image_pipeline, "filesrc"), _gst_object_unref0 (self->filesrc), _tmp2_)) == NULL) {
 		_inner_error_ = g_error_new_literal (GST_CORE_ERROR, GST_CORE_ERROR_FAILED, "No element named filesrc in the image pipeline");
-		if (_inner_error_ != NULL) {
+		{
 			g_propagate_error (error, _inner_error_);
 			_gst_object_unref0 (image_pipeline);
 			return;
@@ -131,12 +132,14 @@ static void omap_image_control_finalize (GObject* obj) {
 
 
 GType omap_image_control_get_type (void) {
-	static GType omap_image_control_type_id = 0;
-	if (omap_image_control_type_id == 0) {
+	static volatile gsize omap_image_control_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_image_control_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapImageControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_image_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapImageControl), 0, (GInstanceInitFunc) omap_image_control_instance_init, NULL };
+		GType omap_image_control_type_id;
 		omap_image_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapImageControl", &g_define_type_info, 0);
+		g_once_init_leave (&omap_image_control_type_id__volatile, omap_image_control_type_id);
 	}
-	return omap_image_control_type_id;
+	return omap_image_control_type_id__volatile;
 }
 
 

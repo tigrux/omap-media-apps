@@ -100,14 +100,15 @@ static void omap_play_list_control_set_property (GObject * object, guint propert
 
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
-
 GType omap_play_list_control_col_get_type (void) {
-	static GType omap_play_list_control_col_type_id = 0;
-	if (G_UNLIKELY (omap_play_list_control_col_type_id == 0)) {
+	static volatile gsize omap_play_list_control_col_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_play_list_control_col_type_id__volatile)) {
 		static const GEnumValue values[] = {{OMAP_PLAY_LIST_CONTROL_COL_ICON, "OMAP_PLAY_LIST_CONTROL_COL_ICON", "icon"}, {OMAP_PLAY_LIST_CONTROL_COL_TITLE, "OMAP_PLAY_LIST_CONTROL_COL_TITLE", "title"}, {OMAP_PLAY_LIST_CONTROL_COL_ARTIST, "OMAP_PLAY_LIST_CONTROL_COL_ARTIST", "artist"}, {OMAP_PLAY_LIST_CONTROL_COL_ALBUM, "OMAP_PLAY_LIST_CONTROL_COL_ALBUM", "album"}, {OMAP_PLAY_LIST_CONTROL_COL_FILE, "OMAP_PLAY_LIST_CONTROL_COL_FILE", "file"}, {0, NULL, NULL}};
+		GType omap_play_list_control_col_type_id;
 		omap_play_list_control_col_type_id = g_enum_register_static ("OmapPlayListControlCol", values);
+		g_once_init_leave (&omap_play_list_control_col_type_id__volatile, omap_play_list_control_col_type_id);
 	}
-	return omap_play_list_control_col_type_id;
+	return omap_play_list_control_col_type_id__volatile;
 }
 
 
@@ -144,7 +145,7 @@ OmapPlayListControl* omap_play_list_control_new (GtkListStore* store) {
 
 
 gboolean omap_play_list_control_play (OmapPlayListControl* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreeIter iter = {0};
 	char* filename;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -174,7 +175,7 @@ gboolean omap_play_list_control_play (OmapPlayListControl* self) {
 
 
 gboolean omap_play_list_control_pause (OmapPlayListControl* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
@@ -191,7 +192,7 @@ gboolean omap_play_list_control_pause (OmapPlayListControl* self) {
 
 
 gboolean omap_play_list_control_stop (OmapPlayListControl* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (gst_element_set_state ((GstElement*) omap_media_control_get_pipeline ((OmapMediaControl*) self), GST_STATE_NULL) != GST_STATE_CHANGE_FAILURE) {
 		GtkTreeIter iter = {0};
@@ -208,7 +209,7 @@ gboolean omap_play_list_control_stop (OmapPlayListControl* self) {
 
 
 gboolean omap_play_list_control_prev (OmapPlayListControl* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->current_row == NULL) {
 		result = FALSE;
@@ -225,7 +226,7 @@ gboolean omap_play_list_control_prev (OmapPlayListControl* self) {
 
 
 gboolean omap_play_list_control_next (OmapPlayListControl* self) {
-	gboolean result;
+	gboolean result = FALSE;
 	gint row_index;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->current_row == NULL) {
@@ -259,7 +260,7 @@ static gpointer _gtk_tree_path_copy0 (gpointer self) {
 
 
 gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath* row) {
-	gboolean result;
+	gboolean result = FALSE;
 	GtkTreeIter iter = {0};
 	g_return_val_if_fail (self != NULL, FALSE);
 	g_return_val_if_fail (row != NULL, FALSE);
@@ -276,7 +277,7 @@ gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath*
 
 
 gboolean omap_play_list_control_get_iter (OmapPlayListControl* self, GtkTreeIter* iter) {
-	gboolean result;
+	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->current_row == NULL) {
 		result = FALSE;
@@ -317,31 +318,43 @@ void omap_play_list_control_on_tag_found (OmapPlayListControl* self, const char*
 	_tmp0_ = tag_name;
 	_tmp1_ = (NULL == _tmp0_) ? 0 : g_quark_from_string (_tmp0_);
 	if (_tmp1_ == g_quark_from_string (GST_TAG_TITLE))
-	do {
+	switch (0) {
+		default:
 		{
-			column = OMAP_PLAY_LIST_CONTROL_COL_TITLE;
-			is_title = TRUE;
+			{
+				column = OMAP_PLAY_LIST_CONTROL_COL_TITLE;
+				is_title = TRUE;
+			}
+			break;
 		}
-		break;
-	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ARTIST))
-	do {
+	} else if (_tmp1_ == g_quark_from_string (GST_TAG_ARTIST))
+	switch (0) {
+		default:
 		{
-			column = OMAP_PLAY_LIST_CONTROL_COL_ARTIST;
+			{
+				column = OMAP_PLAY_LIST_CONTROL_COL_ARTIST;
+			}
+			break;
 		}
-		break;
-	} while (0); else if (_tmp1_ == g_quark_from_string (GST_TAG_ALBUM))
-	do {
+	} else if (_tmp1_ == g_quark_from_string (GST_TAG_ALBUM))
+	switch (0) {
+		default:
 		{
-			column = OMAP_PLAY_LIST_CONTROL_COL_ALBUM;
+			{
+				column = OMAP_PLAY_LIST_CONTROL_COL_ALBUM;
+			}
+			break;
 		}
-		break;
-	} while (0); else
-	do {
+	} else
+	switch (0) {
+		default:
 		{
-			return;
+			{
+				return;
+			}
+			break;
 		}
-		break;
-	} while (0);
+	}
 	column_value = g_strdup (g_value_get_string (tag_value));
 	gtk_tree_model_get_iter ((GtkTreeModel*) self->playlist_store, &iter, self->current_row);
 	gtk_list_store_set (self->playlist_store, &iter, column, column_value, -1, -1);
@@ -360,35 +373,35 @@ void omap_play_list_control_on_row_inserted (OmapPlayListControl* self, GtkTreeP
 
 
 gint omap_play_list_control_get_icon_column (void) {
-	gint result;
+	gint result = 0;
 	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ICON;
 	return result;
 }
 
 
 gint omap_play_list_control_get_title_column (void) {
-	gint result;
+	gint result = 0;
 	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_TITLE;
 	return result;
 }
 
 
 gint omap_play_list_control_get_artist_column (void) {
-	gint result;
+	gint result = 0;
 	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ARTIST;
 	return result;
 }
 
 
 gint omap_play_list_control_get_album_column (void) {
-	gint result;
+	gint result = 0;
 	result = (gint) OMAP_PLAY_LIST_CONTROL_COL_ALBUM;
 	return result;
 }
 
 
 char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeIter* iter) {
-	char* result;
+	char* result = NULL;
 	char* name;
 	g_return_val_if_fail (self != NULL, NULL);
 	name = NULL;
@@ -399,7 +412,7 @@ char* omap_play_list_control_iter_get_title (OmapPlayListControl* self, GtkTreeI
 
 
 char* omap_play_list_control_iter_get_file (OmapPlayListControl* self, GtkTreeIter* iter) {
-	char* result;
+	char* result = NULL;
 	char* file;
 	g_return_val_if_fail (self != NULL, NULL);
 	file = NULL;
@@ -410,7 +423,7 @@ char* omap_play_list_control_iter_get_file (OmapPlayListControl* self, GtkTreeIt
 
 
 GtkListStore* omap_play_list_control_model_new (void) {
-	GtkListStore* result;
+	GtkListStore* result = NULL;
 	GType s;
 	s = G_TYPE_STRING;
 	result = gtk_list_store_new (5, s, s, s, s, s, NULL);
@@ -527,12 +540,14 @@ static void omap_play_list_control_finalize (GObject* obj) {
 
 
 GType omap_play_list_control_get_type (void) {
-	static GType omap_play_list_control_type_id = 0;
-	if (omap_play_list_control_type_id == 0) {
+	static volatile gsize omap_play_list_control_type_id__volatile = 0;
+	if (g_once_init_enter (&omap_play_list_control_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (OmapPlayListControlClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_play_list_control_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapPlayListControl), 0, (GInstanceInitFunc) omap_play_list_control_instance_init, NULL };
+		GType omap_play_list_control_type_id;
 		omap_play_list_control_type_id = g_type_register_static (OMAP_TYPE_MEDIA_CONTROL, "OmapPlayListControl", &g_define_type_info, 0);
+		g_once_init_leave (&omap_play_list_control_type_id__volatile, omap_play_list_control_type_id);
 	}
-	return omap_play_list_control_type_id;
+	return omap_play_list_control_type_id__volatile;
 }
 
 
