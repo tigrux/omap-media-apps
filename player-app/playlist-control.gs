@@ -39,6 +39,8 @@ class Omap.PlayListControl: Omap.MediaControl
         player = Gst.ElementFactory.make("playbin2", "player") as Gst.Bin
         if player == null
             player = Gst.ElementFactory.make("playbin", "player") as Gst.Bin
+        else
+            player.flags = 0x67
         pipeline = player
 
     construct(store: Gtk.ListStore)
