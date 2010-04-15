@@ -502,7 +502,7 @@ static GObject * omap_play_list_control_constructor (GType type, guint n_constru
 			GstElement* _tmp2_;
 			self->player = (_tmp3_ = (_tmp2_ = gst_element_factory_make ("playbin", "player"), GST_IS_BIN (_tmp2_) ? ((GstBin*) _tmp2_) : NULL), _gst_object_unref0 (self->player), _tmp3_);
 		} else {
-			((GstObject*) self->player)->flags = 0x67;
+			g_object_set (G_OBJECT (self->player), "flags", 0x67, NULL);
 		}
 		omap_media_control_set_pipeline ((OmapMediaControl*) self, self->player);
 	}
