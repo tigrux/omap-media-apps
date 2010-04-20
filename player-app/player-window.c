@@ -985,7 +985,7 @@ void omap_player_window_on_control_title_changed (OmapPlayerWindow* self, const 
 void omap_player_window_on_control_eos (OmapPlayerWindow* self, GstObject* src) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (src != NULL);
-	gtk_widget_activate ((GtkWidget*) self->next_button);
+	g_signal_emit_by_name (self->next_button, "clicked");
 }
 
 

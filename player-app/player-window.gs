@@ -414,7 +414,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
         title = song_title
 
     def on_control_eos(src: Gst.Object)
-        next_button.activate()
+        next_button.clicked()
 
     def on_control_error(src: Gst.Object, error: Error, debug: string)
         setup_debug_dialog()
