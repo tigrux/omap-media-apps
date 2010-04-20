@@ -544,7 +544,7 @@ static gboolean omap_icon_list_control_fill_icons_co (OmapIconListControlFillIco
 			data->_tmp0_ = FALSE;
 		}
 		if (data->_tmp0_) {
-			data->self->continuation = (data->_tmp1_ = _omap_icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : data->self->continuation_target_destroy_notify (data->self->continuation_target), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
+			data->self->continuation = (data->_tmp1_ = _omap_icon_list_control_fill_icons_co_gsource_func, ((data->self->continuation_target_destroy_notify == NULL) ? NULL : (data->self->continuation_target_destroy_notify (data->self->continuation_target), NULL), data->self->continuation = NULL, data->self->continuation_target = NULL, data->self->continuation_target_destroy_notify = NULL), data->self->continuation_target = data, data->self->continuation_target_destroy_notify = NULL, data->_tmp1_);
 			omap_media_control_set_state ((OmapMediaControl*) data->self, GST_STATE_READY);
 			while (TRUE) {
 				if (gtk_tree_path_compare (data->path, data->end) > 0) {
@@ -805,7 +805,7 @@ static void omap_icon_list_control_finalize (GObject* obj) {
 	_gst_object_unref0 (self->imagedec);
 	_gst_object_unref0 (self->imagedec_src);
 	_g_object_unref0 (self->missing_pixbuf);
-	(self->continuation_target_destroy_notify == NULL) ? NULL : self->continuation_target_destroy_notify (self->continuation_target);
+	(self->continuation_target_destroy_notify == NULL) ? NULL : (self->continuation_target_destroy_notify (self->continuation_target), NULL);
 	self->continuation = NULL;
 	self->continuation_target = NULL;
 	self->continuation_target_destroy_notify = NULL;

@@ -607,7 +607,7 @@ static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlidesho
 				return FALSE;
 			}
 		}
-		data->self->slideshow_continuation = (data->_tmp1_ = _omap_image_view_window_slideshow_co_gsource_func, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = data, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp1_);
+		data->self->slideshow_continuation = (data->_tmp1_ = _omap_image_view_window_slideshow_co_gsource_func, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : (data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), NULL), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = data, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp1_);
 		{
 			data->_tmp2_ = TRUE;
 			while (TRUE) {
@@ -642,7 +642,7 @@ static gboolean omap_image_view_window_slideshow_co (OmapImageViewWindowSlidesho
 			omap_image_view_window_close_image (data->self);
 		}
 		gtk_tool_button_set_stock_id (data->self->slideshow_button, GTK_STOCK_MEDIA_PLAY);
-		data->self->slideshow_continuation = (data->_tmp4_ = NULL, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp4_);
+		data->self->slideshow_continuation = (data->_tmp4_ = NULL, ((data->self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : (data->self->slideshow_continuation_target_destroy_notify (data->self->slideshow_continuation_target), NULL), data->self->slideshow_continuation = NULL, data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL), data->self->slideshow_continuation_target = NULL, data->self->slideshow_continuation_target_destroy_notify = NULL, data->_tmp4_);
 		data->self->slideshow_cancellable = (data->_tmp5_ = NULL, _g_object_unref0 (data->self->slideshow_cancellable), data->_tmp5_);
 	}
 	{
@@ -892,12 +892,12 @@ static void omap_image_view_window_finalize (GObject* obj) {
 	_g_object_unref0 (self->image_button);
 	_g_object_unref0 (self->slideshow_button);
 	_g_object_unref0 (self->fullscreen_button);
-	(self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : self->slideshow_continuation_target_destroy_notify (self->slideshow_continuation_target);
+	(self->slideshow_continuation_target_destroy_notify == NULL) ? NULL : (self->slideshow_continuation_target_destroy_notify (self->slideshow_continuation_target), NULL);
 	self->slideshow_continuation = NULL;
 	self->slideshow_continuation_target = NULL;
 	self->slideshow_continuation_target_destroy_notify = NULL;
 	_g_object_unref0 (self->slideshow_cancellable);
-	(self->fill_icons_continuation_target_destroy_notify == NULL) ? NULL : self->fill_icons_continuation_target_destroy_notify (self->fill_icons_continuation_target);
+	(self->fill_icons_continuation_target_destroy_notify == NULL) ? NULL : (self->fill_icons_continuation_target_destroy_notify (self->fill_icons_continuation_target), NULL);
 	self->fill_icons_continuation = NULL;
 	self->fill_icons_continuation_target = NULL;
 	self->fill_icons_continuation_target_destroy_notify = NULL;
