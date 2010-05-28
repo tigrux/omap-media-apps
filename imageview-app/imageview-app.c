@@ -29,6 +29,7 @@ OmapImageViewWindow* omap_image_view_window_new (void);
 OmapImageViewWindow* omap_image_view_window_construct (GType object_type);
 GType omap_image_view_window_get_type (void);
 void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
+void omap_image_view_window_on_chooser_folder_changed (OmapImageViewWindow* self);
 static void _gtk_main_quit_gtk_object_destroy (GtkMessageDialog* _sender, gpointer self);
 void _vala_main (char** args, int args_length1);
 
@@ -52,6 +53,7 @@ void _vala_main (char** args, int args_length1) {
 			_g_object_unref0 (window);
 			goto __catch0_g_error;
 		}
+		omap_image_view_window_on_chooser_folder_changed (window);
 		gtk_widget_show ((GtkWidget*) window);
 		_g_object_unref0 (window);
 	}

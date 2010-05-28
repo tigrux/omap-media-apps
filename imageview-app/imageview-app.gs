@@ -7,6 +7,7 @@ init
     try
         var window = new Omap.ImageViewWindow()
         window.setup_controls()
+        window.on_chooser_folder_changed()
         window.show()
     except e: Error
         var dialog = Omap.error_dialog(e)
