@@ -26,7 +26,7 @@ class Omap.MediaWindow: Gtk.Window
         settings.gtk_touchscreen_mode = true
 
         set_default_size(800, 480)
-        destroy += on_quit
+        destroy.connect(on_quit)
 
         main_box = new Gtk.VBox(false, 0)
         add(main_box)
@@ -54,7 +54,7 @@ class Omap.MediaWindow: Gtk.Window
 
         var quit_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_QUIT)
         toolbar.add(quit_button)
-        quit_button.clicked += on_quit
+        quit_button.clicked.connect(on_quit)
 
     def toolbar_add_expander()
         var expander_item = new Gtk.SeparatorToolItem()

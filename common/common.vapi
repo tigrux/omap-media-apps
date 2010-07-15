@@ -9,12 +9,15 @@ namespace Omap {
 		public DebugDialog (Gtk.Window parent);
 		public void add_error_debug (GLib.Error error, string debug);
 		public Gtk.Box new_error_box ();
+		public void on_destroy ();
+		public void on_response ();
 		public void text_insert_new_line (ref Gtk.TextIter iter);
 		public signal void closed ();
 	}
 	[CCode (cheader_filename = "common.h")]
 	public class ErrorDialog : Gtk.MessageDialog {
 		public ErrorDialog (GLib.Error e);
+		public void on_response ();
 	}
 	[CCode (cheader_filename = "common.h")]
 	public class MediaControl : GLib.Object {
@@ -68,6 +71,7 @@ namespace Omap {
 		public VideoArea ();
 		public override bool button_press_event (Gdk.EventButton event);
 		public override bool expose_event (Gdk.EventExpose e);
+		public void on_realize ();
 		public Gst.XOverlay sink { get; set; }
 		public signal void activated ();
 	}

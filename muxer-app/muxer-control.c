@@ -52,7 +52,7 @@ struct _OmapMuxerControlPrivate {
 
 static gpointer omap_muxer_control_parent_class = NULL;
 
-GType omap_muxer_control_get_type (void);
+GType omap_muxer_control_get_type (void) G_GNUC_CONST;
 #define OMAP_MUXER_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_MUXER_CONTROL, OmapMuxerControlPrivate))
 enum  {
 	OMAP_MUXER_CONTROL_DUMMY_PROPERTY,
@@ -75,8 +75,8 @@ static inline void _dynamic_set_silent1 (GstElement* obj, gboolean value);
 void omap_muxer_control_on_eos (OmapMuxerControl* self, GstObject* src);
 gboolean omap_muxer_control_get_previewing (OmapMuxerControl* self);
 gboolean omap_muxer_control_get_recording (OmapMuxerControl* self);
-static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMuxerControl* _sender, GstObject* src, gpointer self);
-static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self);
+static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self);
+static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMediaControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self);
 static GObject * omap_muxer_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_muxer_control_finalize (GObject* obj);
 static void omap_muxer_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -303,12 +303,12 @@ gboolean omap_muxer_control_get_recording (OmapMuxerControl* self) {
 }
 
 
-static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMuxerControl* _sender, GstObject* src, gpointer self) {
+static void _omap_muxer_control_on_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self) {
 	omap_muxer_control_on_eos (self, src);
 }
 
 
-static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMuxerControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self) {
+static void _omap_muxer_control_on_state_changed_omap_media_control_state_changed_message (OmapMediaControl* _sender, GstObject* src, GstState old, GstState current, GstState pending, gpointer self) {
 	omap_muxer_control_on_state_changed (self, src, old, current, pending);
 }
 

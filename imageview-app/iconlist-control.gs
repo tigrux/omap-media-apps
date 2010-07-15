@@ -38,9 +38,9 @@ class Omap.IconListControl: Omap.MediaControl
     event icons_filled()
 
     init
-        eos_message += on_eos
-        error_message += on_error
-        element_message += on_element
+        eos_message.connect(on_eos)
+        error_message.connect(on_error)
+        element_message.connect(on_element)
 
     construct(model: Gtk.ListStore) raises Error
         iconlist_store = model
@@ -160,7 +160,7 @@ class Omap.IconListControl: Omap.MediaControl
         st.get_int("height", out height)
 
     def on_element(src: Gst.Object, structure: Gst.Structure)
-        if src == imagesink and structure.name == pixbuf_q
+        if src == imagesink and structure.get_name_id() == pixbuf_q
             last_pixbuf = imagesink.last_pixbuf
 
     def on_error(src: Gst.Object, error: Error, debug: string)

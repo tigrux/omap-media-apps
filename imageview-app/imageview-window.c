@@ -109,9 +109,9 @@ struct _OmapImageViewWindowSlideshowData {
 static gpointer omap_image_view_window_parent_class = NULL;
 
 #define TITLE "Omap4 ImageView"
-GType omap_image_view_window_get_type (void);
-GType omap_icon_list_control_get_type (void);
-GType omap_image_control_get_type (void);
+GType omap_image_view_window_get_type (void) G_GNUC_CONST;
+GType omap_icon_list_control_get_type (void) G_GNUC_CONST;
+GType omap_image_control_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_IMAGE_VIEW_WINDOW_DUMMY_PROPERTY
 };
@@ -126,9 +126,9 @@ static void _omap_image_view_window_on_control_icons_filled_omap_icon_list_contr
 OmapImageControl* omap_image_control_new (GError** error);
 OmapImageControl* omap_image_control_construct (GType object_type, GError** error);
 void omap_image_view_window_on_control_eos (OmapImageViewWindow* self);
-static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self);
-static void _lambda0_ (GstXOverlay* imagesink, OmapImageViewWindow* self);
-static void __lambda0__omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self);
+static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self);
+void omap_image_view_window_on_prepared (OmapImageViewWindow* self, GstXOverlay* imagesink);
+static void _omap_image_view_window_on_prepared_omap_media_control_prepare_xwindow_id (OmapMediaControl* _sender, GstXOverlay* imagesink, gpointer self);
 void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** error);
 void omap_image_view_window_setup_toolbar (OmapImageViewWindow* self);
 void omap_image_view_window_setup_notebook (OmapImageViewWindow* self);
@@ -139,8 +139,8 @@ void omap_image_view_window_on_notebook_switch_page (OmapImageViewWindow* self, 
 static void _omap_image_view_window_on_notebook_switch_page_gtk_notebook_switch_page (GtkNotebook* _sender, GtkNotebookPage* page, guint page_num, gpointer self);
 void omap_image_view_window_do_fill_visible_icons (OmapImageViewWindow* self);
 static void _omap_image_view_window_do_fill_visible_icons_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
-static void _omap_image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self);
-GType omap_icon_list_control_col_get_type (void);
+static void _omap_image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkWidget* _sender, GtkRequisition* requisition, gpointer self);
+GType omap_icon_list_control_col_get_type (void) G_GNUC_CONST;
 OmapIconListControlCol omap_icon_list_control_get_text_column (void);
 OmapIconListControlCol omap_icon_list_control_get_pixbuf_column (void);
 void omap_image_view_window_on_icon_activated (OmapImageViewWindow* self, GtkTreePath* path);
@@ -151,7 +151,7 @@ char* omap_icon_list_control_iter_get_file (OmapIconListControl* self, GtkTreeIt
 void omap_image_control_set_location (OmapImageControl* self, const char* value);
 static void _omap_media_window_toggle_fullscreen_omap_video_area_activated (OmapVideoArea* _sender, gpointer self);
 void omap_image_view_window_on_chooser_folder_changed (OmapImageViewWindow* self);
-static void _omap_image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self);
+static void _omap_image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooser* _sender, gpointer self);
 void omap_image_view_window_on_open_close (OmapImageViewWindow* self);
 static void _omap_image_view_window_on_open_close_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void omap_image_view_window_on_slideshow (OmapImageViewWindow* self);
@@ -206,19 +206,13 @@ static void _omap_image_view_window_on_control_icons_filled_omap_icon_list_contr
 }
 
 
-static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapImageControl* _sender, GstObject* src, gpointer self) {
+static void _omap_image_view_window_on_control_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self) {
 	omap_image_view_window_on_control_eos (self);
 }
 
 
-static void _lambda0_ (GstXOverlay* imagesink, OmapImageViewWindow* self) {
-	g_return_if_fail (imagesink != NULL);
-	omap_video_area_set_sink (self->video_area, imagesink);
-}
-
-
-static void __lambda0__omap_media_control_prepare_xwindow_id (OmapImageControl* _sender, GstXOverlay* imagesink, gpointer self) {
-	_lambda0_ (imagesink, self);
+static void _omap_image_view_window_on_prepared_omap_media_control_prepare_xwindow_id (OmapMediaControl* _sender, GstXOverlay* imagesink, gpointer self) {
+	omap_image_view_window_on_prepared (self, imagesink);
 }
 
 
@@ -245,7 +239,7 @@ void omap_image_view_window_setup_controls (OmapImageViewWindow* self, GError** 
 	}
 	self->image_control = (_tmp3_ = _tmp2_, _g_object_unref0 (self->image_control), _tmp3_);
 	g_signal_connect_object ((OmapMediaControl*) self->image_control, "eos-message", (GCallback) _omap_image_view_window_on_control_eos_omap_media_control_eos_message, self, 0);
-	g_signal_connect_object ((OmapMediaControl*) self->image_control, "prepare-xwindow-id", (GCallback) __lambda0__omap_media_control_prepare_xwindow_id, self, 0);
+	g_signal_connect_object ((OmapMediaControl*) self->image_control, "prepare-xwindow-id", (GCallback) _omap_image_view_window_on_prepared_omap_media_control_prepare_xwindow_id, self, 0);
 }
 
 
@@ -290,7 +284,7 @@ static void _omap_image_view_window_do_fill_visible_icons_gtk_adjustment_value_c
 }
 
 
-static void _omap_image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkIconView* _sender, GtkRequisition* requisition, gpointer self) {
+static void _omap_image_view_window_do_fill_visible_icons_gtk_widget_size_request (GtkWidget* _sender, GtkRequisition* requisition, gpointer self) {
 	omap_image_view_window_do_fill_visible_icons (self);
 }
 
@@ -333,9 +327,16 @@ GtkBox* omap_image_view_window_new_iconlist_box (OmapImageViewWindow* self) {
 	gtk_icon_view_set_margin (self->icon_view, 0);
 	g_signal_connect_object (self->icon_view, "item-activated", (GCallback) _omap_image_view_window_on_icon_activated_gtk_icon_view_item_activated, self, 0);
 	result = (GtkBox*) box;
-	_g_object_unref0 (scrolled_window);
 	_g_object_unref0 (adjustment);
+	_g_object_unref0 (scrolled_window);
 	return result;
+}
+
+
+void omap_image_view_window_on_prepared (OmapImageViewWindow* self, GstXOverlay* imagesink) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (imagesink != NULL);
+	omap_video_area_set_sink (self->video_area, imagesink);
 }
 
 
@@ -387,7 +388,7 @@ GtkBox* omap_image_view_window_new_video_box (OmapImageViewWindow* self) {
 }
 
 
-static void _omap_image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooserButton* _sender, gpointer self) {
+static void _omap_image_view_window_on_chooser_folder_changed_gtk_file_chooser_current_folder_changed (GtkFileChooser* _sender, gpointer self) {
 	omap_image_view_window_on_chooser_folder_changed (self);
 }
 
@@ -565,7 +566,9 @@ static void omap_image_view_window_slideshow_ready (GObject* source_object, GAsy
 
 
 static gboolean _omap_image_view_window_slideshow_co_gsource_func (gpointer self) {
-	return omap_image_view_window_slideshow_co (self);
+	gboolean result;
+	result = omap_image_view_window_slideshow_co (self);
+	return result;
 }
 
 
@@ -680,8 +683,8 @@ gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, 
 		path = (_tmp0_ = _gtk_tree_path_copy0 ((GtkTreePath*) selected->data), _gtk_tree_path_free0 (path), _tmp0_);
 		gtk_tree_model_get_iter ((GtkTreeModel*) self->iconlist_store, iter, path);
 		result = TRUE;
-		_gtk_tree_path_free0 (path);
 		__g_list_free_gtk_tree_path_free0 (selected);
+		_gtk_tree_path_free0 (path);
 		return result;
 	} else {
 		if (gtk_tree_model_get_iter_first ((GtkTreeModel*) self->iconlist_store, iter)) {
@@ -689,14 +692,14 @@ gboolean omap_image_view_window_get_and_select_iter (OmapImageViewWindow* self, 
 			path = (_tmp1_ = gtk_tree_model_get_path ((GtkTreeModel*) self->iconlist_store, iter), _gtk_tree_path_free0 (path), _tmp1_);
 			gtk_icon_view_select_path (self->icon_view, path);
 			result = TRUE;
-			_gtk_tree_path_free0 (path);
 			__g_list_free_gtk_tree_path_free0 (selected);
+			_gtk_tree_path_free0 (path);
 			return result;
 		}
 	}
 	result = FALSE;
-	_gtk_tree_path_free0 (path);
 	__g_list_free_gtk_tree_path_free0 (selected);
+	_gtk_tree_path_free0 (path);
 	return result;
 }
 
@@ -717,7 +720,9 @@ void omap_image_view_window_on_chooser_folder_changed (OmapImageViewWindow* self
 
 
 static gboolean _omap_image_view_window_retry_change_folder_gsource_func (gpointer self) {
-	return omap_image_view_window_retry_change_folder (self);
+	gboolean result;
+	result = omap_image_view_window_retry_change_folder (self);
+	return result;
 }
 
 
@@ -752,7 +757,9 @@ gboolean omap_image_view_window_retry_change_folder (OmapImageViewWindow* self) 
 
 
 static gboolean _omap_image_view_window_retry_do_fill_visible_icons_gsource_func (gpointer self) {
-	return omap_image_view_window_retry_do_fill_visible_icons (self);
+	gboolean result;
+	result = omap_image_view_window_retry_do_fill_visible_icons (self);
+	return result;
 }
 
 
@@ -804,8 +811,8 @@ gboolean omap_image_view_window_fill_visible_icons (OmapImageViewWindow* self) {
 	self->is_filling_icons = TRUE;
 	omap_icon_list_control_fill_icons (self->iconlist_control, start, end, self->fill_icons_cancellable, NULL, NULL);
 	result = FALSE;
-	_gtk_tree_path_free0 (start);
 	_gtk_tree_path_free0 (end);
+	_gtk_tree_path_free0 (start);
 	return result;
 }
 
@@ -819,7 +826,9 @@ void omap_image_view_window_on_control_icons_filled (OmapImageViewWindow* self) 
 
 
 static gboolean _omap_image_view_window_fill_visible_icons_gsource_func (gpointer self) {
-	return omap_image_view_window_fill_visible_icons (self);
+	gboolean result;
+	result = omap_image_view_window_fill_visible_icons (self);
+	return result;
 }
 
 

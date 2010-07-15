@@ -42,7 +42,7 @@ struct _OmapMuxerConfigParserClass {
 
 static gpointer omap_muxer_config_parser_parent_class = NULL;
 
-GType omap_muxer_config_parser_get_type (void);
+GType omap_muxer_config_parser_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_MUXER_CONFIG_PARSER_DUMMY_PROPERTY
 };
@@ -413,15 +413,15 @@ gboolean omap_muxer_config_parser_normalize_value (OmapMuxerConfigParser* self) 
 	self->current_value = (_tmp6_ = g_strjoinv (" ", lines), _g_free0 (self->current_value), _tmp6_);
 	if (string_get_length (self->current_value) == 0) {
 		result = FALSE;
-		__g_list_free_g_free0 (stripped_list);
-		lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL);
 		_g_free0 (line);
+		lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL);
+		__g_list_free_g_free0 (stripped_list);
 		return result;
 	}
 	result = TRUE;
-	__g_list_free_g_free0 (stripped_list);
-	lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL);
 	_g_free0 (line);
+	lines = (_vala_array_free (lines, lines_length1, (GDestroyNotify) g_free), NULL);
+	__g_list_free_g_free0 (stripped_list);
 	return result;
 }
 

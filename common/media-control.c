@@ -46,7 +46,7 @@ extern GQuark omap_media_control_prepare_xwindow_q;
 GQuark omap_media_control_prepare_xwindow_q = 0U;
 static gpointer omap_media_control_parent_class = NULL;
 
-GType omap_media_control_get_type (void);
+GType omap_media_control_get_type (void) G_GNUC_CONST;
 #define OMAP_MEDIA_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_MEDIA_CONTROL, OmapMediaControlPrivate))
 enum  {
 	OMAP_MEDIA_CONTROL_DUMMY_PROPERTY,
@@ -146,7 +146,7 @@ static void _omap_media_control_tag_foreach_func_gst_tag_foreach_func (GstTagLis
 void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* message) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (message != NULL);
-	switch (GST_MESSAGE_TYPE (message)) {
+	switch (message->type) {
 		case GST_MESSAGE_ELEMENT:
 		{
 			{
@@ -154,7 +154,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstStructure* _tmp0_;
 				st = NULL;
 				if ((st = (_tmp0_ = _gst_structure_copy0 (gst_message_get_structure (message)), _gst_structure_free0 (st), _tmp0_)) != NULL) {
-					g_signal_emit_by_name (self, "element-message", GST_MESSAGE_SRC (message), st);
+					g_signal_emit_by_name (self, "element-message", message->src, st);
 				}
 				_gst_structure_free0 (st);
 			}
@@ -163,7 +163,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 		case GST_MESSAGE_EOS:
 		{
 			{
-				g_signal_emit_by_name (self, "eos-message", GST_MESSAGE_SRC (message));
+				g_signal_emit_by_name (self, "eos-message", message->src);
 			}
 			break;
 		}
@@ -180,9 +180,9 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				d = NULL;
 				(gst_message_parse_error (message, &_tmp1_, &_tmp3_), e = (_tmp2_ = _tmp1_, _g_error_free0 (e), _tmp2_));
 				d = (_tmp4_ = _tmp3_, _g_free0 (d), _tmp4_);
-				g_signal_emit_by_name (self, "error-message", GST_MESSAGE_SRC (message), e, d);
-				_g_error_free0 (e);
+				g_signal_emit_by_name (self, "error-message", message->src, e, d);
 				_g_free0 (d);
+				_g_error_free0 (e);
 			}
 			break;
 		}
@@ -193,7 +193,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstState current = 0;
 				GstState pending = 0;
 				gst_message_parse_state_changed (message, &old, &current, &pending);
-				g_signal_emit_by_name (self, "state-changed-message", GST_MESSAGE_SRC (message), old, current, pending);
+				g_signal_emit_by_name (self, "state-changed-message", message->src, old, current, pending);
 			}
 			break;
 		}
@@ -203,7 +203,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_start (message, &format, &position);
-				g_signal_emit_by_name (self, "segment-start-message", GST_MESSAGE_SRC (message), format, position);
+				g_signal_emit_by_name (self, "segment-start-message", message->src, format, position);
 			}
 			break;
 		}
@@ -213,7 +213,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				GstFormat format = 0;
 				gint64 position = 0LL;
 				gst_message_parse_segment_done (message, &format, &position);
-				g_signal_emit_by_name (self, "segment-done-message", GST_MESSAGE_SRC (message), format, position);
+				g_signal_emit_by_name (self, "segment-done-message", message->src, format, position);
 			}
 			break;
 		}
@@ -227,7 +227,7 @@ void omap_media_control_on_bus_message (OmapMediaControl* self, GstMessage* mess
 				gst_message_parse_tag (message, &_tmp5_);
 				tag_list = (_tmp6_ = _tmp5_, _gst_tag_list_free0 (tag_list), _tmp6_);
 				gst_tag_list_foreach (tag_list, _omap_media_control_tag_foreach_func_gst_tag_foreach_func, self);
-				g_signal_emit_by_name (self, "tag-message", GST_MESSAGE_SRC (message), tag_list);
+				g_signal_emit_by_name (self, "tag-message", message->src, tag_list);
 				_gst_tag_list_free0 (tag_list);
 			}
 			break;
@@ -267,10 +267,10 @@ void omap_media_control_on_bus_sync_message (OmapMediaControl* self, GstMessage*
 		_gst_structure_free0 (structure);
 		return;
 	}
-	if (structure->name == omap_media_control_prepare_xwindow_q) {
+	if (gst_structure_get_name_id (structure) == omap_media_control_prepare_xwindow_q) {
 		GstXOverlay* _tmp2_;
 		GstObject* _tmp1_;
-		self->xoverlay = (_tmp2_ = _gst_object_ref0 ((_tmp1_ = GST_MESSAGE_SRC (message), GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL)), _gst_object_unref0 (self->xoverlay), _tmp2_);
+		self->xoverlay = (_tmp2_ = _gst_object_ref0 ((_tmp1_ = message->src, GST_IS_X_OVERLAY (_tmp1_) ? ((GstXOverlay*) _tmp1_) : NULL)), _gst_object_unref0 (self->xoverlay), _tmp2_);
 		g_signal_emit_by_name (self, "prepare-xwindow-id", self->xoverlay);
 	}
 	_gst_structure_free0 (structure);

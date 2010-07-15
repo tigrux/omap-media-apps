@@ -11,6 +11,6 @@ init
         window.show()
     except e: Error
         var dialog = Omap.error_dialog(e)
-        dialog.destroy += Gtk.main_quit
+        dialog.destroy.connect(Gtk.main_quit)
     Gtk.main()
 

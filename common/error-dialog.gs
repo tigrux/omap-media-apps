@@ -14,16 +14,20 @@ class Omap.DebugDialog: Gtk.Dialog
         var content_area = get_content_area() as Gtk.Box
         content_area.add(new_error_box())
         text_buffer.create_tag("bold", "weight", Pango.Weight.BOLD, null)
-        destroy += def()
-            closed()
-        response += def()
-            destroy()
+        destroy.connect(on_destroy)
+        response.connect(on_response)
 
     construct(parent: Gtk.Window)
         width, height: int
         parent.get_size(out width, out height)
         set_default_size(3*width/4, 3*height/4)
         set_transient_for(parent)
+
+    def on_destroy()
+        closed()
+
+    def on_response()
+        destroy()
 
     def add_error_debug(error: Error, debug: string)
         errors_n ++
@@ -74,12 +78,13 @@ class Omap.ErrorDialog: Gtk.MessageDialog
         title = "Error"
         modal = true
         add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
-        response += def()
-            destroy()
+        response.connect(on_response)
 
     construct(e: Error)
         text = e.message
 
+    def on_response()
+        destroy()
 
 namespace Omap
     def error_dialog(e: Error): Gtk.MessageDialog

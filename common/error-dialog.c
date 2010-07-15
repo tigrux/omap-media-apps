@@ -58,29 +58,29 @@ struct _OmapErrorDialogClass {
 static gpointer omap_debug_dialog_parent_class = NULL;
 static gpointer omap_error_dialog_parent_class = NULL;
 
-GType omap_debug_dialog_get_type (void);
+GType omap_debug_dialog_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_DEBUG_DIALOG_DUMMY_PROPERTY
 };
 OmapDebugDialog* omap_debug_dialog_new (GtkWindow* parent);
 OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* parent);
+void omap_debug_dialog_on_destroy (OmapDebugDialog* self);
+void omap_debug_dialog_on_response (OmapDebugDialog* self);
 void omap_debug_dialog_text_insert_new_line (OmapDebugDialog* self, GtkTextIter* iter);
 void omap_debug_dialog_add_error_debug (OmapDebugDialog* self, GError* _error_, const char* debug);
 GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self);
-static void _lambda1_ (OmapDebugDialog* self);
-static void __lambda1__gtk_object_destroy (OmapDebugDialog* _sender, gpointer self);
-static void _lambda2_ (OmapDebugDialog* self);
-static void __lambda2__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self);
+static void _omap_debug_dialog_on_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self);
+static void _omap_debug_dialog_on_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
 static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_debug_dialog_finalize (GObject* obj);
-GType omap_error_dialog_get_type (void);
+GType omap_error_dialog_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_ERROR_DIALOG_DUMMY_PROPERTY
 };
 OmapErrorDialog* omap_error_dialog_new (GError* e);
 OmapErrorDialog* omap_error_dialog_construct (GType object_type, GError* e);
-static void _lambda3_ (OmapErrorDialog* self);
-static void __lambda3__gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self);
+void omap_error_dialog_on_response (OmapErrorDialog* self);
+static void _omap_error_dialog_on_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
 static GObject * omap_error_dialog_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 GtkMessageDialog* omap_error_dialog (GError* e);
 
@@ -101,6 +101,18 @@ OmapDebugDialog* omap_debug_dialog_construct (GType object_type, GtkWindow* pare
 
 OmapDebugDialog* omap_debug_dialog_new (GtkWindow* parent) {
 	return omap_debug_dialog_construct (OMAP_TYPE_DEBUG_DIALOG, parent);
+}
+
+
+void omap_debug_dialog_on_destroy (OmapDebugDialog* self) {
+	g_return_if_fail (self != NULL);
+	g_signal_emit_by_name (self, "closed");
+}
+
+
+void omap_debug_dialog_on_response (OmapDebugDialog* self) {
+	g_return_if_fail (self != NULL);
+	gtk_object_destroy ((GtkObject*) self);
 }
 
 
@@ -163,31 +175,21 @@ GtkBox* omap_debug_dialog_new_error_box (OmapDebugDialog* self) {
 	self->text_buffer = (_tmp0_ = _g_object_ref0 (gtk_text_view_get_buffer (text_view)), _g_object_unref0 (self->text_buffer), _tmp0_);
 	gtk_widget_show_all ((GtkWidget*) box);
 	result = (GtkBox*) box;
-	_g_object_unref0 (image);
-	_g_object_unref0 (separator);
-	_g_object_unref0 (scrolled_window);
 	_g_object_unref0 (text_view);
+	_g_object_unref0 (scrolled_window);
+	_g_object_unref0 (separator);
+	_g_object_unref0 (image);
 	return result;
 }
 
 
-static void _lambda1_ (OmapDebugDialog* self) {
-	g_signal_emit_by_name (self, "closed");
+static void _omap_debug_dialog_on_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self) {
+	omap_debug_dialog_on_destroy (self);
 }
 
 
-static void __lambda1__gtk_object_destroy (OmapDebugDialog* _sender, gpointer self) {
-	_lambda1_ (self);
-}
-
-
-static void _lambda2_ (OmapDebugDialog* self) {
-	gtk_object_destroy ((GtkObject*) self);
-}
-
-
-static void __lambda2__gtk_dialog_response (OmapDebugDialog* _sender, gint response_id, gpointer self) {
-	_lambda2_ (self);
+static void _omap_debug_dialog_on_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self) {
+	omap_debug_dialog_on_response (self);
 }
 
 
@@ -209,8 +211,8 @@ static GObject * omap_debug_dialog_constructor (GType type, guint n_construct_pr
 		gtk_container_add ((GtkContainer*) content_area, (GtkWidget*) (_tmp1_ = omap_debug_dialog_new_error_box (self)));
 		_g_object_unref0 (_tmp1_);
 		gtk_text_buffer_create_tag (self->text_buffer, "bold", "weight", PANGO_WEIGHT_BOLD, NULL, NULL);
-		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) __lambda1__gtk_object_destroy, self, 0);
-		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda2__gtk_dialog_response, self, 0);
+		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _omap_debug_dialog_on_destroy_gtk_object_destroy, self, 0);
+		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) _omap_debug_dialog_on_response_gtk_dialog_response, self, 0);
 		_g_object_unref0 (content_area);
 	}
 	return obj;
@@ -262,13 +264,14 @@ OmapErrorDialog* omap_error_dialog_new (GError* e) {
 }
 
 
-static void _lambda3_ (OmapErrorDialog* self) {
+void omap_error_dialog_on_response (OmapErrorDialog* self) {
+	g_return_if_fail (self != NULL);
 	gtk_object_destroy ((GtkObject*) self);
 }
 
 
-static void __lambda3__gtk_dialog_response (OmapErrorDialog* _sender, gint response_id, gpointer self) {
-	_lambda3_ (self);
+static void _omap_error_dialog_on_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self) {
+	omap_error_dialog_on_response (self);
 }
 
 
@@ -284,7 +287,7 @@ static GObject * omap_error_dialog_constructor (GType type, guint n_construct_pr
 		gtk_window_set_title ((GtkWindow*) self, "Error");
 		gtk_window_set_modal ((GtkWindow*) self, TRUE);
 		gtk_dialog_add_button ((GtkDialog*) self, GTK_STOCK_CLOSE, (gint) GTK_RESPONSE_CLOSE);
-		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) __lambda3__gtk_dialog_response, self, 0);
+		g_signal_connect_object ((GtkDialog*) self, "response", (GCallback) _omap_error_dialog_on_response_gtk_dialog_response, self, 0);
 	}
 	return obj;
 }

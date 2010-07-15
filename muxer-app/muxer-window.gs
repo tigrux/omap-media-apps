@@ -39,7 +39,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
         chooser_button = new Gtk.FileChooserButton(
             "Config file", Gtk.FileChooserAction.OPEN)
         chooser_item.add(chooser_button)
-        chooser_button.file_set += on_chooser_file_set
+        chooser_button.file_set.connect(on_chooser_file_set)
 
         var file_filter = new Gtk.FileFilter()
         file_filter.set_name("Config files")
@@ -62,19 +62,19 @@ class Omap.MuxerWindow: Omap.MediaWindow
 
         preview_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY)
         toolbar.add(preview_button)
-        preview_button.clicked += on_preview
+        preview_button.clicked.connect(on_preview)
 
         var pause_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PAUSE)
         toolbar.add(pause_button)
-        pause_button.clicked += on_pause
+        pause_button.clicked.connect(on_pause)
 
         record_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_RECORD)
         toolbar.add(record_button)
-        record_button.clicked += on_record
+        record_button.clicked.connect(on_record)
 
         stop_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
-        stop_button.clicked += on_stop
+        stop_button.clicked.connect(on_stop)
 
         toolbar_add_expander()
 
@@ -92,13 +92,15 @@ class Omap.MuxerWindow: Omap.MediaWindow
             muxer_control = null
             Omap.error_dialog(e)
             return
-        muxer_control.error_message += on_control_error    
-        muxer_control.preview_started += on_preview_started
-        muxer_control.preview_stopped += on_preview_stopped
-        muxer_control.record_started += on_record_started
-        muxer_control.record_stopped += on_record_stopped
-        muxer_control.prepare_xwindow_id += def(imagesink)
-            video_area.sink = imagesink
+        muxer_control.error_message.connect(on_control_error)
+        muxer_control.preview_started.connect(on_preview_started)
+        muxer_control.preview_stopped.connect(on_preview_stopped)
+        muxer_control.record_started.connect(on_record_started)
+        muxer_control.record_stopped.connect(on_record_stopped)
+        muxer_control.prepare_xwindow_id.connect(on_prepared)
+
+    def on_prepared(imagesink: Gst.XOverlay)
+        video_area.sink = imagesink
 
     def on_preview()
         if muxer_control == null
@@ -203,7 +205,7 @@ class Omap.MuxerWindow: Omap.MediaWindow
     def setup_debug_dialog()
         if debug_dialog == null
             debug_dialog = new Omap.DebugDialog(this)
-            debug_dialog.closed += on_debug_dialog_closed
+            debug_dialog.closed.connect(on_debug_dialog_closed)
             debug_dialog.show_all()
 
     def on_debug_dialog_closed()

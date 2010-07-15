@@ -21,6 +21,7 @@ typedef struct _OmapImageControl OmapImageControl;
 typedef struct _OmapImageControlClass OmapImageControlClass;
 typedef struct _OmapImageControlPrivate OmapImageControlPrivate;
 #define _gst_object_unref0(var) ((var == NULL) ? NULL : (var = (gst_object_unref (var), NULL)))
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _OmapImageControl {
 	OmapMediaControl parent_instance;
@@ -36,7 +37,7 @@ struct _OmapImageControlClass {
 static gpointer omap_image_control_parent_class = NULL;
 
 #define IMAGE_PIPELINE_DESC "filesrc name=filesrc ! jpegdec ! ffmpegcolorspace ! ximagesink"
-GType omap_image_control_get_type (void);
+GType omap_image_control_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_IMAGE_CONTROL_DUMMY_PROPERTY,
 	OMAP_IMAGE_CONTROL_LOCATION
@@ -59,7 +60,7 @@ OmapImageControl* omap_image_control_construct (GType object_type, GError** erro
 	omap_image_control_setup_pipeline (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
-		g_object_unref (self);
+		_g_object_unref0 (self);
 		return NULL;
 	}
 	return self;

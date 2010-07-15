@@ -78,8 +78,8 @@ struct _OmapPlayerWindowClass {
 static gpointer omap_player_window_parent_class = NULL;
 
 #define TITLE "Omap4 Player"
-GType omap_player_window_get_type (void);
-GType omap_play_list_control_get_type (void);
+GType omap_player_window_get_type (void) G_GNUC_CONST;
+GType omap_play_list_control_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_PLAYER_WINDOW_DUMMY_PROPERTY,
 	OMAP_PLAYER_WINDOW_PLAYING
@@ -89,9 +89,9 @@ void omap_player_window_setup_model (OmapPlayerWindow* self);
 OmapPlayListControl* omap_play_list_control_new (GtkListStore* store);
 OmapPlayListControl* omap_play_list_control_construct (GType object_type, GtkListStore* store);
 void omap_player_window_on_control_eos (OmapPlayerWindow* self, GstObject* src);
-static void _omap_player_window_on_control_eos_omap_media_control_eos_message (OmapPlayListControl* _sender, GstObject* src, gpointer self);
+static void _omap_player_window_on_control_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self);
 void omap_player_window_on_control_error (OmapPlayerWindow* self, GstObject* src, GError* _error_, const char* debug);
-static void _omap_player_window_on_control_error_omap_media_control_error_message (OmapPlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+static void _omap_player_window_on_control_error_omap_media_control_error_message (OmapMediaControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
 void omap_player_window_on_control_playing (OmapPlayerWindow* self, GtkTreeIter* iter);
 static void _omap_player_window_on_control_playing_omap_play_list_control_playing (OmapPlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void omap_player_window_on_control_paused (OmapPlayerWindow* self, GtkTreeIter* iter);
@@ -101,7 +101,7 @@ static void _omap_player_window_on_control_stopped_omap_play_list_control_stoppe
 void omap_player_window_on_control_moved (OmapPlayerWindow* self, GtkTreeIter* iter);
 static void _omap_player_window_on_control_moved_omap_play_list_control_moved (OmapPlayListControl* _sender, GtkTreeIter* iter, gpointer self);
 void omap_player_window_on_control_xid_prepared (OmapPlayerWindow* self, GstXOverlay* imagesink);
-static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id (OmapPlayListControl* _sender, GstXOverlay* imagesink, gpointer self);
+static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id (OmapMediaControl* _sender, GstXOverlay* imagesink, gpointer self);
 void omap_player_window_on_control_title_changed (OmapPlayerWindow* self, const char* song_title);
 static void _omap_player_window_on_control_title_changed_omap_play_list_control_title_changed (OmapPlayListControl* _sender, const char* title, gpointer self);
 void omap_player_window_setup_controls (OmapPlayerWindow* self);
@@ -128,9 +128,9 @@ static void _omap_player_window_on_add_gtk_tool_button_clicked (GtkToolButton* _
 void omap_player_window_on_remove (OmapPlayerWindow* self);
 static void _omap_player_window_on_remove_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 gboolean omap_player_window_on_seeking_scale_pressed (OmapPlayerWindow* self);
-static gboolean _omap_player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
+static gboolean _omap_player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkWidget* _sender, GdkEventButton* event, gpointer self);
 gboolean omap_player_window_on_seeking_scale_released (OmapPlayerWindow* self);
-static gboolean _omap_player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkScale* _sender, GdkEventButton* event, gpointer self);
+static gboolean _omap_player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkWidget* _sender, GdkEventButton* event, gpointer self);
 char* omap_player_window_on_scale_format_value (OmapPlayerWindow* self, double scale_value);
 static char* _omap_player_window_on_scale_format_value_gtk_scale_format_value (GtkScale* _sender, double value, gpointer self);
 gboolean omap_play_list_control_play (OmapPlayListControl* self);
@@ -143,12 +143,12 @@ gboolean omap_play_list_control_next (OmapPlayListControl* self);
 gboolean omap_play_list_control_prev (OmapPlayListControl* self);
 void omap_player_window_on_mute_clicked (OmapPlayerWindow* self);
 gboolean omap_player_window_on_volume_button_pressed (OmapPlayerWindow* self);
-static gboolean _omap_player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkVolumeButton* _sender, GdkEventButton* event, gpointer self);
+static gboolean _omap_player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkWidget* _sender, GdkEventButton* event, gpointer self);
 static void _omap_player_window_on_mute_clicked_gtk_button_clicked (GtkButton* _sender, gpointer self);
-void omap_play_list_control_set_volume (OmapPlayListControl* self, double value);
-static void _lambda0_ (GtkAdjustment* volume, OmapPlayerWindow* self);
-static void __lambda0__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
+void omap_player_window_on_volume_changed (OmapPlayerWindow* self, GtkAdjustment* volume);
+static void _omap_player_window_on_volume_changed_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self);
 double omap_play_list_control_get_volume (OmapPlayListControl* self);
+void omap_play_list_control_set_volume (OmapPlayListControl* self, double value);
 GtkTreeView* omap_player_window_new_playlist_view (OmapPlayerWindow* self);
 static void _omap_media_window_toggle_fullscreen_omap_video_area_activated (OmapVideoArea* _sender, gpointer self);
 void omap_player_window_on_row_activated (OmapPlayerWindow* self, GtkTreePath* row);
@@ -162,9 +162,9 @@ gboolean omap_play_list_control_move_to (OmapPlayListControl* self, GtkTreePath*
 gboolean omap_player_window_get_and_select_iter (OmapPlayerWindow* self, GtkTreeIter* iter);
 void omap_player_window_setup_chooser (OmapPlayerWindow* self);
 void omap_player_window_on_chooser_response (OmapPlayerWindow* self, gint response);
-static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkFileChooserDialog* _sender, gint response_id, gpointer self);
+static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self);
 gboolean omap_player_window_on_chooser_delete (OmapPlayerWindow* self);
-static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkFileChooserDialog* _sender, GdkEvent* event, gpointer self);
+static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 void omap_play_list_control_add_file (OmapPlayListControl* self, const char* file);
 void omap_player_window_on_remove_files (OmapPlayerWindow* self);
 static void _g_list_free_gtk_tree_path_free (GList* self);
@@ -192,12 +192,12 @@ void omap_player_window_setup_model (OmapPlayerWindow* self) {
 }
 
 
-static void _omap_player_window_on_control_eos_omap_media_control_eos_message (OmapPlayListControl* _sender, GstObject* src, gpointer self) {
+static void _omap_player_window_on_control_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self) {
 	omap_player_window_on_control_eos (self, src);
 }
 
 
-static void _omap_player_window_on_control_error_omap_media_control_error_message (OmapPlayListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+static void _omap_player_window_on_control_error_omap_media_control_error_message (OmapMediaControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
 	omap_player_window_on_control_error (self, src, _error_, debug);
 }
 
@@ -222,7 +222,7 @@ static void _omap_player_window_on_control_moved_omap_play_list_control_moved (O
 }
 
 
-static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id (OmapPlayListControl* _sender, GstXOverlay* imagesink, gpointer self) {
+static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepare_xwindow_id (OmapMediaControl* _sender, GstXOverlay* imagesink, gpointer self) {
 	omap_player_window_on_control_xid_prepared (self, imagesink);
 }
 
@@ -354,25 +354,31 @@ void omap_player_window_setup_toolbar (OmapPlayerWindow* self) {
 	gtk_container_add ((GtkContainer*) ((OmapMediaWindow*) self)->toolbar, (GtkWidget*) remove_button);
 	g_signal_connect_object (remove_button, "clicked", (GCallback) _omap_player_window_on_remove_gtk_tool_button_clicked, self, 0);
 	omap_media_window_toolbar_add_quit_button ((OmapMediaWindow*) self);
-	_g_object_unref0 (prev_button);
-	_g_object_unref0 (stop_button);
-	_g_object_unref0 (volume_button_item);
 	_g_object_unref0 (remove_button);
+	_g_object_unref0 (volume_button_item);
+	_g_object_unref0 (stop_button);
+	_g_object_unref0 (prev_button);
 }
 
 
-static gboolean _omap_player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkScale* _sender, GdkEventButton* event, gpointer self) {
-	return omap_player_window_on_seeking_scale_pressed (self);
+static gboolean _omap_player_window_on_seeking_scale_pressed_gtk_widget_button_press_event (GtkWidget* _sender, GdkEventButton* event, gpointer self) {
+	gboolean result;
+	result = omap_player_window_on_seeking_scale_pressed (self);
+	return result;
 }
 
 
-static gboolean _omap_player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkScale* _sender, GdkEventButton* event, gpointer self) {
-	return omap_player_window_on_seeking_scale_released (self);
+static gboolean _omap_player_window_on_seeking_scale_released_gtk_widget_button_release_event (GtkWidget* _sender, GdkEventButton* event, gpointer self) {
+	gboolean result;
+	result = omap_player_window_on_seeking_scale_released (self);
+	return result;
 }
 
 
 static char* _omap_player_window_on_scale_format_value_gtk_scale_format_value (GtkScale* _sender, double value, gpointer self) {
-	return omap_player_window_on_scale_format_value (self, value);
+	char* result;
+	result = omap_player_window_on_scale_format_value (self, value);
+	return result;
 }
 
 
@@ -480,8 +486,10 @@ void omap_player_window_on_notebook_switch_page (OmapPlayerWindow* self, GtkNote
 }
 
 
-static gboolean _omap_player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkVolumeButton* _sender, GdkEventButton* event, gpointer self) {
-	return omap_player_window_on_volume_button_pressed (self);
+static gboolean _omap_player_window_on_volume_button_pressed_gtk_widget_button_press_event (GtkWidget* _sender, GdkEventButton* event, gpointer self) {
+	gboolean result;
+	result = omap_player_window_on_volume_button_pressed (self);
+	return result;
 }
 
 
@@ -490,14 +498,8 @@ static void _omap_player_window_on_mute_clicked_gtk_button_clicked (GtkButton* _
 }
 
 
-static void _lambda0_ (GtkAdjustment* volume, OmapPlayerWindow* self) {
-	g_return_if_fail (volume != NULL);
-	omap_play_list_control_set_volume (self->playlist_control, gtk_adjustment_get_value (volume));
-}
-
-
-static void __lambda0__gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self) {
-	_lambda0_ (_sender, self);
+static void _omap_player_window_on_volume_changed_gtk_adjustment_value_changed (GtkAdjustment* _sender, gpointer self) {
+	omap_player_window_on_volume_changed (self, _sender);
 }
 
 
@@ -540,14 +542,21 @@ GtkVolumeButton* omap_player_window_new_volume_button_with_mute (OmapPlayerWindo
 	gtk_widget_realize ((GtkWidget*) mute_button);
 	self->volume_adjustment = (_tmp7_ = g_object_ref_sink ((GtkAdjustment*) gtk_adjustment_new ((double) 0, (double) 0, 1.0, 0.1, 0.1, (double) 0)), _g_object_unref0 (self->volume_adjustment), _tmp7_);
 	gtk_scale_button_set_adjustment ((GtkScaleButton*) volume_button, self->volume_adjustment);
-	g_signal_connect_object (self->volume_adjustment, "value-changed", (GCallback) __lambda0__gtk_adjustment_value_changed, self, 0);
+	g_signal_connect_object (self->volume_adjustment, "value-changed", (GCallback) _omap_player_window_on_volume_changed_gtk_adjustment_value_changed, self, 0);
 	gtk_adjustment_set_value (self->volume_adjustment, omap_play_list_control_get_volume (self->playlist_control));
 	result = volume_button;
-	_g_object_unref0 (popup_window);
-	_g_object_unref0 (popup_frame);
-	_g_object_unref0 (popup_box);
 	_g_object_unref0 (mute_button);
+	_g_object_unref0 (popup_box);
+	_g_object_unref0 (popup_frame);
+	_g_object_unref0 (popup_window);
 	return result;
+}
+
+
+void omap_player_window_on_volume_changed (OmapPlayerWindow* self, GtkAdjustment* volume) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (volume != NULL);
+	omap_play_list_control_set_volume (self->playlist_control, gtk_adjustment_get_value (volume));
 }
 
 
@@ -703,13 +712,15 @@ void omap_player_window_on_add (OmapPlayerWindow* self) {
 }
 
 
-static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkFileChooserDialog* _sender, gint response_id, gpointer self) {
+static void _omap_player_window_on_chooser_response_gtk_dialog_response (GtkDialog* _sender, gint response_id, gpointer self) {
 	omap_player_window_on_chooser_response (self, response_id);
 }
 
 
-static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkFileChooserDialog* _sender, GdkEvent* event, gpointer self) {
-	return omap_player_window_on_chooser_delete (self);
+static gboolean _omap_player_window_on_chooser_delete_gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+	gboolean result;
+	result = omap_player_window_on_chooser_delete (self);
+	return result;
 }
 
 
@@ -857,7 +868,9 @@ char* omap_player_window_on_scale_format_value (OmapPlayerWindow* self, double s
 
 
 static gboolean _omap_player_window_update_scale_timeout_gsource_func (gpointer self) {
-	return omap_player_window_update_scale_timeout (self);
+	gboolean result;
+	result = omap_player_window_update_scale_timeout (self);
+	return result;
 }
 
 

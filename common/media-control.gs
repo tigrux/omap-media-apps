@@ -32,8 +32,8 @@ class Omap.MediaControl: GLib.Object
         var bus = _pipeline.bus
         bus.add_signal_watch()
         bus.enable_sync_message_emission()
-        bus.message += on_bus_message
-        bus.sync_message += on_bus_sync_message
+        bus.message.connect(on_bus_message)
+        bus.sync_message.connect(on_bus_sync_message)
 
     prop pipeline: Gst.Bin
         set
@@ -76,37 +76,37 @@ class Omap.MediaControl: GLib.Object
             return duration
 
     def on_bus_message(message: Gst.Message)
-        case message.type()
+        case message.type
             when Gst.MessageType.ELEMENT
                 st: Gst.Structure
                 if (st = message.get_structure()) != null
-                    element_message(message.src(), st)
+                    element_message(message.src, st)
             when Gst.MessageType.EOS
-                eos_message(message.src())
+                eos_message(message.src)
             when Gst.MessageType.ERROR
                 e: Error
                 d: string
                 message.parse_error(out e, out d)
-                error_message(message.src(), e, d)
+                error_message(message.src, e, d)
             when Gst.MessageType.STATE_CHANGED
                 old, current, pending: Gst.State
                 message.parse_state_changed(out old, out current, out pending)
-                state_changed_message(message.src(), old, current, pending)
+                state_changed_message(message.src, old, current, pending)
             when Gst.MessageType.SEGMENT_START
                 format: Gst.Format
                 position: int64
                 message.parse_segment_start(out format, out position)
-                segment_start_message(message.src(), format, position)
+                segment_start_message(message.src, format, position)
             when Gst.MessageType.SEGMENT_DONE
                 format: Gst.Format
                 position: int64
                 message.parse_segment_done(out format, out position)
-                segment_done_message(message.src(), format, position)
+                segment_done_message(message.src, format, position)
             when Gst.MessageType.TAG
                 tag_list: Gst.TagList
                 message.parse_tag(out tag_list)
                 tag_list.foreach(tag_foreach_func)
-                tag_message(message.src(), tag_list)
+                tag_message(message.src, tag_list)
             default
                 pass
 
@@ -119,7 +119,7 @@ class Omap.MediaControl: GLib.Object
         structure: Gst.Structure
         if (structure = message.get_structure()) == null
             return
-        if structure.name == prepare_xwindow_q
-            xoverlay = message.src() as Gst.XOverlay
+        if structure.get_name_id() == prepare_xwindow_q
+            xoverlay = message.src as Gst.XOverlay
             prepare_xwindow_id(xoverlay)
 

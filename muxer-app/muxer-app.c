@@ -26,7 +26,7 @@ typedef struct _OmapMuxerWindowClass OmapMuxerWindowClass;
 
 OmapMuxerWindow* omap_muxer_window_new (void);
 OmapMuxerWindow* omap_muxer_window_construct (GType object_type);
-GType omap_muxer_window_get_type (void);
+GType omap_muxer_window_get_type (void) G_GNUC_CONST;
 void _vala_main (char** args, int args_length1);
 
 

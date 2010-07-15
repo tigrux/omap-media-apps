@@ -54,18 +54,18 @@ typedef enum  {
 
 static gpointer omap_play_list_control_parent_class = NULL;
 
-GType omap_play_list_control_get_type (void);
+GType omap_play_list_control_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_PLAY_LIST_CONTROL_DUMMY_PROPERTY,
 	OMAP_PLAY_LIST_CONTROL_VOLUME,
 	OMAP_PLAY_LIST_CONTROL_N_ROWS,
 	OMAP_PLAY_LIST_CONTROL_LOCATION
 };
-GType omap_play_list_control_col_get_type (void);
+GType omap_play_list_control_col_get_type (void) G_GNUC_CONST;
 void omap_play_list_control_on_row_inserted (OmapPlayListControl* self, GtkTreePath* row);
-static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
+static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkTreeModel* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self);
 void omap_play_list_control_on_row_deleted (OmapPlayListControl* self, GtkTreePath* row);
-static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self);
+static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkTreeModel* _sender, GtkTreePath* path, gpointer self);
 OmapPlayListControl* omap_play_list_control_new (GtkListStore* store);
 OmapPlayListControl* omap_play_list_control_construct (GType object_type, GtkListStore* store);
 gboolean omap_play_list_control_get_iter (OmapPlayListControl* self, GtkTreeIter* iter);
@@ -91,7 +91,7 @@ static inline void _dynamic_set_volume1 (GstBin* obj, double value);
 void omap_play_list_control_set_volume (OmapPlayListControl* self, double value);
 guint omap_play_list_control_get_n_rows (OmapPlayListControl* self);
 static inline void _dynamic_set_uri2 (GstBin* obj, char* value);
-static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapPlayListControl* _sender, const char* name, GValue* tag_value, gpointer self);
+static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapMediaControl* _sender, const char* name, GValue* tag_value, gpointer self);
 static GObject * omap_play_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_play_list_control_finalize (GObject* obj);
 static void omap_play_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -117,12 +117,12 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkListStore* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self) {
+static void _omap_play_list_control_on_row_inserted_gtk_tree_model_row_inserted (GtkTreeModel* _sender, GtkTreePath* path, GtkTreeIter* iter, gpointer self) {
 	omap_play_list_control_on_row_inserted (self, path);
 }
 
 
-static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkListStore* _sender, GtkTreePath* path, gpointer self) {
+static void _omap_play_list_control_on_row_deleted_gtk_tree_model_row_deleted (GtkTreeModel* _sender, GtkTreePath* path, gpointer self) {
 	omap_play_list_control_on_row_deleted (self, path);
 }
 
@@ -480,7 +480,7 @@ void omap_play_list_control_set_location (OmapPlayListControl* self, const char*
 }
 
 
-static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapPlayListControl* _sender, const char* name, GValue* tag_value, gpointer self) {
+static void _omap_play_list_control_on_tag_found_omap_media_control_tag_found (OmapMediaControl* _sender, const char* name, GValue* tag_value, gpointer self) {
 	omap_play_list_control_on_tag_found (self, name, tag_value);
 }
 

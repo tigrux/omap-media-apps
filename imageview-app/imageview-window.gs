@@ -32,12 +32,11 @@ class Omap.ImageViewWindow: Omap.MediaWindow
 
     def setup_controls() raises Error
         iconlist_control = new Omap.IconListControl(iconlist_store)
-        iconlist_control.files_added += on_control_files_added
-        iconlist_control.icons_filled += on_control_icons_filled
+        iconlist_control.files_added.connect(on_control_files_added)
+        iconlist_control.icons_filled.connect(on_control_icons_filled)
         image_control = new Omap.ImageControl()
-        image_control.eos_message += on_control_eos
-        image_control.prepare_xwindow_id += def(imagesink)
-            video_area.sink = imagesink
+        image_control.eos_message.connect(on_control_eos)
+        image_control.prepare_xwindow_id.connect(on_prepared)
 
     def setup_widgets()
         title = TITLE
@@ -49,7 +48,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
     def setup_notebook()
         notebook.append_page(new_iconlist_box(), new Gtk.Label("List"))
         notebook.append_page(new_video_box(), new Gtk.Label("Video"))
-        notebook.switch_page += on_notebook_switch_page
+        notebook.switch_page.connect(on_notebook_switch_page)
 
     def new_iconlist_box(): Gtk.Box
         var box = new Gtk.VBox(false, 0)
@@ -61,14 +60,14 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         adjustment: Gtk.Adjustment
 
         adjustment = scrolled_window.vadjustment
-        adjustment.value_changed += do_fill_visible_icons
+        adjustment.value_changed.connect(do_fill_visible_icons)
 
         adjustment = scrolled_window.hadjustment
-        adjustment.value_changed += do_fill_visible_icons
+        adjustment.value_changed.connect(do_fill_visible_icons)
 
         icon_view = new Gtk.IconView()
         scrolled_window.add(icon_view)
-        icon_view.size_request += do_fill_visible_icons
+        icon_view.size_request.connect(do_fill_visible_icons)
         icon_view.selection_mode = Gtk.SelectionMode.BROWSE
         icon_view.model = iconlist_store
         icon_view.text_column = Omap.IconListControl.get_text_column()
@@ -77,9 +76,12 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         icon_view.column_spacing = 0
         icon_view.spacing = 0
         icon_view.margin = 0
-        icon_view.item_activated += on_icon_activated
+        icon_view.item_activated.connect(on_icon_activated)
 
         return box
+
+    def on_prepared(imagesink: Gst.XOverlay)
+        video_area.sink = imagesink
 
     def on_icon_activated(path: Gtk.TreePath)
         if iconlist_control == null
@@ -101,7 +103,7 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         scrolled_window.set_policy(policy, policy)
         box.pack_start(scrolled_window, true, true, 0)
         video_area = new Omap.VideoArea()
-        video_area.activated += toggle_fullscreen
+        video_area.activated.connect(toggle_fullscreen)
         scrolled_window.add_with_viewport(video_area)
         return box
 
@@ -113,25 +115,25 @@ class Omap.ImageViewWindow: Omap.MediaWindow
         chooser_button = new Gtk.FileChooserButton(
             "Select folder", Gtk.FileChooserAction.SELECT_FOLDER)
         chooser_item.add(chooser_button)
-        chooser_button.current_folder_changed += on_chooser_folder_changed
+        chooser_button.current_folder_changed.connect(on_chooser_folder_changed)
 
         toolbar_add_expander()
 
         image_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_ZOOM_100)
         toolbar.add(image_button)
-        image_button.clicked += on_open_close
+        image_button.clicked.connect(on_open_close)
 
         toolbar_add_expander()
 
         slideshow_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY)
         toolbar.add(slideshow_button)
-        slideshow_button.clicked += on_slideshow
+        slideshow_button.clicked.connect(on_slideshow)
 
         toolbar_add_expander()
 
         fullscreen_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_FULLSCREEN)
         toolbar.add(fullscreen_button)
-        fullscreen_button.clicked += on_fullscreen
+        fullscreen_button.clicked.connect(on_fullscreen)
 
         toolbar_add_quit_button()
 

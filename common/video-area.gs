@@ -11,8 +11,7 @@ class Omap.VideoArea: Gtk.DrawingArea
         double_buffered = false
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         add_events(Gdk.EventMask.BUTTON_RELEASE_MASK)
-        realize += def()
-            xid = Gdk.x11_drawable_get_xid(window)
+        realize.connect(on_realize)
 
     prop sink: Gst.XOverlay
         set
@@ -21,6 +20,9 @@ class Omap.VideoArea: Gtk.DrawingArea
             _imagesink.set_xwindow_id(xid)
         get
             return _imagesink
+
+    def on_realize()
+        xid = Gdk.x11_drawable_get_xid(window)
 
     def override button_press_event(event: Gdk.EventButton): bool
         if event.type == Gdk.EventType.2BUTTON_PRESS

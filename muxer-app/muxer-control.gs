@@ -33,8 +33,8 @@ class Omap.MuxerControl: Omap.MediaControl
     adjust_ts_audio: Gst.ClockTime
 
     init
-        eos_message += on_eos
-        state_changed_message += on_state_changed
+        eos_message.connect(on_eos)
+        state_changed_message.connect(on_state_changed)
 
     construct(preview: string, record: string)
         preview_desc = preview

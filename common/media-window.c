@@ -50,12 +50,12 @@ extern gboolean omap_media_window_style_applied;
 gboolean omap_media_window_style_applied = FALSE;
 static gpointer omap_media_window_parent_class = NULL;
 
-GType omap_media_window_get_type (void);
+GType omap_media_window_get_type (void) G_GNUC_CONST;
 enum  {
 	OMAP_MEDIA_WINDOW_DUMMY_PROPERTY,
 	OMAP_MEDIA_WINDOW_FULLSCREEN
 };
-GType omap_media_window_tab_get_type (void);
+GType omap_media_window_tab_get_type (void) G_GNUC_CONST;
 gboolean omap_media_window_apply_style (void);
 void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const char* name);
 void omap_media_window_toolbar_add_expander (OmapMediaWindow* self);
@@ -69,7 +69,7 @@ gboolean omap_media_window_quit (OmapMediaWindow* self);
 static gboolean _omap_media_window_quit_gsource_func (gpointer self);
 OmapMediaWindow* omap_media_window_new (void);
 OmapMediaWindow* omap_media_window_construct (GType object_type);
-static void _omap_media_window_on_quit_gtk_object_destroy (OmapMediaWindow* _sender, gpointer self);
+static void _omap_media_window_on_quit_gtk_object_destroy (GtkObject* _sender, gpointer self);
 static GObject * omap_media_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_media_window_finalize (GObject* obj);
 static void omap_media_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -109,13 +109,13 @@ gboolean omap_media_window_apply_style (void) {
 					gtk_rc_parse (rc_file);
 					{
 						result = TRUE;
-						_g_free0 (dir);
 						_g_free0 (rc_file);
+						_g_free0 (dir);
 						return result;
 					}
 				}
-				_g_free0 (dir);
 				_g_free0 (rc_file);
+				_g_free0 (dir);
 			}
 		}
 	}
@@ -156,15 +156,15 @@ void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const ch
 		}
 		__finally0:
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (theme);
 			_gtk_icon_info_free0 (icon_info);
+			_g_object_unref0 (theme);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return;
 		}
 	}
-	_g_object_unref0 (theme);
 	_gtk_icon_info_free0 (icon_info);
+	_g_object_unref0 (theme);
 }
 
 
@@ -202,7 +202,9 @@ void omap_media_window_toggle_fullscreen (OmapMediaWindow* self) {
 
 
 static gboolean _omap_media_window_quit_gsource_func (gpointer self) {
-	return omap_media_window_quit (self);
+	gboolean result;
+	result = omap_media_window_quit (self);
+	return result;
 }
 
 
@@ -272,7 +274,7 @@ void omap_media_window_set_fullscreen (OmapMediaWindow* self, gboolean value) {
 }
 
 
-static void _omap_media_window_on_quit_gtk_object_destroy (OmapMediaWindow* _sender, gpointer self) {
+static void _omap_media_window_on_quit_gtk_object_destroy (GtkObject* _sender, gpointer self) {
 	omap_media_window_on_quit (self);
 }
 

@@ -35,7 +35,7 @@ class Omap.PlayListControl: Omap.MediaControl
     event title_changed(title: string)
 
     init
-        tag_found += on_tag_found
+        tag_found.connect(on_tag_found)
         player = Gst.ElementFactory.make("playbin2", "player") as Gst.Bin
         if player == null
             player = Gst.ElementFactory.make("playbin", "player") as Gst.Bin
@@ -45,8 +45,8 @@ class Omap.PlayListControl: Omap.MediaControl
 
     construct(store: Gtk.ListStore)
         playlist_store = store
-        playlist_store.row_inserted += on_row_inserted
-        playlist_store.row_deleted += on_row_deleted
+        playlist_store.row_inserted.connect(on_row_inserted)
+        playlist_store.row_deleted.connect(on_row_deleted)
 
     def play(): bool
         iter: Gtk.TreeIter

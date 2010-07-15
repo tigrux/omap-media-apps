@@ -125,13 +125,13 @@ static gpointer omap_icon_list_control_parent_class = NULL;
 "oscale !\n" \
 "video/x-raw-rgb,width=128,height=96 ! gdkpixbufsink name=imagesink"
 #define IMAGE_FILE_ATTRIBUTES "standard::name,standard::display-name,standard::content-type"
-GType omap_icon_list_control_get_type (void);
+GType omap_icon_list_control_get_type (void) G_GNUC_CONST;
 #define OMAP_ICON_LIST_CONTROL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_ICON_LIST_CONTROL, OmapIconListControlPrivate))
 enum  {
 	OMAP_ICON_LIST_CONTROL_DUMMY_PROPERTY,
 	OMAP_ICON_LIST_CONTROL_ICONLIST_STORE
 };
-GType omap_icon_list_control_col_get_type (void);
+GType omap_icon_list_control_col_get_type (void) G_GNUC_CONST;
 void omap_icon_list_control_set_iconlist_store (OmapIconListControl* self, GtkListStore* value);
 void omap_icon_list_control_setup_icons (OmapIconListControl* self, GError** error);
 void omap_icon_list_control_setup_elements (OmapIconListControl* self, GError** error);
@@ -165,9 +165,9 @@ gboolean omap_icon_list_control_iter_is_filled (OmapIconListControl* self, GtkTr
 char* omap_icon_list_control_iter_get_file (OmapIconListControl* self, GtkTreeIter* iter);
 void omap_icon_list_control_iter_get_size (OmapIconListControl* self, GtkTreeIter* iter, gint* width, gint* height);
 GtkListStore* omap_icon_list_control_model_new (void);
-static void _omap_icon_list_control_on_eos_omap_media_control_eos_message (OmapIconListControl* _sender, GstObject* src, gpointer self);
-static void _omap_icon_list_control_on_error_omap_media_control_error_message (OmapIconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
-static void _omap_icon_list_control_on_element_omap_media_control_element_message (OmapIconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
+static void _omap_icon_list_control_on_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self);
+static void _omap_icon_list_control_on_error_omap_media_control_error_message (OmapMediaControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self);
+static void _omap_icon_list_control_on_element_omap_media_control_element_message (OmapMediaControl* _sender, GstObject* src, const GstStructure* structure, gpointer self);
 static GObject * omap_icon_list_control_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_icon_list_control_finalize (GObject* obj);
 static void omap_icon_list_control_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -199,7 +199,7 @@ OmapIconListControl* omap_icon_list_control_construct (GType object_type, GtkLis
 		omap_icon_list_control_setup_icons (self, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			g_object_unref (self);
+			_g_object_unref0 (self);
 			return NULL;
 		}
 		omap_icon_list_control_pixbufs_loaded = TRUE;
@@ -207,7 +207,7 @@ OmapIconListControl* omap_icon_list_control_construct (GType object_type, GtkLis
 	omap_icon_list_control_setup_elements (self, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_propagate_error (error, _inner_error_);
-		g_object_unref (self);
+		_g_object_unref0 (self);
 		return NULL;
 	}
 	return self;
@@ -241,8 +241,8 @@ void omap_icon_list_control_setup_icons (OmapIconListControl* self, GError** err
 		_tmp1_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (icon_theme);
 			_gtk_icon_info_free0 (icon_info);
+			_g_object_unref0 (icon_theme);
 			return;
 		}
 		self->missing_pixbuf = (_tmp2_ = _tmp1_, _g_object_unref0 (self->missing_pixbuf), _tmp2_);
@@ -254,14 +254,14 @@ void omap_icon_list_control_setup_icons (OmapIconListControl* self, GError** err
 		_tmp4_ = gtk_icon_info_load_icon (icon_info, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			g_propagate_error (error, _inner_error_);
-			_g_object_unref0 (icon_theme);
 			_gtk_icon_info_free0 (icon_info);
+			_g_object_unref0 (icon_theme);
 			return;
 		}
 		omap_icon_list_control_loading_pixbuf = (_tmp5_ = _tmp4_, _g_object_unref0 (omap_icon_list_control_loading_pixbuf), _tmp5_);
 	}
-	_g_object_unref0 (icon_theme);
 	_gtk_icon_info_free0 (icon_info);
+	_g_object_unref0 (icon_theme);
 }
 
 
@@ -464,8 +464,8 @@ void omap_icon_list_control_add_next_files (OmapIconListControl* self, const cha
 					file = g_build_filename (dirname, g_file_info_get_name (info), NULL);
 					text = g_strdup (g_file_info_get_display_name (info));
 					gtk_list_store_insert_with_values (self->priv->_iconlist_store, NULL, -1, OMAP_ICON_LIST_CONTROL_COL_TEXT, text, OMAP_ICON_LIST_CONTROL_COL_FILE, file, OMAP_ICON_LIST_CONTROL_COL_PIXBUF, omap_icon_list_control_loading_pixbuf, -1, -1);
-					_g_free0 (file);
 					_g_free0 (text);
+					_g_free0 (file);
 				}
 				_g_object_unref0 (info);
 			}
@@ -518,7 +518,9 @@ static void omap_icon_list_control_fill_icons_ready (GObject* source_object, GAs
 
 
 static gboolean _omap_icon_list_control_fill_icons_co_gsource_func (gpointer self) {
-	return omap_icon_list_control_fill_icons_co (self);
+	gboolean result;
+	result = omap_icon_list_control_fill_icons_co (self);
+	return result;
 }
 
 
@@ -633,7 +635,7 @@ void omap_icon_list_control_on_element (OmapIconListControl* self, GstObject* sr
 	g_return_if_fail (src != NULL);
 	g_return_if_fail (structure != NULL);
 	if (src == GST_OBJECT (self->imagesink)) {
-		_tmp0_ = structure->name == omap_icon_list_control_pixbuf_q;
+		_tmp0_ = gst_structure_get_name_id (structure) == omap_icon_list_control_pixbuf_q;
 	} else {
 		_tmp0_ = FALSE;
 	}
@@ -747,17 +749,17 @@ void omap_icon_list_control_set_iconlist_store (OmapIconListControl* self, GtkLi
 }
 
 
-static void _omap_icon_list_control_on_eos_omap_media_control_eos_message (OmapIconListControl* _sender, GstObject* src, gpointer self) {
+static void _omap_icon_list_control_on_eos_omap_media_control_eos_message (OmapMediaControl* _sender, GstObject* src, gpointer self) {
 	omap_icon_list_control_on_eos (self, src);
 }
 
 
-static void _omap_icon_list_control_on_error_omap_media_control_error_message (OmapIconListControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
+static void _omap_icon_list_control_on_error_omap_media_control_error_message (OmapMediaControl* _sender, GstObject* src, GError* _error_, const char* debug, gpointer self) {
 	omap_icon_list_control_on_error (self, src, _error_, debug);
 }
 
 
-static void _omap_icon_list_control_on_element_omap_media_control_element_message (OmapIconListControl* _sender, GstObject* src, const GstStructure* structure, gpointer self) {
+static void _omap_icon_list_control_on_element_omap_media_control_element_message (OmapMediaControl* _sender, GstObject* src, const GstStructure* structure, gpointer self) {
 	omap_icon_list_control_on_element (self, src, structure);
 }
 

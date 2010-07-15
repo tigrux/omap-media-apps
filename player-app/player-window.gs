@@ -47,14 +47,14 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
     def setup_controls()
         playlist_control = new Omap.PlayListControl(playlist_store)
-        playlist_control.eos_message += on_control_eos
-        playlist_control.error_message += on_control_error
-        playlist_control.playing += on_control_playing
-        playlist_control.paused += on_control_paused
-        playlist_control.stopped += on_control_stopped
-        playlist_control.moved += on_control_moved
-        playlist_control.prepare_xwindow_id += on_control_xid_prepared
-        playlist_control.title_changed += on_control_title_changed
+        playlist_control.eos_message.connect(on_control_eos)
+        playlist_control.error_message.connect(on_control_error)
+        playlist_control.playing.connect(on_control_playing)
+        playlist_control.paused.connect(on_control_paused)
+        playlist_control.stopped.connect(on_control_stopped)
+        playlist_control.moved.connect(on_control_moved)
+        playlist_control.prepare_xwindow_id.connect(on_control_xid_prepared)
+        playlist_control.title_changed.connect(on_control_title_changed)
 
     def setup_widgets()
         title = TITLE
@@ -67,24 +67,24 @@ class Omap.PlayerWindow: Omap.MediaWindow
     def setup_notebook()
         notebook.append_page(new_playlist_box(), new Gtk.Label("List"))
         notebook.append_page(new_video_box(), new Gtk.Label("Video"))
-        notebook.switch_page += on_notebook_switch_page
+        notebook.switch_page.connect(on_notebook_switch_page)
 
     def setup_toolbar()
         var prev_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PREVIOUS)
-        prev_button.clicked += on_prev
+        prev_button.clicked.connect(on_prev)
         toolbar.add(prev_button)
 
         play_pause_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY)
         toolbar.add(play_pause_button)
-        play_pause_button.clicked += play_pause
+        play_pause_button.clicked.connect(play_pause)
 
         next_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_NEXT)
         toolbar.add(next_button)
-        next_button.clicked += next
+        next_button.clicked.connect(next)
 
         var stop_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_STOP)
         toolbar.add(stop_button)
-        stop_button.clicked += stop
+        stop_button.clicked.connect(stop)
 
         toolbar_add_expander()
 
@@ -95,18 +95,18 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
         fullscreen_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_FULLSCREEN)
         fullscreen_button.no_show_all = true
-        fullscreen_button.clicked += toggle_fullscreen
+        fullscreen_button.clicked.connect(toggle_fullscreen)
         toolbar.add(fullscreen_button)
 
         toolbar_add_expander()
 
         add_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_ADD)
         toolbar.add(add_button)
-        add_button.clicked += on_add
+        add_button.clicked.connect(on_add)
 
         var remove_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_REMOVE)
         toolbar.add(remove_button)
-        remove_button.clicked += on_remove
+        remove_button.clicked.connect(on_remove)
 
         toolbar_add_quit_button()
 
@@ -117,9 +117,9 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
         seeking_scale.no_show_all = true
         seeking_scale.update_policy = Gtk.UpdateType.DISCONTINUOUS
-        seeking_scale.button_press_event += on_seeking_scale_pressed
-        seeking_scale.button_release_event += on_seeking_scale_released
-        seeking_scale.format_value += on_scale_format_value
+        seeking_scale.button_press_event.connect(on_seeking_scale_pressed)
+        seeking_scale.button_release_event.connect(on_seeking_scale_released)
+        seeking_scale.format_value.connect(on_scale_format_value)
 
     def play()
         playlist_control.play()
@@ -171,7 +171,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
         var icon_size = toolbar.get_icon_size()
         volume_button.size = icon_size
 
-        volume_button.button_press_event += on_volume_button_pressed
+        volume_button.button_press_event.connect(on_volume_button_pressed)
 
         var popup_window = volume_button.get_popup() as Gtk.Window
         popup_window.height_request = 240
@@ -187,16 +187,18 @@ class Omap.PlayerWindow: Omap.MediaWindow
         muted_icon_name = volume_button.icons[0]
         mute_image = new Gtk.Image.from_icon_name(muted_icon_name, icon_size)
         mute_button.add(mute_image)
-        mute_button.clicked += on_mute_clicked
+        mute_button.clicked.connect(on_mute_clicked)
         mute_button.realize()
 
         volume_adjustment = new Gtk.Adjustment(0, 0, 1.0, 0.1, 0.1, 0)
         volume_button.adjustment = volume_adjustment
-        volume_adjustment.value_changed += def(volume)
-            playlist_control.volume = volume.value
+        volume_adjustment.value_changed.connect(on_volume_changed)
         volume_adjustment.value = playlist_control.volume
 
         return volume_button
+
+    def on_volume_changed(volume: Gtk.Adjustment)
+        playlist_control.volume = volume.value
 
     def new_playlist_box(): Gtk.Box
         var box = new Gtk.VBox(false, 0)
@@ -218,13 +220,13 @@ class Omap.PlayerWindow: Omap.MediaWindow
         var box = new Gtk.VBox(false, 0)
         video_area = new Omap.VideoArea()
         box.pack_start(video_area, true, true, 0)
-        video_area.activated += toggle_fullscreen
+        video_area.activated.connect(toggle_fullscreen)
         return box
 
     def new_playlist_view(): Gtk.TreeView
         var view = new Gtk.TreeView()
         view.headers_visible = false
-        view.row_activated += on_row_activated
+        view.row_activated.connect(on_row_activated)
 
         view.insert_column_with_attributes(
             -1, "Icon", new Gtk.CellRendererPixbuf(),
@@ -289,8 +291,8 @@ class Omap.PlayerWindow: Omap.MediaWindow
             Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE,
             Gtk.STOCK_ADD, Gtk.ResponseType.OK,
             null)
-        chooser.response += on_chooser_response
-        chooser.delete_event += on_chooser_delete
+        chooser.response.connect(on_chooser_response)
+        chooser.delete_event.connect(on_chooser_delete)
 
     def on_chooser_response(response: int)
         case response
@@ -377,7 +379,7 @@ class Omap.PlayerWindow: Omap.MediaWindow
         seeking_scale.hide()
         toolbar.hide()
         debug_dialog = new Omap.DebugDialog(this)
-        debug_dialog.closed += on_debug_dialog_closed
+        debug_dialog.closed.connect(on_debug_dialog_closed)
         debug_dialog.show()
 
     def on_debug_dialog_closed()

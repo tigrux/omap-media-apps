@@ -10,8 +10,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xregion.h>
 #include <gst/interfaces/xoverlay.h>
-#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <gdk/gdk.h>
 
 
 #define OMAP_TYPE_VIDEO_AREA (omap_video_area_get_type ())
@@ -43,12 +43,13 @@ struct _OmapVideoAreaPrivate {
 
 static gpointer omap_video_area_parent_class = NULL;
 
-GType omap_video_area_get_type (void);
+GType omap_video_area_get_type (void) G_GNUC_CONST;
 #define OMAP_VIDEO_AREA_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), OMAP_TYPE_VIDEO_AREA, OmapVideoAreaPrivate))
 enum  {
 	OMAP_VIDEO_AREA_DUMMY_PROPERTY,
 	OMAP_VIDEO_AREA_SINK
 };
+void omap_video_area_on_realize (OmapVideoArea* self);
 static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event);
 static gboolean omap_video_area_real_expose_event (GtkWidget* base, GdkEventExpose* e);
 OmapVideoArea* omap_video_area_new (void);
@@ -56,13 +57,18 @@ OmapVideoArea* omap_video_area_construct (GType object_type);
 GstXOverlay* omap_video_area_get_sink (OmapVideoArea* self);
 static inline void _dynamic_set_force_aspect_ratio0 (GstXOverlay* obj, gboolean value);
 void omap_video_area_set_sink (OmapVideoArea* self, GstXOverlay* value);
-static void _lambda0_ (OmapVideoArea* self);
-static void __lambda0__gtk_widget_realize (OmapVideoArea* _sender, gpointer self);
+static void _omap_video_area_on_realize_gtk_widget_realize (GtkWidget* _sender, gpointer self);
 static GObject * omap_video_area_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_video_area_finalize (GObject* obj);
 static void omap_video_area_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void omap_video_area_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
+
+
+void omap_video_area_on_realize (OmapVideoArea* self) {
+	g_return_if_fail (self != NULL);
+	self->xid = gdk_x11_drawable_get_xid ((GdkDrawable*) ((GtkWidget*) self)->window);
+}
 
 
 static gboolean omap_video_area_real_button_press_event (GtkWidget* base, GdkEventButton* event) {
@@ -132,13 +138,8 @@ void omap_video_area_set_sink (OmapVideoArea* self, GstXOverlay* value) {
 }
 
 
-static void _lambda0_ (OmapVideoArea* self) {
-	self->xid = gdk_x11_drawable_get_xid ((GdkDrawable*) ((GtkWidget*) self)->window);
-}
-
-
-static void __lambda0__gtk_widget_realize (OmapVideoArea* _sender, gpointer self) {
-	_lambda0_ (self);
+static void _omap_video_area_on_realize_gtk_widget_realize (GtkWidget* _sender, gpointer self) {
+	omap_video_area_on_realize (self);
 }
 
 
@@ -153,7 +154,7 @@ static GObject * omap_video_area_constructor (GType type, guint n_construct_prop
 		gtk_widget_set_double_buffered ((GtkWidget*) self, FALSE);
 		gtk_widget_add_events ((GtkWidget*) self, (gint) GDK_BUTTON_PRESS_MASK);
 		gtk_widget_add_events ((GtkWidget*) self, (gint) GDK_BUTTON_RELEASE_MASK);
-		g_signal_connect_object ((GtkWidget*) self, "realize", (GCallback) __lambda0__gtk_widget_realize, self, 0);
+		g_signal_connect_object ((GtkWidget*) self, "realize", (GCallback) _omap_video_area_on_realize_gtk_widget_realize, self, 0);
 	}
 	return obj;
 }
