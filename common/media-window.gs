@@ -26,7 +26,7 @@ class Omap.MediaWindow: Gtk.Window
         settings.gtk_touchscreen_mode = true
 
         set_default_size(800, 480)
-        destroy.connect(on_quit)
+        destroy.connect(on_destroy)
 
         main_box = new Gtk.VBox(false, 0)
         add(main_box)
@@ -81,8 +81,11 @@ class Omap.MediaWindow: Gtk.Window
         get
             return is_fullscreen
 
-    def on_quit()
+    def on_destroy()
         Idle.add(quit)
+
+    def on_quit()
+        destroy()
 
     def quit(): bool
         Gtk.main_quit()

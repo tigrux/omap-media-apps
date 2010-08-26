@@ -162,6 +162,7 @@ void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const ch
 void omap_media_window_toolbar_add_quit_button (OmapMediaWindow* self);
 void omap_media_window_toolbar_add_expander (OmapMediaWindow* self);
 void omap_media_window_toggle_fullscreen (OmapMediaWindow* self);
+void omap_media_window_on_destroy (OmapMediaWindow* self);
 void omap_media_window_on_quit (OmapMediaWindow* self);
 gboolean omap_media_window_quit (OmapMediaWindow* self);
 OmapMediaWindow* omap_media_window_new (void);

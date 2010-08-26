@@ -58,6 +58,7 @@ namespace Omap {
 		public MediaWindow ();
 		public static bool apply_style ();
 		public void lookup_and_set_icon_name (string name);
+		public void on_destroy ();
 		public void on_quit ();
 		public bool quit ();
 		public void toggle_fullscreen ();

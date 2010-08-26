@@ -67,9 +67,10 @@ void omap_media_window_set_fullscreen (OmapMediaWindow* self, gboolean value);
 void omap_media_window_toggle_fullscreen (OmapMediaWindow* self);
 gboolean omap_media_window_quit (OmapMediaWindow* self);
 static gboolean _omap_media_window_quit_gsource_func (gpointer self);
+void omap_media_window_on_destroy (OmapMediaWindow* self);
 OmapMediaWindow* omap_media_window_new (void);
 OmapMediaWindow* omap_media_window_construct (GType object_type);
-static void _omap_media_window_on_quit_gtk_object_destroy (GtkObject* _sender, gpointer self);
+static void _omap_media_window_on_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self);
 static GObject * omap_media_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void omap_media_window_finalize (GObject* obj);
 static void omap_media_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -208,9 +209,15 @@ static gboolean _omap_media_window_quit_gsource_func (gpointer self) {
 }
 
 
-void omap_media_window_on_quit (OmapMediaWindow* self) {
+void omap_media_window_on_destroy (OmapMediaWindow* self) {
 	g_return_if_fail (self != NULL);
 	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _omap_media_window_quit_gsource_func, g_object_ref (self), g_object_unref);
+}
+
+
+void omap_media_window_on_quit (OmapMediaWindow* self) {
+	g_return_if_fail (self != NULL);
+	gtk_object_destroy ((GtkObject*) self);
 }
 
 
@@ -274,8 +281,8 @@ void omap_media_window_set_fullscreen (OmapMediaWindow* self, gboolean value) {
 }
 
 
-static void _omap_media_window_on_quit_gtk_object_destroy (GtkObject* _sender, gpointer self) {
-	omap_media_window_on_quit (self);
+static void _omap_media_window_on_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self) {
+	omap_media_window_on_destroy (self);
 }
 
 
@@ -295,7 +302,7 @@ static GObject * omap_media_window_constructor (GType type, guint n_construct_pr
 		settings = _g_object_ref0 (gtk_widget_get_settings ((GtkWidget*) self));
 		g_object_set (settings, "gtk-touchscreen-mode", TRUE, NULL);
 		gtk_window_set_default_size ((GtkWindow*) self, 800, 480);
-		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _omap_media_window_on_quit_gtk_object_destroy, self, 0);
+		g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _omap_media_window_on_destroy_gtk_object_destroy, self, 0);
 		self->main_box = (_tmp0_ = g_object_ref_sink ((GtkVBox*) gtk_vbox_new (FALSE, 0)), _g_object_unref0 (self->main_box), _tmp0_);
 		gtk_container_add ((GtkContainer*) self, (GtkWidget*) self->main_box);
 		self->toolbar = (_tmp1_ = g_object_ref_sink ((GtkToolbar*) gtk_toolbar_new ()), _g_object_unref0 (self->toolbar), _tmp1_);
