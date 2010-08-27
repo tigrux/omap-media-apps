@@ -7,6 +7,7 @@ class Omap.MediaWindow: Gtk.Window
     main_box: Gtk.VBox
     style_applied: static bool = apply_style()
     is_fullscreen: bool
+    instances: static List of weak Omap.MediaWindow
 
     enum Tab
         LIST
@@ -19,6 +20,13 @@ class Omap.MediaWindow: Gtk.Window
                 Gtk.rc_parse(rc_file)
                     return true
         return false
+
+    def static signal_handler(signal_n: int)
+        for instance in instances
+            instance.destroy()
+
+    init class
+        Posix.signal(Posix.SIGINT, signal_handler)
 
     init
         lookup_and_set_icon_name(Environment.get_prgname())
@@ -39,6 +47,10 @@ class Omap.MediaWindow: Gtk.Window
         notebook.show_tabs = false
         main_box.pack_start(notebook, true, true, 0)
         main_box.show_all()
+        instances.append(this)
+
+    final
+        instances.remove(this)
 
     def lookup_and_set_icon_name(name: string)
         var theme = Gtk.IconTheme.get_default()

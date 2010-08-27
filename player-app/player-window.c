@@ -105,10 +105,14 @@ static void _omap_player_window_on_control_xid_prepared_omap_media_control_prepa
 void omap_player_window_on_control_title_changed (OmapPlayerWindow* self, const char* song_title);
 static void _omap_player_window_on_control_title_changed_omap_play_list_control_title_changed (OmapPlayListControl* _sender, const char* title, gpointer self);
 void omap_player_window_setup_controls (OmapPlayerWindow* self);
+void omap_player_window_on_window_destroy (OmapPlayerWindow* self);
+static void _omap_player_window_on_window_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self);
 void omap_player_window_setup_toolbar (OmapPlayerWindow* self);
 void omap_player_window_setup_notebook (OmapPlayerWindow* self);
 void omap_player_window_setup_seeking (OmapPlayerWindow* self);
 void omap_player_window_setup_widgets (OmapPlayerWindow* self);
+gboolean omap_player_window_get_playing (OmapPlayerWindow* self);
+void omap_player_window_stop (OmapPlayerWindow* self);
 GtkBox* omap_player_window_new_playlist_box (OmapPlayerWindow* self);
 GtkBox* omap_player_window_new_video_box (OmapPlayerWindow* self);
 void omap_player_window_on_notebook_switch_page (OmapPlayerWindow* self, GtkNotebookPage* page, guint num_page);
@@ -119,7 +123,6 @@ void omap_player_window_play_pause (OmapPlayerWindow* self);
 static void _omap_player_window_play_pause_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 void omap_player_window_next (OmapPlayerWindow* self);
 static void _omap_player_window_next_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
-void omap_player_window_stop (OmapPlayerWindow* self);
 static void _omap_player_window_stop_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
 GtkVolumeButton* omap_player_window_new_volume_button_with_mute (OmapPlayerWindow* self);
 static void _omap_media_window_toggle_fullscreen_gtk_tool_button_clicked (GtkToolButton* _sender, gpointer self);
@@ -138,7 +141,6 @@ void omap_player_window_play (OmapPlayerWindow* self);
 gboolean omap_play_list_control_pause (OmapPlayListControl* self);
 void omap_player_window_pause (OmapPlayerWindow* self);
 gboolean omap_play_list_control_stop (OmapPlayListControl* self);
-gboolean omap_player_window_get_playing (OmapPlayerWindow* self);
 gboolean omap_play_list_control_next (OmapPlayListControl* self);
 gboolean omap_play_list_control_prev (OmapPlayListControl* self);
 void omap_player_window_on_mute_clicked (OmapPlayerWindow* self);
@@ -247,14 +249,28 @@ void omap_player_window_setup_controls (OmapPlayerWindow* self) {
 }
 
 
+static void _omap_player_window_on_window_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self) {
+	omap_player_window_on_window_destroy (self);
+}
+
+
 void omap_player_window_setup_widgets (OmapPlayerWindow* self) {
 	g_return_if_fail (self != NULL);
 	gtk_window_set_title ((GtkWindow*) self, TITLE);
+	g_signal_connect_object ((GtkObject*) self, "destroy", (GCallback) _omap_player_window_on_window_destroy_gtk_object_destroy, self, 0);
 	omap_player_window_setup_toolbar (self);
 	omap_player_window_setup_notebook (self);
 	omap_player_window_setup_seeking (self);
 	gtk_widget_realize ((GtkWidget*) self->video_area);
 	gtk_widget_show_all ((GtkWidget*) ((OmapMediaWindow*) self)->main_box);
+}
+
+
+void omap_player_window_on_window_destroy (OmapPlayerWindow* self) {
+	g_return_if_fail (self != NULL);
+	if (omap_player_window_get_playing (self)) {
+		omap_player_window_stop (self);
+	}
 }
 
 

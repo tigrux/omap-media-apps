@@ -58,11 +58,16 @@ class Omap.PlayerWindow: Omap.MediaWindow
 
     def setup_widgets()
         title = TITLE
+        destroy.connect(on_window_destroy)
         setup_toolbar()
         setup_notebook()
         setup_seeking()
         video_area.realize()
         main_box.show_all()
+
+    def on_window_destroy()
+        if playing
+            stop()
 
     def setup_notebook()
         notebook.append_page(new_playlist_box(), new Gtk.Label("List"))

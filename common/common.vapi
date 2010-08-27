@@ -50,6 +50,7 @@ namespace Omap {
 			LIST,
 			VIDEO
 		}
+		public static GLib.List<weak Omap.MediaWindow> instances;
 		public bool is_fullscreen;
 		public Gtk.VBox main_box;
 		public Gtk.Notebook notebook;
@@ -61,6 +62,7 @@ namespace Omap {
 		public void on_destroy ();
 		public void on_quit ();
 		public bool quit ();
+		public static void signal_handler (int signal_n);
 		public void toggle_fullscreen ();
 		public void toolbar_add_expander ();
 		public void toolbar_add_quit_button ();

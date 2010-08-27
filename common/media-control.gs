@@ -18,9 +18,6 @@ class Omap.MediaControl: GLib.Object
     event state_changed_message(src: Gst.Object,
             old: Gst.State, current: Gst.State, pending: Gst.State)
 
-    final
-        pipeline = null
-
     def remove_signals()
         var bus = _pipeline.bus
         bus.message.disconnect(on_bus_sync_message)

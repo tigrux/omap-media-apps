@@ -397,9 +397,6 @@ static void omap_media_control_instance_init (OmapMediaControl * self) {
 static void omap_media_control_finalize (GObject* obj) {
 	OmapMediaControl * self;
 	self = OMAP_MEDIA_CONTROL (obj);
-	{
-		omap_media_control_set_pipeline (self, NULL);
-	}
 	_gst_object_unref0 (self->priv->_pipeline);
 	_gst_object_unref0 (self->xoverlay);
 	G_OBJECT_CLASS (omap_media_control_parent_class)->finalize (obj);

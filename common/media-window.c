@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib/gstdio.h>
+#include <signal.h>
 
 
 #define OMAP_TYPE_MEDIA_WINDOW (omap_media_window_get_type ())
@@ -48,6 +49,8 @@ typedef enum  {
 
 extern gboolean omap_media_window_style_applied;
 gboolean omap_media_window_style_applied = FALSE;
+extern GList* omap_media_window_instances;
+GList* omap_media_window_instances = NULL;
 static gpointer omap_media_window_parent_class = NULL;
 
 GType omap_media_window_get_type (void) G_GNUC_CONST;
@@ -57,6 +60,7 @@ enum  {
 };
 GType omap_media_window_tab_get_type (void) G_GNUC_CONST;
 gboolean omap_media_window_apply_style (void);
+void omap_media_window_signal_handler (gint signal_n);
 void omap_media_window_lookup_and_set_icon_name (OmapMediaWindow* self, const char* name);
 void omap_media_window_toolbar_add_expander (OmapMediaWindow* self);
 void omap_media_window_on_quit (OmapMediaWindow* self);
@@ -72,6 +76,7 @@ OmapMediaWindow* omap_media_window_new (void);
 OmapMediaWindow* omap_media_window_construct (GType object_type);
 static void _omap_media_window_on_destroy_gtk_object_destroy (GtkObject* _sender, gpointer self);
 static GObject * omap_media_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void _omap_media_window_signal_handler_sighandler_t (gint signal);
 static void omap_media_window_finalize (GObject* obj);
 static void omap_media_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void omap_media_window_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
@@ -122,6 +127,22 @@ gboolean omap_media_window_apply_style (void) {
 	}
 	result = FALSE;
 	return result;
+}
+
+
+void omap_media_window_signal_handler (gint signal_n) {
+	{
+		GList* instance_collection;
+		GList* instance_it;
+		instance_collection = omap_media_window_instances;
+		for (instance_it = instance_collection; instance_it != NULL; instance_it = instance_it->next) {
+			OmapMediaWindow* instance;
+			instance = (OmapMediaWindow*) instance_it->data;
+			{
+				gtk_object_destroy ((GtkObject*) instance);
+			}
+		}
+	}
 }
 
 
@@ -312,9 +333,22 @@ static GObject * omap_media_window_constructor (GType type, guint n_construct_pr
 		gtk_notebook_set_show_tabs (self->notebook, FALSE);
 		gtk_box_pack_start ((GtkBox*) self->main_box, (GtkWidget*) self->notebook, TRUE, TRUE, (guint) 0);
 		gtk_widget_show_all ((GtkWidget*) self->main_box);
+		omap_media_window_instances = g_list_append (omap_media_window_instances, self);
 		_g_object_unref0 (settings);
 	}
 	return obj;
+}
+
+
+static void _omap_media_window_signal_handler_sighandler_t (gint signal) {
+	omap_media_window_signal_handler (signal);
+}
+
+
+static void omap_media_window_base_init (OmapMediaWindowClass * klass) {
+	{
+		signal (SIGINT, _omap_media_window_signal_handler_sighandler_t);
+	}
 }
 
 
@@ -336,6 +370,9 @@ static void omap_media_window_instance_init (OmapMediaWindow * self) {
 static void omap_media_window_finalize (GObject* obj) {
 	OmapMediaWindow * self;
 	self = OMAP_MEDIA_WINDOW (obj);
+	{
+		omap_media_window_instances = g_list_remove (omap_media_window_instances, self);
+	}
 	_g_object_unref0 (self->notebook);
 	_g_object_unref0 (self->toolbar);
 	_g_object_unref0 (self->main_box);
@@ -346,7 +383,7 @@ static void omap_media_window_finalize (GObject* obj) {
 GType omap_media_window_get_type (void) {
 	static volatile gsize omap_media_window_type_id__volatile = 0;
 	if (g_once_init_enter (&omap_media_window_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (OmapMediaWindowClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_media_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMediaWindow), 0, (GInstanceInitFunc) omap_media_window_instance_init, NULL };
+		static const GTypeInfo g_define_type_info = { sizeof (OmapMediaWindowClass), (GBaseInitFunc) omap_media_window_base_init, (GBaseFinalizeFunc) NULL, (GClassInitFunc) omap_media_window_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (OmapMediaWindow), 0, (GInstanceInitFunc) omap_media_window_instance_init, NULL };
 		GType omap_media_window_type_id;
 		omap_media_window_type_id = g_type_register_static (GTK_TYPE_WINDOW, "OmapMediaWindow", &g_define_type_info, 0);
 		g_once_init_leave (&omap_media_window_type_id__volatile, omap_media_window_type_id);
