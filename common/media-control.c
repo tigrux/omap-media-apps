@@ -110,8 +110,6 @@ void omap_media_control_remove_signals (OmapMediaControl* self) {
 	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _omap_media_control_on_bus_sync_message_gst_bus_message, self);
 	g_signal_parse_name ("message", GST_TYPE_BUS, &_tmp1_, NULL, FALSE);
 	g_signal_handlers_disconnect_matched (bus, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _omap_media_control_on_bus_message_gst_bus_message, self);
-	gst_bus_disable_sync_message_emission (bus);
-	gst_bus_remove_signal_watch (bus);
 	_gst_object_unref0 (bus);
 }
 

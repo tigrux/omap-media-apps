@@ -25,8 +25,6 @@ class Omap.MediaControl: GLib.Object
         var bus = _pipeline.bus
         bus.message.disconnect(on_bus_sync_message)
         bus.message.disconnect(on_bus_message)
-        bus.disable_sync_message_emission()
-        bus.remove_signal_watch()
 
     def add_signals()
         var bus = _pipeline.bus
